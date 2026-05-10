@@ -55,6 +55,7 @@ export default function ChatPage() {
     setInput('')
     setLoading(true)
 
+    let isConfigError = false
     try {
       const allMessages = [...messages, userMessage].map((m) => ({
         role: m.role,
@@ -70,7 +71,10 @@ export default function ChatPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        if (res.status === 503) setHasApiKey(false)
+        if (res.status === 503) {
+          isConfigError = true
+          setHasApiKey(false)
+        }
         throw new Error(data.error || 'API error')
       }
 
@@ -85,9 +89,9 @@ export default function ChatPage() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: hasApiKey
-          ? '申し訳ございません。一時的なエラーが発生しました。もう一度お試しください。'
-          : '⚠️ AI チャット機能を使用するには、環境変数 GOOGLE_AI_API_KEY を設定してください。\n\nGoogle AI Studio でAPIキーを取得できます。',
+        content: isConfigError
+          ? '⚠️ AIチャットを有効にするには、環境変数 GOOGLE_AI_API_KEY の設定が必要です。\n\nVercelのダッシュボード → Settings → Environment Variables から設定してください。\n\nAPIキーは Google AI Studio (aistudio.google.com) で無料取得できます。'
+          : '申し訳ございません。一時的なエラーが発生しました。もう一度お試しください。',
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
