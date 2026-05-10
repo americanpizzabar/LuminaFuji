@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', ui-sans-serif;
+  --font-noto-serif: 'Noto Serif JP', ui-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-zinc-950 text-zinc-100 antialiased;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    overscroll-behavior: none;
+  }
+
+  input, textarea, select {
+    @apply bg-zinc-800 text-zinc-100 border-zinc-700;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-zinc-950;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-700 rounded-full;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-zinc-900 border border-zinc-800 rounded-2xl;
+  }
+
+  .card-elevated {
+    @apply bg-zinc-800/50 border border-zinc-700/50 rounded-2xl;
+  }
+
+  .btn-gold {
+    @apply bg-gold-500 hover:bg-gold-400 text-zinc-950 font-semibold rounded-xl px-6 py-3 transition-all duration-200 active:scale-95;
+  }
+
+  .btn-outline {
+    @apply border border-zinc-700 hover:border-gold-500/50 hover:bg-zinc-800 text-zinc-300 rounded-xl px-6 py-3 transition-all duration-200 active:scale-95;
+  }
+
+  .section-title {
+    @apply font-serif text-sm tracking-widest text-gold-500 uppercase mb-3;
+  }
+
+  .page-container {
+    @apply max-w-[430px] mx-auto min-h-screen pb-24 px-4 pt-6;
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.15), 0 0 60px rgba(251, 191, 36, 0.05);
+  }
+
+  .range-gold::-webkit-slider-thumb {
+    @apply appearance-none w-5 h-5 rounded-full bg-gold-400 cursor-pointer shadow-gold;
+  }
+
+  .range-gold::-webkit-slider-runnable-track {
+    @apply rounded-full h-2;
+  }
+
+  .range-gold {
+    @apply appearance-none w-full h-2 rounded-full bg-zinc-700 outline-none cursor-pointer;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* PWA status bar safe area */
+@supports (padding: max(0px)) {
+  .pt-safe {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+  .pb-safe {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Lighting scene glow animation */
+@keyframes lightGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.light-glow {
+  animation: lightGlow 3s ease-in-out infinite;
+}
+
+/* Gradient text */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
