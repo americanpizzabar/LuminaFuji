@@ -1,246 +1,413 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Mail, Phone, Video, Building2, CheckCircle2, Clock } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Mail, Phone, Video, Building2, Star, Clock,
+  X, FileText, CheckCircle2, TrendingUp,
+} from 'lucide-react'
+import { useStore } from '@/lib/useStore'
+import { getStore, updateConsultRequest } from '@/lib/store'
+import type { ConsultRequest, ConsultStatus } from '@/lib/store'
 
-interface ConsultRequest {
-  id: string
-  name: string
-  email: string
-  phone?: string
-  profession: string
-  projectType: string
-  scale: string
-  budget: string
-  contactMethod: 'email' | 'phone' | 'online'
-  message: string
-  submittedAt: string
-  status: 'new' | 'inProgress' | 'done'
+type FilterStatus = 'all' | ConsultStatus
+
+const statusConfig: Record<ConsultStatus, { label: string; color: string; dot: string }> = {
+  new:       { label: '新着',   color: 'text-red-400 border-red-500/30 bg-red-500/10',       dot: 'bg-red-400' },
+  contacted: { label: '連絡済', color: 'text-amber-400 border-amber-500/30 bg-amber-500/10', dot: 'bg-amber-400' },
+  quoted:    { label: '見積済', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10',     dot: 'bg-blue-400' },
+  won:       { label: '受注',   color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10', dot: 'bg-emerald-400' },
+  lost:      { label: '失注',   color: 'text-zinc-400 border-zinc-600 bg-zinc-800',           dot: 'bg-zinc-500' },
 }
 
-const mockRequests: ConsultRequest[] = [
-  {
-    id: 'C-001',
-    name: '田中 拓也',
-    email: 'tanaka@architect.co.jp',
-    phone: '090-1234-5678',
-    profession: '建築家・設計士',
-    projectType: '商業施設',
-    scale: '500〜2000m²',
-    budget: '500〜1000万円',
-    contactMethod: 'online',
-    message: '美術館の照明リニューアルプロジェクトを検討中です。均一な面発光と高演色性が必須条件です。',
-    submittedAt: '2026-05-10 14:32',
-    status: 'new',
-  },
-  {
-    id: 'C-002',
-    name: 'Emma L.',
-    email: 'emma@design.co.uk',
-    profession: 'インテリアデザイナー',
-    projectType: 'ホテル・旅館',
-    scale: '100〜500m²',
-    budget: '100〜500万円',
-    contactMethod: 'email',
-    message: 'Boutique hotel renovation in Tokyo. Interested in Brite 3 and Luna Series for guest rooms.',
-    submittedAt: '2026-05-08 09:15',
-    status: 'inProgress',
-  },
-  {
-    id: 'C-003',
-    name: '山本 健一',
-    email: 'yamamoto@realestate.jp',
-    phone: '03-5555-XXXX',
-    profession: 'デベロッパー・施主',
-    projectType: '住宅',
-    scale: '〜100m²',
-    budget: '未定 / 相談したい',
-    contactMethod: 'phone',
-    message: '自宅のリノベーションに合わせて、有機EL照明を全室に導入したいと思っています。',
-    submittedAt: '2026-05-06 17:45',
-    status: 'done',
-  },
-  {
-    id: 'C-004',
-    name: 'Sara M.',
-    email: 'sara@gallery.com',
-    profession: 'インテリアデザイナー',
-    projectType: '美術館・ギャラリー',
-    scale: '100〜500m²',
-    budget: '500〜1000万円',
-    contactMethod: 'online',
-    message: 'Gallery lighting for contemporary art. UV-free and flicker-free is essential.',
-    submittedAt: '2026-05-05 11:20',
-    status: 'new',
-  },
-  {
-    id: 'C-005',
-    name: '鈴木 美咲',
-    email: 'suzuki@interior.jp',
-    profession: 'インテリアデザイナー',
-    projectType: 'オフィス',
-    scale: '100〜500m²',
-    budget: '100〜500万円',
-    contactMethod: 'email',
-    message: 'クリエイティブオフィスの照明設計。集中とリラックスを切り替えられる照明が必要です。',
-    submittedAt: '2026-05-03 15:00',
-    status: 'inProgress',
-  },
+const contactMethodConfig: Record<ConsultRequest['contactMethod'], { label: string; icon: typeof Mail }> = {
+  email:  { label: 'メール', icon: Mail },
+  phone:  { label: '電話',   icon: Phone },
+  online: { label: 'オンライン', icon: Video },
+}
+
+const filterTabs: { key: FilterStatus; label: string }[] = [
+  { key: 'all',       label: 'すべて' },
+  { key: 'new',       label: '新着' },
+  { key: 'contacted', label: '連絡済' },
+  { key: 'quoted',    label: '見積済' },
+  { key: 'won',       label: '受注' },
+  { key: 'lost',      label: '失注' },
 ]
 
-const statusConfig = {
-  new: { label: '新着', color: 'text-red-400 border-red-500/30 bg-red-500/10' },
-  inProgress: { label: '対応中', color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' },
-  done: { label: '完了', color: 'text-zinc-400 border-zinc-600 bg-zinc-800' },
+const productLabels: Record<string, string> = {
+  'brite-3':      'Brite 3',
+  'luna-series':  'Luna Series',
+  'aria-strip':   'Aria Strip',
+  'nexus-module': 'Nexus Module',
 }
 
-const contactIcon = { email: Mail, phone: Phone, online: Video }
+const STATUS_FLOW: ConsultStatus[] = ['new', 'contacted', 'quoted', 'won', 'lost']
 
 export default function ConsultsPage() {
-  const [requests, setRequests] = useState(mockRequests)
-  const [selected, setSelected] = useState<ConsultRequest | null>(null)
-  const [filter, setFilter] = useState<'all' | 'new' | 'inProgress' | 'done'>('all')
+  const [store, update] = useStore()
+  const [filter, setFilter] = useState<FilterStatus>('all')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [notesInput, setNotesInput] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [savedId, setSavedId] = useState<string | null>(null)
 
-  const filtered = filter === 'all' ? requests : requests.filter((r) => r.status === filter)
+  const requests = store.consultRequests
+  const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter)
+  const selected = requests.find(r => r.id === selectedId) ?? null
 
-  const updateStatus = (id: string, status: ConsultRequest['status']) => {
-    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)))
-    if (selected?.id === id) setSelected((prev) => prev ? { ...prev, status } : prev)
+  const totalCount = requests.length
+  const newCount = requests.filter(r => r.status === 'new').length
+  const wonCount = requests.filter(r => r.status === 'won').length
+  const conversionRate = totalCount > 0 ? Math.round((wonCount / totalCount) * 100) : 0
+
+  const openDetail = (req: ConsultRequest) => {
+    setSelectedId(req.id)
+    setNotesInput(req.ownerNotes ?? '')
+  }
+
+  const closeDetail = () => {
+    setSelectedId(null)
+    setNotesInput('')
+  }
+
+  const changeStatus = (id: string, status: ConsultStatus) => {
+    updateConsultRequest(id, { status })
+    update({ consultRequests: getStore().consultRequests })
+    if (selectedId === id) {
+      // keep modal open with updated state
+    }
+  }
+
+  const saveNotes = (id: string) => {
+    setSaving(true)
+    updateConsultRequest(id, { ownerNotes: notesInput })
+    update({ consultRequests: getStore().consultRequests })
+    setSavedId(id)
+    setTimeout(() => { setSaving(false); setSavedId(null) }, 1800)
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      <div className="mb-5">
-        <h1 className="text-xl font-medium text-zinc-100">照明コンサル相談</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">{requests.filter((r) => r.status === 'new').length} 件の未対応リクエスト</p>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-5"
+    >
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-medium text-zinc-100">リード管理 CRM</h1>
+        <p className="text-sm text-zinc-500 mt-0.5">照明コンサル相談・商談管理</p>
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2 mb-4">
-        {[
-          { key: 'all', label: 'すべて' },
-          { key: 'new', label: '新着' },
-          { key: 'inProgress', label: '対応中' },
-          { key: 'done', label: '完了' },
-        ].map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key as typeof filter)}
-            className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-all ${
-              filter === key
-                ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
-                : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Detail Modal */}
-      {selected && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setSelected(null)}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h2 className="font-medium text-zinc-100">{selected.name}</h2>
-                <p className="text-xs text-zinc-500">{selected.profession}</p>
-              </div>
-              <span className={`text-xs px-2 py-0.5 rounded-full border ${statusConfig[selected.status].color}`}>
-                {statusConfig[selected.status].label}
-              </span>
-            </div>
-            <div className="space-y-3 text-sm mb-5">
-              {[
-                { label: 'メール', value: selected.email },
-                selected.phone && { label: '電話', value: selected.phone },
-                { label: 'プロジェクト', value: selected.projectType },
-                { label: '規模', value: selected.scale },
-                { label: '予算', value: selected.budget },
-                { label: '希望連絡方法', value: { email: 'メール', phone: '電話', online: 'オンライン面談' }[selected.contactMethod] },
-              ].filter(Boolean).map((item: any) => (
-                <div key={item.label} className="flex gap-3">
-                  <span className="text-zinc-500 w-24 flex-shrink-0 text-xs">{item.label}</span>
-                  <span className="text-zinc-300 text-xs">{item.value}</span>
-                </div>
-              ))}
-              {selected.message && (
-                <div className="border-t border-zinc-800 pt-3">
-                  <p className="text-xs text-zinc-500 mb-1">メッセージ</p>
-                  <p className="text-xs text-zinc-300 leading-relaxed">{selected.message}</p>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              {selected.status !== 'inProgress' && (
-                <button
-                  onClick={() => updateStatus(selected.id, 'inProgress')}
-                  className="flex-1 py-2 border border-amber-500/30 bg-amber-500/10 text-amber-400 rounded-xl text-xs font-medium"
-                >
-                  対応中にする
-                </button>
-              )}
-              {selected.status !== 'done' && (
-                <button
-                  onClick={() => updateStatus(selected.id, 'done')}
-                  className="flex-1 py-2 border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 rounded-xl text-xs font-medium"
-                >
-                  完了にする
-                </button>
-              )}
-            </div>
-          </motion.div>
+      {/* Stats bar */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+          <p className="text-[10px] text-zinc-500 mb-1 uppercase tracking-wider">合計リード</p>
+          <p className="text-2xl font-light text-zinc-100">{totalCount}</p>
         </div>
-      )}
+        <div className="bg-zinc-900 border border-red-500/20 rounded-2xl p-4">
+          <p className="text-[10px] text-red-400 mb-1 uppercase tracking-wider">未対応</p>
+          <p className="text-2xl font-light text-red-400">{newCount}</p>
+        </div>
+        <div className="bg-zinc-900 border border-emerald-500/20 rounded-2xl p-4">
+          <div className="flex items-center gap-1 mb-1">
+            <TrendingUp size={10} className="text-emerald-400" />
+            <p className="text-[10px] text-emerald-400 uppercase tracking-wider">受注率</p>
+          </div>
+          <p className="text-2xl font-light text-emerald-400">{conversionRate}%</p>
+        </div>
+      </div>
 
-      {/* List */}
-      <div className="space-y-3">
-        {filtered.map((req, i) => {
-          const ContactIcon = contactIcon[req.contactMethod]
+      {/* Filter tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {filterTabs.map(({ key, label }) => {
+          const count = key === 'all' ? requests.length : requests.filter(r => r.status === key).length
           return (
-            <motion.div
-              key={req.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => setSelected(req)}
-              className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 cursor-pointer hover:border-zinc-700 transition-all"
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+                filter === key
+                  ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
+                  : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+              }`}
             >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0">
-                    <Building2 size={15} className="text-zinc-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-zinc-100">{req.name}</p>
-                    <p className="text-xs text-zinc-500">{req.profession}</p>
-                  </div>
-                </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full border flex-shrink-0 ${statusConfig[req.status].color}`}>
-                  {statusConfig[req.status].label}
+              {key !== 'all' && (
+                <span className={`w-1.5 h-1.5 rounded-full ${statusConfig[key as ConsultStatus].dot}`} />
+              )}
+              {label}
+              {count > 0 && (
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                  filter === key ? 'bg-blue-500/20 text-blue-300' : 'bg-zinc-800 text-zinc-500'
+                }`}>
+                  {count}
                 </span>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-zinc-500">
-                <span>{req.projectType} · {req.scale}</span>
-                <span className="flex items-center gap-1">
-                  <ContactIcon size={11} />
-                  {req.budget}
-                </span>
-              </div>
-              <div className="flex items-center gap-1 mt-1.5 text-xs text-zinc-600">
-                <Clock size={10} />
-                {req.submittedAt}
-              </div>
-            </motion.div>
+              )}
+            </button>
           )
         })}
       </div>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {selected && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+            onClick={closeDetail}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 40, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.97 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-zinc-900 border border-zinc-700 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto"
+            >
+              {/* Modal header */}
+              <div className="sticky top-0 bg-zinc-900 border-b border-zinc-800 px-5 py-4 flex items-start justify-between">
+                <div className="flex-1 min-w-0 pr-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="font-medium text-zinc-100">{selected.name}</h2>
+                    {selected.source === 'lumina_fuji_stay' && (
+                      <span className="flex items-center gap-1 text-[10px] text-amber-400 border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                        <Star size={8} className="fill-amber-400" /> 宿泊経験者
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-0.5">{selected.profession}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusConfig[selected.status].color}`}>
+                    {statusConfig[selected.status].label}
+                  </span>
+                  <button
+                    onClick={closeDetail}
+                    className="w-7 h-7 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-all"
+                  >
+                    <X size={13} className="text-zinc-400" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-5 space-y-5">
+                {/* Contact info */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-zinc-500 mb-1">メール</p>
+                    <p className="text-zinc-300 break-all">{selected.email}</p>
+                  </div>
+                  {selected.phone && (
+                    <div>
+                      <p className="text-zinc-500 mb-1">電話</p>
+                      <p className="text-zinc-300">{selected.phone}</p>
+                    </div>
+                  )}
+                  {selected.company && (
+                    <div>
+                      <p className="text-zinc-500 mb-1">会社・事務所</p>
+                      <p className="text-zinc-300">{selected.company}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-zinc-500 mb-1">希望連絡方法</p>
+                    <div className="flex items-center gap-1 text-zinc-300">
+                      {(() => {
+                        const cfg = contactMethodConfig[selected.contactMethod]
+                        const Icon = cfg.icon
+                        return <><Icon size={11} /> {cfg.label}</>
+                      })()}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-zinc-500 mb-1">提出日時</p>
+                    <p className="text-zinc-300">{selected.submittedAt}</p>
+                  </div>
+                </div>
+
+                {/* Project details */}
+                <div className="bg-zinc-800/50 rounded-xl p-4 grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-zinc-500 mb-1">プロジェクト種別</p>
+                    <p className="text-zinc-200 font-medium">{selected.projectType}</p>
+                  </div>
+                  <div>
+                    <p className="text-zinc-500 mb-1">規模</p>
+                    <p className="text-zinc-200">{selected.scale}</p>
+                  </div>
+                  <div>
+                    <p className="text-zinc-500 mb-1">予算感</p>
+                    <p className="text-zinc-200">{selected.budget}</p>
+                  </div>
+                  {selected.timeline && (
+                    <div>
+                      <p className="text-zinc-500 mb-1">希望時期</p>
+                      <p className="text-zinc-200">{selected.timeline}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Interested products */}
+                {selected.interestedProducts.length > 0 && (
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-2">興味のある製品</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selected.interestedProducts.map(pid => (
+                        <span key={pid} className="text-xs px-2.5 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300">
+                          {productLabels[pid] ?? pid}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Message */}
+                <div>
+                  <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1">
+                    <FileText size={11} /> ご要望・メッセージ
+                  </p>
+                  <div className="bg-zinc-800/50 rounded-xl p-3">
+                    <p className="text-xs text-zinc-300 leading-relaxed">{selected.message}</p>
+                  </div>
+                </div>
+
+                {/* Owner notes */}
+                <div>
+                  <p className="text-xs text-zinc-500 mb-2">オーナーメモ</p>
+                  <textarea
+                    value={notesInput}
+                    onChange={e => setNotesInput(e.target.value)}
+                    placeholder="対応履歴・メモを記入..."
+                    rows={3}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/40 transition-all resize-none"
+                  />
+                  <button
+                    onClick={() => saveNotes(selected.id)}
+                    disabled={saving}
+                    className="mt-2 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all disabled:opacity-50"
+                  >
+                    {savedId === selected.id ? (
+                      <><CheckCircle2 size={11} /> 保存しました</>
+                    ) : (
+                      'メモを保存'
+                    )}
+                  </button>
+                </div>
+
+                {/* Status change */}
+                <div>
+                  <p className="text-xs text-zinc-500 mb-2">ステータス変更</p>
+                  <div className="flex flex-wrap gap-2">
+                    {STATUS_FLOW.map(s => (
+                      <button
+                        key={s}
+                        onClick={() => changeStatus(selected.id, s)}
+                        disabled={selected.status === s}
+                        className={`text-xs px-3 py-1.5 rounded-xl border transition-all ${
+                          selected.status === s
+                            ? `${statusConfig[s].color} cursor-default`
+                            : 'border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
+                        }`}
+                      >
+                        {statusConfig[s].label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Card list */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-zinc-600 text-sm">
+          <Building2 size={32} className="mx-auto mb-3 opacity-30" />
+          <p>該当するリードはありません</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((req, i) => {
+            const cfg = statusConfig[req.status]
+            const ContactIcon = contactMethodConfig[req.contactMethod].icon
+            return (
+              <motion.div
+                key={req.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                onClick={() => openDetail(req)}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 cursor-pointer hover:border-zinc-700 transition-all active:scale-[0.99]"
+              >
+                <div className="flex items-start justify-between gap-2 mb-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                      <Building2 size={15} className="text-zinc-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-medium text-zinc-100">{req.name}</p>
+                        {req.source === 'lumina_fuji_stay' && (
+                          <Star size={11} className="text-amber-400 fill-amber-400 flex-shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-500">{req.profession}</p>
+                      {req.company && (
+                        <p className="text-xs text-zinc-600">{req.company}</p>
+                      )}
+                    </div>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 ${cfg.color}`}>
+                    {cfg.label}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3 text-xs text-zinc-500 flex-wrap">
+                  <span>{req.projectType}</span>
+                  <span className="text-zinc-700">·</span>
+                  <span>{req.scale}</span>
+                  <span className="text-zinc-700">·</span>
+                  <span>{req.budget}</span>
+                </div>
+
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-1 text-[10px] text-zinc-600">
+                    <Clock size={9} />
+                    {req.submittedAt}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <ContactIcon size={11} className="text-zinc-600" />
+                    {req.interestedProducts.length > 0 && (
+                      <div className="flex gap-1">
+                        {req.interestedProducts.slice(0, 2).map(pid => (
+                          <span key={pid} className="text-[10px] px-1.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400">
+                            {productLabels[pid] ?? pid}
+                          </span>
+                        ))}
+                        {req.interestedProducts.length > 2 && (
+                          <span className="text-[10px] text-zinc-600">+{req.interestedProducts.length - 2}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {req.ownerNotes && (
+                  <div className="mt-2.5 p-2 bg-zinc-800/50 rounded-lg">
+                    <p className="text-[10px] text-zinc-500 leading-relaxed line-clamp-1">
+                      メモ: {req.ownerNotes}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )
+          })}
+        </div>
+      )}
     </motion.div>
   )
 }

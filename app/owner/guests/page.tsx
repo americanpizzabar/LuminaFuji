@@ -1,0 +1,565 @@
+'use client'
+
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Users, Wrench, MessageSquare, CheckCircle2, Clock,
+  AlertTriangle, Send, ChevronDown, ChevronUp, Calendar,
+  Bed, DollarSign, Filter,
+} from 'lucide-react'
+import { useStore } from '@/lib/useStore'
+import {
+  getStore, updateServiceRequest, updateMaintenanceItem,
+  sendMessage as storeSendMessage,
+} from '@/lib/store'
+import type { BookingRecord, ServiceRequest, MaintenanceItem } from '@/lib/store'
+
+type BookingFilter = 'all' | 'staying' | 'confirmed' | 'completed'
+type ActiveSection = 'bookings' | 'requests' | 'messages' | 'maintenance'
+
+const bookingStatusConfig: Record<BookingRecord['status'], { label: string; color: string }> = {
+  staying:   { label: '滞在中',     color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' },
+  confirmed: { label: '予約済',     color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' },
+  completed: { label: '完了',       color: 'text-zinc-400 border-zinc-600 bg-zinc-800' },
+  cancelled: { label: 'キャンセル', color: 'text-red-400 border-red-500/30 bg-red-500/10' },
+}
+
+const serviceTypeEmoji: Record<ServiceRequest['type'], string> = {
+  towels:      '🛁',
+  amenities:   '🧴',
+  temperature: '🌡️',
+  maintenance: '🔧',
+  taxi:        '🚕',
+  other:       '💬',
+}
+
+const serviceStatusConfig: Record<ServiceRequest['status'], { label: string; color: string }> = {
+  pending:    { label: '未対応',  color: 'text-red-400 border-red-500/30 bg-red-500/10' },
+  inProgress: { label: '対応中', color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' },
+  done:       { label: '完了',   color: 'text-zinc-400 border-zinc-600 bg-zinc-800' },
+}
+
+const maintenancePriorityConfig: Record<MaintenanceItem['priority'], { label: string; color: string }> = {
+  low:    { label: '低',   color: 'text-zinc-400 border-zinc-700 bg-zinc-800' },
+  medium: { label: '中',   color: 'text-amber-400 border-amber-500/30 bg-amber-500/10' },
+  urgent: { label: '緊急', color: 'text-red-400 border-red-500/30 bg-red-500/10' },
+}
+
+const maintenanceStatusConfig: Record<MaintenanceItem['status'], { label: string; color: string }> = {
+  open:      { label: 'オープン', color: 'text-red-400 border-red-500/30 bg-red-500/10' },
+  scheduled: { label: '予定済み', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' },
+  done:      { label: '完了',     color: 'text-zinc-400 border-zinc-600 bg-zinc-800' },
+}
+
+const platformBadge: Record<string, { label: string; color: string }> = {
+  Airbnb:        { label: 'Airbnb',       color: 'text-rose-400 border-rose-500/30 bg-rose-500/10' },
+  'Booking.com': { label: 'Booking.com',  color: 'text-blue-400 border-blue-500/30 bg-blue-500/10' },
+  direct:        { label: 'ダイレクト',   color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' },
+  other:         { label: 'その他',       color: 'text-zinc-400 border-zinc-700 bg-zinc-800' },
+}
+
+const bookingFilterTabs: { key: BookingFilter; label: string }[] = [
+  { key: 'all',       label: 'すべて' },
+  { key: 'staying',   label: '滞在中' },
+  { key: 'confirmed', label: '予約済' },
+  { key: 'completed', label: '完了' },
+]
+
+export default function GuestsPage() {
+  const [store, update] = useStore()
+  const [bookingFilter, setBookingFilter] = useState<BookingFilter>('all')
+  const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null)
+  const [msgInput, setMsgInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const [activeSection, setActiveSection] = useState<ActiveSection>('bookings')
+
+  const filteredBookings =
+    bookingFilter === 'all'
+      ? store.bookingHistory
+      : store.bookingHistory.filter(b => b.status === bookingFilter)
+
+  const pendingRequestsCount = store.serviceRequests.filter(r => r.status !== 'done').length
+  const unreadMsgCount = store.messages.filter(m => m.from === 'guest' && !m.readByOwner).length
+  const openMaintenanceCount = store.maintenanceItems.filter(m => m.status !== 'done').length
+
+  const resolveServiceRequest = (id: string) => {
+    updateServiceRequest(id, { status: 'done', resolvedAt: new Date().toISOString() })
+    update({ serviceRequests: getStore().serviceRequests })
+  }
+
+  const inProgressServiceRequest = (id: string) => {
+    updateServiceRequest(id, { status: 'inProgress' })
+    update({ serviceRequests: getStore().serviceRequests })
+  }
+
+  const resolveMaintenanceItem = (id: string) => {
+    updateMaintenanceItem(id, { status: 'done', doneAt: new Date().toISOString() })
+    update({ maintenanceItems: getStore().maintenanceItems })
+  }
+
+  const scheduleMaintenanceItem = (id: string) => {
+    updateMaintenanceItem(id, { status: 'scheduled' })
+    update({ maintenanceItems: getStore().maintenanceItems })
+  }
+
+  const sendOwnerMessage = () => {
+    if (!msgInput.trim()) return
+    setSending(true)
+    storeSendMessage('owner', msgInput.trim())
+    update({ messages: getStore().messages })
+    setMsgInput('')
+    setSending(false)
+  }
+
+  const sectionTabs: { key: ActiveSection; label: string; count?: number }[] = [
+    { key: 'bookings',    label: '予約',       count: store.bookingHistory.length },
+    { key: 'requests',    label: 'リクエスト', count: pendingRequestsCount },
+    { key: 'messages',    label: 'メッセージ', count: unreadMsgCount },
+    { key: 'maintenance', label: 'メンテナンス', count: openMaintenanceCount },
+  ]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="space-y-5"
+    >
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-medium text-zinc-100">ゲスト管理</h1>
+        <p className="text-sm text-zinc-500 mt-0.5">予約・リクエスト・メッセージ・メンテナンス</p>
+      </div>
+
+      {/* Section tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {sectionTabs.map(({ key, label, count }) => (
+          <button
+            key={key}
+            onClick={() => setActiveSection(key)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
+              activeSection === key
+                ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
+                : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+            }`}
+          >
+            {label}
+            {typeof count === 'number' && count > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                activeSection === key ? 'bg-blue-500/20 text-blue-300' : 'bg-zinc-800 text-zinc-500'
+              }`}>
+                {count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+
+        {/* ── BOOKINGS ── */}
+        {activeSection === 'bookings' && (
+          <motion.div
+            key="bookings"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center gap-2">
+              <Filter size={12} className="text-zinc-500" />
+              <div className="flex gap-2 flex-wrap">
+                {bookingFilterTabs.map(({ key, label }) => {
+                  const count =
+                    key === 'all'
+                      ? store.bookingHistory.length
+                      : store.bookingHistory.filter(b => b.status === key).length
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setBookingFilter(key)}
+                      className={`px-3 py-1 rounded-xl border text-xs transition-all ${
+                        bookingFilter === key
+                          ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
+                          : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'
+                      }`}
+                    >
+                      {label}
+                      <span className="ml-1.5 opacity-60">{count}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {filteredBookings.length === 0 ? (
+              <div className="text-center py-12 text-zinc-600 text-sm">
+                <Users size={32} className="mx-auto mb-3 opacity-30" />
+                該当する予約はありません
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredBookings.map((booking, i) => {
+                  const statusCfg = bookingStatusConfig[booking.status]
+                  const platCfg = platformBadge[booking.platform] ?? platformBadge.other
+                  const isExpanded = expandedBookingId === booking.id
+                  return (
+                    <motion.div
+                      key={booking.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden"
+                    >
+                      <button
+                        onClick={() => setExpandedBookingId(isExpanded ? null : booking.id)}
+                        className="w-full p-4 text-left hover:bg-zinc-800/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl flex-shrink-0">{booking.flag}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-medium text-zinc-100">{booking.guestName}</span>
+                              <span className="text-xs text-zinc-500">{booking.nationality}</span>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full border ml-auto ${statusCfg.color}`}>
+                                {statusCfg.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <Calendar size={10} />
+                                {booking.checkIn} → {booking.checkOut}
+                              </span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded border ${platCfg.color}`}>
+                                {platCfg.label}
+                              </span>
+                            </div>
+                          </div>
+                          {isExpanded
+                            ? <ChevronUp size={14} className="text-zinc-500 flex-shrink-0" />
+                            : <ChevronDown size={14} className="text-zinc-500 flex-shrink-0" />
+                          }
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="border-t border-zinc-800 px-4 py-4">
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                                <div>
+                                  <p className="text-zinc-500">チェックイン</p>
+                                  <p className="text-zinc-200 mt-0.5 font-medium">{booking.checkIn}</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500">チェックアウト</p>
+                                  <p className="text-zinc-200 mt-0.5 font-medium">{booking.checkOut}</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500 flex items-center gap-1">
+                                    <Users size={10} /> 大人 / 子供
+                                  </p>
+                                  <p className="text-zinc-200 mt-0.5">{booking.adults}名 / {booking.children}名</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500 flex items-center gap-1">
+                                    <Bed size={10} /> 宿泊数
+                                  </p>
+                                  <p className="text-zinc-200 mt-0.5">{booking.nights}泊</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500 flex items-center gap-1">
+                                    <DollarSign size={10} /> 売上
+                                  </p>
+                                  <p className="text-zinc-200 mt-0.5 font-medium">¥{booking.revenue.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-zinc-500">予約ID</p>
+                                  <p className="text-zinc-400 mt-0.5 font-mono text-[10px]">{booking.id}</p>
+                                </div>
+                              </div>
+                              {booking.notes && (
+                                <div className="mt-3 p-3 bg-zinc-800/50 rounded-xl">
+                                  <p className="text-xs text-zinc-500 mb-1">メモ</p>
+                                  <p className="text-xs text-zinc-300">{booking.notes}</p>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ── SERVICE REQUESTS ── */}
+        {activeSection === 'requests' && (
+          <motion.div
+            key="requests"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="space-y-3"
+          >
+            {store.serviceRequests.length === 0 ? (
+              <div className="text-center py-12 text-zinc-600 text-sm">
+                <CheckCircle2 size={32} className="mx-auto mb-3 opacity-30" />
+                <p>サービスリクエストはありません</p>
+              </div>
+            ) : (
+              store.serviceRequests.map((req, i) => {
+                const sCfg = serviceStatusConfig[req.status]
+                const emoji = serviceTypeEmoji[req.type]
+                return (
+                  <motion.div
+                    key={req.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className={`bg-zinc-900 border rounded-2xl p-4 transition-all ${
+                      req.status === 'done' ? 'border-zinc-800 opacity-60' : 'border-zinc-700'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-lg flex-shrink-0">
+                        {emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium text-zinc-100">{req.label}</span>
+                          {req.priority === 'urgent' && (
+                            <span className="flex items-center gap-1 text-[10px] text-red-400 border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 rounded-full">
+                              <AlertTriangle size={9} /> 急ぎ
+                            </span>
+                          )}
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full border ml-auto ${sCfg.color}`}>
+                            {sCfg.label}
+                          </span>
+                        </div>
+                        {req.description && req.description !== req.label && (
+                          <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{req.description}</p>
+                        )}
+                        <div className="flex items-center gap-1 mt-1">
+                          <Clock size={9} className="text-zinc-600" />
+                          <span className="text-[10px] text-zinc-600">
+                            {new Date(req.createdAt).toLocaleString('ja-JP', {
+                              month: 'numeric', day: 'numeric',
+                              hour: '2-digit', minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+                        {req.status !== 'done' && (
+                          <div className="flex gap-2 mt-3">
+                            {req.status === 'pending' && (
+                              <button
+                                onClick={() => inProgressServiceRequest(req.id)}
+                                className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all"
+                              >
+                                対応中にする
+                              </button>
+                            )}
+                            <button
+                              onClick={() => resolveServiceRequest(req.id)}
+                              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                            >
+                              <CheckCircle2 size={11} /> 解決済み
+                            </button>
+                          </div>
+                        )}
+                        {req.status === 'done' && req.resolvedAt && (
+                          <p className="text-[10px] text-zinc-600 mt-2">
+                            解決:{' '}
+                            {new Date(req.resolvedAt).toLocaleString('ja-JP', {
+                              month: 'numeric', day: 'numeric',
+                              hour: '2-digit', minute: '2-digit',
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })
+            )}
+          </motion.div>
+        )}
+
+        {/* ── MESSAGES ── */}
+        {activeSection === 'messages' && (
+          <motion.div
+            key="messages"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="space-y-4"
+          >
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-zinc-800 flex items-center gap-2">
+                <MessageSquare size={14} className="text-blue-400" />
+                <span className="text-sm font-medium text-zinc-200">ゲストとのメッセージ</span>
+                {unreadMsgCount > 0 && (
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400">
+                    未読 {unreadMsgCount}件
+                  </span>
+                )}
+              </div>
+
+              <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+                {store.messages.length === 0 ? (
+                  <p className="text-center text-zinc-600 text-sm py-8">メッセージはありません</p>
+                ) : (
+                  store.messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.from === 'owner' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                        msg.from === 'owner'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-zinc-800 text-zinc-200'
+                      }`}>
+                        <p className="text-xs leading-relaxed">{msg.content}</p>
+                        <div className={`flex items-center gap-1.5 mt-1 ${
+                          msg.from === 'owner' ? 'justify-end' : 'justify-start'
+                        }`}>
+                          <span className={`text-[10px] ${
+                            msg.from === 'owner' ? 'text-blue-200' : 'text-zinc-500'
+                          }`}>
+                            {msg.from === 'owner' ? 'オーナー' : 'ゲスト'} · {msg.createdAt}
+                          </span>
+                          {msg.from === 'owner' && (
+                            <span className={`text-[9px] ${
+                              msg.readByGuest ? 'text-blue-200' : 'text-blue-400/50'
+                            }`}>
+                              {msg.readByGuest ? '既読' : '未読'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="p-4 border-t border-zinc-800">
+                <div className="flex gap-2">
+                  <input
+                    value={msgInput}
+                    onChange={e => setMsgInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendOwnerMessage()}
+                    placeholder="ゲストへメッセージを送信..."
+                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/40 transition-all"
+                  />
+                  <button
+                    onClick={sendOwnerMessage}
+                    disabled={!msgInput.trim() || sending}
+                    className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 flex items-center justify-center transition-all disabled:opacity-40 flex-shrink-0"
+                  >
+                    <Send size={14} className="text-white" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── MAINTENANCE ── */}
+        {activeSection === 'maintenance' && (
+          <motion.div
+            key="maintenance"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="space-y-3"
+          >
+            {store.maintenanceItems.length === 0 ? (
+              <div className="text-center py-12 text-zinc-600 text-sm">
+                <Wrench size={32} className="mx-auto mb-3 opacity-30" />
+                <p>メンテナンス案件はありません</p>
+              </div>
+            ) : (
+              store.maintenanceItems.map((item, i) => {
+                const priCfg = maintenancePriorityConfig[item.priority]
+                const staCfg = maintenanceStatusConfig[item.status]
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className={`bg-zinc-900 border rounded-2xl p-4 transition-all ${
+                      item.status === 'done' ? 'border-zinc-800 opacity-60' : 'border-zinc-700'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                        <Wrench size={15} className="text-zinc-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium text-zinc-100">{item.description}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${priCfg.color}`}>
+                            {priCfg.label}
+                          </span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ml-auto ${staCfg.color}`}>
+                            {staCfg.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-[10px] text-zinc-500">
+                          <span>{item.area}</span>
+                          <span>
+                            報告者:{' '}
+                            {item.reportedBy === 'guest'
+                              ? 'ゲスト'
+                              : item.reportedBy === 'owner'
+                              ? 'オーナー'
+                              : '管理会社'}
+                          </span>
+                          <span>{new Date(item.reportedAt).toLocaleDateString('ja-JP')}</span>
+                        </div>
+                        {item.status !== 'done' && (
+                          <div className="flex gap-2 mt-3">
+                            {item.status === 'open' && (
+                              <button
+                                onClick={() => scheduleMaintenanceItem(item.id)}
+                                className="text-xs px-3 py-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
+                              >
+                                予定に入れる
+                              </button>
+                            )}
+                            <button
+                              onClick={() => resolveMaintenanceItem(item.id)}
+                              className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"
+                            >
+                              <CheckCircle2 size={11} /> 完了
+                            </button>
+                          </div>
+                        )}
+                        {item.status === 'done' && item.doneAt && (
+                          <p className="text-[10px] text-zinc-600 mt-2">
+                            完了: {new Date(item.doneAt).toLocaleDateString('ja-JP')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })
+            )}
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+    </motion.div>
+  )
+}

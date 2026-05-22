@@ -1,36 +1,21 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { getStore, setPhase as storeSetPhase, setGuestInfo as storeSetGuestInfo, GuestInfo, GuestPhase } from './store'
 
-export type GuestPhase = 'booked' | 'staying' | 'post'
-
-interface GuestInfo {
-  name: string
-  email: string
-  checkIn: string
-  checkOut: string
-  reservationId: string
-}
+export type { GuestPhase }
+export type { GuestInfo }
 
 interface PhaseContextValue {
   phase: GuestPhase
   setPhase: (phase: GuestPhase) => void
   guestInfo: GuestInfo | null
   setGuestInfo: (info: GuestInfo) => void
-  isDemo: boolean
   isLoggedIn: boolean
   logout: () => void
 }
 
 const PhaseContext = createContext<PhaseContextValue | null>(null)
-
-const DEMO_GUEST: GuestInfo = {
-  name: 'Yamada Taro',
-  email: 'guest@example.com',
-  checkIn: '2026-05-10',
-  checkOut: '2026-05-12',
-  reservationId: 'LF-2026-0510',
-}
 
 export function PhaseProvider({ children }: { children: React.ReactNode }) {
   const [phase, setPhaseState] = useState<GuestPhase>('staying')
@@ -39,40 +24,38 @@ export function PhaseProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const storedPhase = localStorage.getItem('lf_phase') as GuestPhase | null
-    const storedGuest = localStorage.getItem('lf_guest')
-    const storedLogin = localStorage.getItem('lf_logged_in')
+    const store = getStore()
+    setPhaseState(store.phase)
+    setGuestInfoState(store.guestInfo)
+    setIsLoggedIn(!!store.guestInfo)
 
-    if (storedPhase) setPhaseState(storedPhase)
-    if (storedGuest) setGuestInfoState(JSON.parse(storedGuest))
-    if (storedLogin === 'true') setIsLoggedIn(true)
-
-    if (!storedLogin && !storedGuest) {
-      setGuestInfoState(DEMO_GUEST)
-      setIsLoggedIn(true)
-      localStorage.setItem('lf_guest', JSON.stringify(DEMO_GUEST))
-      localStorage.setItem('lf_logged_in', 'true')
-      localStorage.setItem('lf_phase', 'staying')
+    // Listen for store changes from other tabs or owner dashboard
+    const handler = (e: StorageEvent) => {
+      if (e.key === 'lf_store_v3' && e.newValue) {
+        try {
+          const updated = JSON.parse(e.newValue)
+          if (updated.phase) setPhaseState(updated.phase)
+          if (updated.guestInfo !== undefined) setGuestInfoState(updated.guestInfo)
+        } catch {}
+      }
     }
+    window.addEventListener('storage', handler)
     setMounted(true)
+    return () => window.removeEventListener('storage', handler)
   }, [])
 
   const setPhase = (p: GuestPhase) => {
     setPhaseState(p)
-    localStorage.setItem('lf_phase', p)
+    storeSetPhase(p)
   }
 
   const setGuestInfo = (info: GuestInfo) => {
     setGuestInfoState(info)
-    localStorage.setItem('lf_guest', JSON.stringify(info))
     setIsLoggedIn(true)
-    localStorage.setItem('lf_logged_in', 'true')
+    storeSetGuestInfo(info)
   }
 
   const logout = () => {
-    localStorage.removeItem('lf_guest')
-    localStorage.removeItem('lf_logged_in')
-    localStorage.removeItem('lf_phase')
     setIsLoggedIn(false)
     setGuestInfoState(null)
   }
@@ -80,15 +63,7 @@ export function PhaseProvider({ children }: { children: React.ReactNode }) {
   if (!mounted) return null
 
   return (
-    <PhaseContext.Provider value={{
-      phase,
-      setPhase,
-      guestInfo,
-      setGuestInfo,
-      isDemo: process.env.NEXT_PUBLIC_DEMO_MODE === 'true',
-      isLoggedIn,
-      logout,
-    }}>
+    <PhaseContext.Provider value={{ phase, setPhase, guestInfo, setGuestInfo, isLoggedIn, logout }}>
       {children}
     </PhaseContext.Provider>
   )
