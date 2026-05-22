@@ -2,104 +2,91 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ChevronDown, Wifi, Car, Coffee, Clock, Phone, Info } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Wifi, Coffee, Clock, Phone, Info } from 'lucide-react'
 import Link from 'next/link'
+import { useLanguage } from '@/lib/useLanguage'
+import { useStore } from '@/lib/useStore'
 
 interface GuideSection {
   id: string
   icon: React.ReactNode
-  title: string
-  items: { label: string; value: string }[]
+  titleKey: string
+  items: { labelKey: string; valueKey: string; dynamic?: boolean }[]
 }
 
-const guideSections: GuideSection[] = [
+const GUIDE_SECTIONS: GuideSection[] = [
   {
-    id: 'basics',
-    icon: <Clock size={16} />,
-    title: 'チェックイン / アウト',
+    id: 'basics', icon: <Clock size={16} />, titleKey: 'guide.sections.basics',
     items: [
-      { label: 'チェックイン', value: '16:00〜22:00' },
-      { label: 'チェックアウト', value: '〜11:00' },
-      { label: '延長', value: '事前にご相談ください' },
-      { label: 'セルフチェックイン', value: 'スマートロック対応' },
+      { labelKey: 'guide.items.checkin', valueKey: 'guide.items.checkinVal' },
+      { labelKey: 'guide.items.checkout', valueKey: 'guide.items.checkoutVal' },
+      { labelKey: 'guide.items.extension', valueKey: 'guide.items.extensionVal' },
+      { labelKey: 'guide.items.selfCheckin', valueKey: 'guide.items.selfCheckinVal' },
     ],
   },
   {
-    id: 'wifi',
-    icon: <Wifi size={16} />,
-    title: 'Wi-Fi / インターネット',
+    id: 'wifi', icon: <Wifi size={16} />, titleKey: 'guide.sections.wifi',
     items: [
-      { label: 'ネットワーク名', value: 'LuminaFuji_5G' },
-      { label: 'パスワード', value: 'fuji2024view' },
-      { label: '速度', value: '最大 1Gbps (光回線)' },
-      { label: 'デバイス数', value: '無制限' },
+      { labelKey: 'guide.items.networkName', valueKey: '__wifiName__', dynamic: true },
+      { labelKey: 'guide.items.password', valueKey: '__wifiPassword__', dynamic: true },
+      { labelKey: 'guide.items.speed', valueKey: 'guide.items.speedVal' },
+      { labelKey: 'guide.items.devices', valueKey: 'guide.items.devicesVal' },
     ],
   },
   {
-    id: 'amenities',
-    icon: <Coffee size={16} />,
-    title: 'アメニティ / 設備',
+    id: 'amenities', icon: <Coffee size={16} />, titleKey: 'guide.sections.amenities',
     items: [
-      { label: 'キッチン', value: 'IH コンロ 2口、電子レンジ、炊飯器' },
-      { label: 'バスルーム', value: 'シャワー、バスタブ、ドライヤー' },
-      { label: '寝具', value: 'シモンズ製ベッド、羽毛布団' },
-      { label: 'ランドリー', value: 'ドラム式洗濯乾燥機' },
-      { label: 'エアコン', value: '全室完備 (床暖房あり)' },
-      { label: '駐車場', value: '2台分（無料）' },
-      { label: 'BBQ', value: '庭でのバーベキュー可（要事前連絡）' },
-      { label: 'ペット', value: '不可' },
+      { labelKey: 'guide.items.kitchen', valueKey: 'guide.items.kitchenVal' },
+      { labelKey: 'guide.items.bathroom', valueKey: 'guide.items.bathroomVal' },
+      { labelKey: 'guide.items.bedding', valueKey: 'guide.items.beddingVal' },
+      { labelKey: 'guide.items.laundry', valueKey: 'guide.items.laundryVal' },
+      { labelKey: 'guide.items.ac', valueKey: 'guide.items.acVal' },
+      { labelKey: 'guide.items.parking', valueKey: 'guide.items.parkingVal' },
+      { labelKey: 'guide.items.bbq', valueKey: 'guide.items.bbqVal' },
+      { labelKey: 'guide.items.pets', valueKey: 'guide.items.petsVal' },
     ],
   },
   {
-    id: 'lighting',
-    icon: <span className="text-sm">✦</span>,
-    title: 'ECUANEST 照明の使い方',
+    id: 'lighting', icon: <span className="text-sm">✦</span>, titleKey: 'guide.sections.lighting',
     items: [
-      { label: '操作方法', value: 'このアプリの「照明」タブから操作' },
-      { label: '対応エリア', value: 'リビング・寝室・バスルーム・エントランス' },
-      { label: 'プリセット', value: '夜明け・朝・昼・夕暮れ・くつろぎ・読書・就寝' },
-      { label: '色温度', value: '2,700K〜6,500K 無段階調整' },
-      { label: 'ご注意', value: '照明機器には直接触れないでください' },
+      { labelKey: 'guide.items.operation', valueKey: 'guide.items.operationVal' },
+      { labelKey: 'guide.items.coverage', valueKey: 'guide.items.coverageVal' },
+      { labelKey: 'guide.items.presets', valueKey: 'guide.items.presetsVal' },
+      { labelKey: 'guide.items.colorTemp', valueKey: 'guide.items.colorTempVal' },
+      { labelKey: 'guide.items.caution', valueKey: 'guide.items.cautionVal' },
     ],
   },
   {
-    id: 'rules',
-    icon: <Info size={16} />,
-    title: '利用上のルール',
+    id: 'rules', icon: <Info size={16} />, titleKey: 'guide.sections.rules',
     items: [
-      { label: '禁煙', value: '屋内全面禁煙（屋外喫煙可）' },
-      { label: '騒音', value: '22:00〜8:00 は静粛に' },
-      { label: 'ゴミ', value: '分別の上、所定の場所へ' },
-      { label: '火気', value: '指定場所以外での火気使用禁止' },
-      { label: '追加ゲスト', value: '届出以外のゲスト宿泊不可' },
+      { labelKey: 'guide.items.noSmoking', valueKey: 'guide.items.noSmokingVal' },
+      { labelKey: 'guide.items.noise', valueKey: 'guide.items.noiseVal' },
+      { labelKey: 'guide.items.trash', valueKey: 'guide.items.trashVal' },
+      { labelKey: 'guide.items.fire', valueKey: 'guide.items.fireVal' },
+      { labelKey: 'guide.items.extraGuests', valueKey: 'guide.items.extraGuestsVal' },
     ],
   },
   {
-    id: 'contact',
-    icon: <Phone size={16} />,
-    title: '緊急連絡先',
+    id: 'contact', icon: <Phone size={16} />, titleKey: 'guide.sections.contact',
     items: [
-      { label: 'ホスト', value: '+81-555-XX-XXXX' },
-      { label: '警察', value: '110' },
-      { label: '消防・救急', value: '119' },
-      { label: '最寄り病院', value: '山中湖村立病院（車5分）' },
+      { labelKey: 'guide.items.host', valueKey: '__ownerPhone__', dynamic: true },
+      { labelKey: 'guide.items.police', valueKey: 'guide.items.policeVal' },
+      { labelKey: 'guide.items.ambulance', valueKey: 'guide.items.ambulanceVal' },
+      { labelKey: 'guide.items.hospital', valueKey: 'guide.items.hospitalVal' },
     ],
   },
 ]
 
-function AccordionItem({ section }: { section: GuideSection }) {
+function AccordionItem({ section, t, dynamicValues }: { section: GuideSection; t: (k: string) => string; dynamicValues: Record<string, string> }) {
   const [open, setOpen] = useState(false)
 
   return (
     <div className="card overflow-hidden mb-3">
-      <button
-        className="w-full flex items-center gap-3 px-5 py-4 text-left"
-        onClick={() => setOpen(!open)}
-      >
+      <button className="w-full flex items-center gap-3 px-5 py-4 text-left" onClick={() => setOpen(!open)}>
         <div className="w-8 h-8 rounded-xl bg-zinc-800 flex items-center justify-center text-gold-400 flex-shrink-0">
           {section.icon}
         </div>
-        <span className="flex-1 text-sm font-medium text-zinc-200">{section.title}</span>
+        <span className="flex-1 text-sm font-medium text-zinc-200">{t(section.titleKey)}</span>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
           <ChevronDown size={16} className="text-zinc-500" />
         </motion.div>
@@ -116,10 +103,12 @@ function AccordionItem({ section }: { section: GuideSection }) {
           >
             <div className="px-5 pb-4 border-t border-zinc-800">
               <div className="divide-y divide-zinc-800/50">
-                {section.items.map(({ label, value }) => (
-                  <div key={label} className="flex gap-3 py-3">
-                    <span className="text-xs text-zinc-500 flex-shrink-0 w-24 leading-relaxed">{label}</span>
-                    <span className="text-xs text-zinc-300 leading-relaxed">{value}</span>
+                {section.items.map(({ labelKey, valueKey, dynamic }) => (
+                  <div key={labelKey} className="flex gap-3 py-3">
+                    <span className="text-xs text-zinc-500 flex-shrink-0 w-24 leading-relaxed">{t(labelKey)}</span>
+                    <span className="text-xs text-zinc-300 leading-relaxed">
+                      {dynamic ? (dynamicValues[valueKey] ?? '') : t(valueKey)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -132,6 +121,14 @@ function AccordionItem({ section }: { section: GuideSection }) {
 }
 
 export default function GuidePage() {
+  const { t } = useLanguage()
+  const [store] = useStore()
+  const dynamicValues: Record<string, string> = {
+    '__wifiName__': store.facilitySettings.wifiName,
+    '__wifiPassword__': store.facilitySettings.wifiPassword,
+    '__ownerPhone__': store.facilitySettings.ownerPhone,
+  }
+
   return (
     <div className="page-container">
       <div className="flex items-center gap-3 mb-6">
@@ -139,8 +136,8 @@ export default function GuidePage() {
           <ArrowLeft size={18} className="text-zinc-300" />
         </Link>
         <div>
-          <h1 className="text-lg font-medium text-zinc-100">施設ガイド</h1>
-          <p className="text-xs text-zinc-500">Facility Guide</p>
+          <h1 className="text-lg font-medium text-zinc-100">{t('guide.title')}</h1>
+          <p className="text-xs text-zinc-500">{t('guide.subtitle')}</p>
         </div>
       </div>
 
@@ -149,22 +146,20 @@ export default function GuidePage() {
           <span className="text-2xl">🏔️</span>
           <div>
             <p className="text-sm font-medium text-zinc-200">Lumina Fuji Residence</p>
-            <p className="text-xs text-zinc-500">山梨県南都留郡山中湖村 · 山中湖畔</p>
+            <p className="text-xs text-zinc-500">{t('guide.location')}</p>
           </div>
         </div>
 
         <div>
-          {guideSections.map((section) => (
-            <AccordionItem key={section.id} section={section} />
+          {GUIDE_SECTIONS.map((section) => (
+            <AccordionItem key={section.id} section={section} t={t} dynamicValues={dynamicValues} />
           ))}
         </div>
 
         <div className="mt-4 text-center">
-          <p className="text-xs text-zinc-600">
-            ご不明な点はコンシェルジュチャットへ
-          </p>
+          <p className="text-xs text-zinc-600">{t('guide.footer')}</p>
           <Link href="/dashboard/chat" className="text-xs text-gold-400 hover:text-gold-300 mt-1 inline-block">
-            チャットで相談する →
+            {t('guide.footerLink')}
           </Link>
         </div>
       </motion.div>

@@ -5,13 +5,13 @@ import { usePathname } from 'next/navigation'
 import { Home, Lightbulb, Map, MessageCircle, MoreHorizontal, BookOpen, ShoppingBag, Bell, Camera, Phone } from 'lucide-react'
 import { usePhase } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
+import { useLanguage } from '@/lib/useLanguage'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface NavItem {
   href: string
   label: string
-  labelEn: string
   icon: React.ComponentType<{ size?: number | string; strokeWidth?: number | string; className?: string }>
   badge?: number
 }
@@ -19,31 +19,32 @@ interface NavItem {
 function useNavItems() {
   const { phase } = usePhase()
   const [store] = useStore()
+  const { t } = useLanguage()
   const pendingRequests = store.serviceRequests.filter(r => r.status === 'pending').length
   const unreadMessages = store.messages.filter(m => m.from === 'owner' && !m.readByGuest).length
 
   const staying: NavItem[] = [
-    { href: '/dashboard', label: 'ホーム', labelEn: 'Home', icon: Home },
-    { href: '/dashboard/lighting', label: '照明', labelEn: 'Lights', icon: Lightbulb },
-    { href: '/dashboard/requests', label: 'リクエスト', labelEn: 'Request', icon: Bell, badge: pendingRequests || undefined },
-    { href: '/dashboard/map', label: '周辺', labelEn: 'Explore', icon: Map },
-    { href: '/dashboard/chat', label: 'チャット', labelEn: 'Chat', icon: MessageCircle, badge: unreadMessages || undefined },
+    { href: '/dashboard', label: t('nav.home'), icon: Home },
+    { href: '/dashboard/lighting', label: t('nav.lights'), icon: Lightbulb },
+    { href: '/dashboard/requests', label: t('nav.request'), icon: Bell, badge: pendingRequests || undefined },
+    { href: '/dashboard/map', label: t('nav.explore'), icon: Map },
+    { href: '/dashboard/chat', label: t('nav.chat'), icon: MessageCircle, badge: unreadMessages || undefined },
   ]
 
   const booked: NavItem[] = [
-    { href: '/dashboard', label: 'ホーム', labelEn: 'Home', icon: Home },
-    { href: '/dashboard/guide', label: 'ガイド', labelEn: 'Guide', icon: BookOpen },
-    { href: '/dashboard/map', label: 'マップ', labelEn: 'Map', icon: Map },
-    { href: '/dashboard/products', label: '製品', labelEn: 'Products', icon: ShoppingBag },
-    { href: '/dashboard/chat', label: 'チャット', labelEn: 'Chat', icon: MessageCircle },
+    { href: '/dashboard', label: t('nav.home'), icon: Home },
+    { href: '/dashboard/guide', label: t('nav.guide'), icon: BookOpen },
+    { href: '/dashboard/map', label: t('nav.map'), icon: Map },
+    { href: '/dashboard/products', label: t('nav.products'), icon: ShoppingBag },
+    { href: '/dashboard/chat', label: t('nav.chat'), icon: MessageCircle },
   ]
 
   const post: NavItem[] = [
-    { href: '/dashboard', label: 'ホーム', labelEn: 'Home', icon: Home },
-    { href: '/dashboard/guestbook', label: '寄せ書き', labelEn: 'Book', icon: Camera },
-    { href: '/dashboard/products', label: '製品', labelEn: 'Products', icon: ShoppingBag },
-    { href: '/dashboard/consult', label: '相談', labelEn: 'Consult', icon: Phone },
-    { href: '/dashboard/chat', label: 'チャット', labelEn: 'Chat', icon: MessageCircle },
+    { href: '/dashboard', label: t('nav.home'), icon: Home },
+    { href: '/dashboard/guestbook', label: t('nav.guestbook'), icon: Camera },
+    { href: '/dashboard/products', label: t('nav.products'), icon: ShoppingBag },
+    { href: '/dashboard/consult', label: t('nav.consult'), icon: Phone },
+    { href: '/dashboard/chat', label: t('nav.chat'), icon: MessageCircle },
   ]
 
   return phase === 'staying' ? staying : phase === 'booked' ? booked : post
@@ -54,13 +55,13 @@ export default function Navigation() {
   const navItems = useNavItems()
   const [showMore, setShowMore] = useState(false)
   const { phase } = usePhase()
+  const { t } = useLanguage()
 
-  // Extra items accessible from "more" during staying phase
   const moreItems: NavItem[] = [
-    { href: '/dashboard/guide', label: '施設ガイド', labelEn: 'Guide', icon: BookOpen },
-    { href: '/dashboard/guestbook', label: '寄せ書き', labelEn: 'Guestbook', icon: Camera },
-    { href: '/dashboard/products', label: 'ECUANEST製品', labelEn: 'Products', icon: ShoppingBag },
-    { href: '/dashboard/consult', label: '照明相談', labelEn: 'Consult', icon: Phone },
+    { href: '/dashboard/guide', label: t('nav.guide'), icon: BookOpen },
+    { href: '/dashboard/guestbook', label: t('nav.guestbook'), icon: Camera },
+    { href: '/dashboard/products', label: t('nav.products'), icon: ShoppingBag },
+    { href: '/dashboard/consult', label: t('nav.consult'), icon: Phone },
   ]
 
   return (
@@ -144,7 +145,7 @@ export default function Navigation() {
                   }`}
                 >
                   <MoreHorizontal size={22} strokeWidth={1.5} />
-                  <span className="text-[9px] leading-none font-medium text-zinc-600">もっと</span>
+                  <span className="text-[9px] leading-none font-medium text-zinc-600">{t('nav.more')}</span>
                 </button>
               )}
             </div>

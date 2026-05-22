@@ -7,12 +7,14 @@ import Link from 'next/link'
 import { useStore } from '@/lib/useStore'
 import { addGuestbookPost, likeGuestbookPost, getStore } from '@/lib/store'
 import { usePhase } from '@/lib/phase'
+import { useLanguage } from '@/lib/useLanguage'
 
 const EMOJI_OPTIONS = ['✨', '🌅', '🏔️', '💡', '🌙', '🌸', '⭐', '🎉', '🫶', '🗻']
 
 export default function GuestbookPage() {
   const [store, update] = useStore()
   const { guestInfo } = usePhase()
+  const { t } = useLanguage()
   const [showForm, setShowForm] = useState(false)
   const [message, setMessage] = useState('')
   const [emoji, setEmoji] = useState('✨')
@@ -58,15 +60,15 @@ export default function GuestbookPage() {
             <ArrowLeft size={18} className="text-zinc-300" />
           </Link>
           <div>
-            <h1 className="text-lg font-medium text-zinc-100">デジタル寄せ書き</h1>
-            <p className="text-xs text-zinc-500">Guestbook · {visiblePosts.length} messages</p>
+            <h1 className="text-lg font-medium text-zinc-100">{t('guestbook.title')}</h1>
+            <p className="text-xs text-zinc-500">{t('guestbook.subtitle')} · {visiblePosts.length} messages</p>
           </div>
         </div>
         <button
           onClick={() => setShowForm(true)}
           className="btn-gold text-xs py-2 px-4 flex items-center gap-1.5"
         >
-          <Camera size={13} /> 投稿する
+          <Camera size={13} /> {t('guestbook.writeBtn')}
         </button>
       </div>
 
@@ -88,14 +90,14 @@ export default function GuestbookPage() {
               className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-3xl p-6"
             >
               <div className="flex items-center justify-between mb-5">
-                <h2 className="font-medium text-zinc-100">メッセージを残す</h2>
+                <h2 className="font-medium text-zinc-100">{t('guestbook.formTitle')}</h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl bg-zinc-800 flex items-center justify-center">
                   <X size={16} className="text-zinc-400" />
                 </button>
               </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1.5 block">絵文字を選ぶ</label>
+                  <label className="text-xs text-zinc-500 mb-1.5 block">{t('guestbook.chooseEmoji')}</label>
                   <div className="flex gap-2 flex-wrap">
                     {EMOJI_OPTIONS.map(e => (
                       <button key={e} type="button" onClick={() => setEmoji(e)}
@@ -105,11 +107,11 @@ export default function GuestbookPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1.5 block">メッセージ *</label>
+                  <label className="text-xs text-zinc-500 mb-1.5 block">{t('guestbook.messageLabel')} *</label>
                   <textarea
                     value={message}
                     onChange={e => setMessage(e.target.value)}
-                    placeholder="滞在の思い出や感想をお書きください..."
+                    placeholder={t('guestbook.messagePlaceholder')}
                     required rows={3}
                     className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-gold-500/40 transition-all resize-none"
                   />
@@ -125,7 +127,7 @@ export default function GuestbookPage() {
                 >
                   {submitting
                     ? <div className="w-4 h-4 border-2 border-zinc-950/30 border-t-zinc-950 rounded-full animate-spin" />
-                    : <><Send size={14} /> 投稿する</>
+                    : <><Send size={14} /> {t('guestbook.submitBtn')}</>
                   }
                 </button>
               </form>

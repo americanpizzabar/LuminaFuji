@@ -8,8 +8,10 @@ import {
   SCENES, DEFAULT_ZONES, Zone, LightingScene,
   colorTempToRgb, getColorTempLabel
 } from '@/lib/lighting'
+import { useLanguage } from '@/lib/useLanguage'
 
 export default function LightingPage() {
+  const { t } = useLanguage()
   const [activeScene, setActiveScene] = useState<LightingScene>(SCENES[4]) // 'evening/くつろぎ' default
   const [brightness, setBrightness] = useState(70)
   const [colorTemp, setColorTemp] = useState(2700)
@@ -53,8 +55,8 @@ export default function LightingPage() {
             <ArrowLeft size={18} className="text-zinc-300" />
           </Link>
           <div>
-            <h1 className="text-lg font-medium text-zinc-100">照明コントロール</h1>
-            <p className="text-xs text-zinc-500">Lighting Control · DALI-2</p>
+            <h1 className="text-lg font-medium text-zinc-100">{t('lighting.title')}</h1>
+            <p className="text-xs text-zinc-500">{t('lighting.subtitle')}</p>
           </div>
           <button
             onClick={toggleAll}
@@ -98,7 +100,7 @@ export default function LightingPage() {
 
         {/* Scene Presets */}
         <div className="px-4 mb-6">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">シーンプリセット</p>
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">{t('lighting.scenePresets')}</p>
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
             {SCENES.map((scene) => (
               <button
@@ -121,7 +123,7 @@ export default function LightingPage() {
         <div className="px-4 mb-6">
           <div className="card p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-zinc-300">全体の明るさ</p>
+              <p className="text-sm font-medium text-zinc-300">{t('lighting.brightness')}</p>
               <span className="text-2xl font-light text-gold-400 tabular-nums">{brightness}%</span>
             </div>
             <div className="relative">
@@ -138,8 +140,8 @@ export default function LightingPage() {
               />
             </div>
             <div className="flex justify-between text-xs text-zinc-600 mt-1.5">
-              <span>消灯</span>
-              <span>最大</span>
+              <span>{t('lighting.off')}</span>
+              <span>{t('lighting.max')}</span>
             </div>
           </div>
         </div>
@@ -148,7 +150,7 @@ export default function LightingPage() {
         <div className="px-4 mb-6">
           <div className="card p-5">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-medium text-zinc-300">色温度</p>
+              <p className="text-sm font-medium text-zinc-300">{t('lighting.colorTemp')}</p>
               <div className="flex items-center gap-2">
                 <div
                   className="w-3 h-3 rounded-full"
@@ -182,8 +184,8 @@ export default function LightingPage() {
               </div>
             </div>
             <div className="flex justify-between text-xs text-zinc-600">
-              <span>暖かい 2700K</span>
-              <span>6500K 涼しい</span>
+              <span>{t('lighting.warm')}</span>
+              <span>{t('lighting.cool')}</span>
             </div>
           </div>
         </div>
@@ -191,12 +193,12 @@ export default function LightingPage() {
         {/* Zone Control */}
         <div className="px-4 mb-6">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-zinc-500 uppercase tracking-widest">エリア別コントロール</p>
+            <p className="text-xs text-zinc-500 uppercase tracking-widest">{t('lighting.zones')}</p>
             <button
               onClick={toggleAll}
               className="text-xs text-zinc-500 hover:text-gold-400 transition-colors"
             >
-              {isAllOn ? 'すべて消灯' : 'すべて点灯'}
+              {isAllOn ? t('lighting.allOff') : t('lighting.allOn')}
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -204,6 +206,7 @@ export default function LightingPage() {
               <ZoneCard
                 key={zone.id}
                 zone={zone}
+                brightnessLabel={t('lighting.zoneBrightness')}
                 onToggle={() => toggleZone(zone.id)}
                 onBrightnessChange={(val) => setZoneBrightness(zone.id, val)}
               />
@@ -220,7 +223,7 @@ export default function LightingPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-zinc-200">ECUANEST Brite 3</p>
-                <p className="text-xs text-zinc-500">この部屋で使用中の照明</p>
+                <p className="text-xs text-zinc-500">{t('lighting.productLink')}</p>
               </div>
               <ChevronRight size={16} className="text-zinc-600" />
             </div>
@@ -233,10 +236,12 @@ export default function LightingPage() {
 
 function ZoneCard({
   zone,
+  brightnessLabel,
   onToggle,
   onBrightnessChange,
 }: {
   zone: Zone
+  brightnessLabel: string
   onToggle: () => void
   onBrightnessChange: (val: number) => void
 }) {
@@ -263,7 +268,7 @@ function ZoneCard({
       {zone.isOn && (
         <div>
           <div className="flex justify-between text-xs text-zinc-500 mb-1.5">
-            <span>明るさ</span>
+            <span>{brightnessLabel}</span>
             <span className="text-zinc-400">{zone.brightness}%</span>
           </div>
           <input
