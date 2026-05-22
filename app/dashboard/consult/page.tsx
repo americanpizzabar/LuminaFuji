@@ -7,46 +7,38 @@ import Link from 'next/link'
 import { usePhase } from '@/lib/phase'
 import { addConsultRequest, getStore } from '@/lib/store'
 import { useStore } from '@/lib/useStore'
+import { useLanguage } from '@/lib/useLanguage'
 
 type Step = 1 | 2 | 3 | 4
 
-const professions = [
-  { value: 'architect', label: '建築家・設計士', emoji: '🏗️' },
-  { value: 'interior', label: 'インテリアデザイナー', emoji: '🛋️' },
-  { value: 'developer', label: 'デベロッパー・施主', emoji: '🏢' },
-  { value: 'general', label: '個人（住宅）', emoji: '🏠' },
-  { value: 'other', label: 'その他', emoji: '💼' },
+const PROFESSION_KEYS = [
+  { value: 'architect',        emoji: '🏗️' },
+  { value: 'interiorDesigner', emoji: '🛋️' },
+  { value: 'developer',        emoji: '🏢' },
+  { value: 'homeowner',        emoji: '🏠' },
+  { value: 'other',            emoji: '💼' },
 ]
-const projectTypes = [
-  { value: 'residential', label: '住宅', emoji: '🏡' },
-  { value: 'commercial', label: '商業施設', emoji: '🏬' },
-  { value: 'hospitality', label: 'ホテル・旅館', emoji: '🏨' },
-  { value: 'office', label: 'オフィス', emoji: '💼' },
-  { value: 'museum', label: '美術館・ギャラリー', emoji: '🖼️' },
+const PROJECT_TYPE_KEYS = [
+  { value: 'residential', emoji: '🏡' },
+  { value: 'commercial',  emoji: '🏬' },
+  { value: 'hotel',       emoji: '🏨' },
+  { value: 'office',      emoji: '💼' },
+  { value: 'gallery',     emoji: '🖼️' },
 ]
-const scales = [
-  { value: 'small', label: '〜100m²' },
-  { value: 'medium', label: '100〜500m²' },
-  { value: 'large', label: '500〜2000m²' },
-  { value: 'xlarge', label: '2000m² 以上' },
-]
-const budgets = [
-  { value: 'under1m', label: '〜100万円' },
-  { value: '1to5m', label: '100〜500万円' },
-  { value: '5to10m', label: '500〜1000万円' },
-  { value: 'over10m', label: '1000万円以上' },
-  { value: 'tbd', label: '未定 / 相談したい' },
-]
-const productOptions = [
-  { id: 'brite-3', label: 'Brite 3（パネル型）' },
-  { id: 'luna-series', label: 'Luna Series（壁面型）' },
-  { id: 'aria-strip', label: 'Aria Strip（ライン型）' },
-  { id: 'nexus-module', label: 'Nexus Module（モジュール型）' },
+const SCALE_KEYS = ['s', 'm', 'l', 'xl'] as const
+const BUDGET_KEYS = ['s', 'm', 'l', 'xl', 'unknown'] as const
+const CONTACT_METHOD_KEYS = ['email', 'phone', 'online'] as const
+const PRODUCT_OPTIONS = [
+  { id: 'brite-3',       label: 'Brite 3（パネル型）' },
+  { id: 'luna-series',   label: 'Luna Series（壁面型）' },
+  { id: 'aria-strip',    label: 'Aria Strip（ライン型）' },
+  { id: 'nexus-module',  label: 'Nexus Module（モジュール型）' },
 ]
 
 export default function ConsultPage() {
   const { guestInfo } = usePhase()
   const [, updateStore] = useStore()
+  const { t } = useLanguage()
   const [step, setStep] = useState<Step>(1)
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -70,10 +62,11 @@ export default function ConsultPage() {
     await new Promise(r => setTimeout(r, 1200))
     addConsultRequest({
       name: form.name, email: form.email, phone: form.phone || undefined,
-      company: form.company || undefined, profession: professions.find(p => p.value === form.profession)?.label ?? form.profession,
-      projectType: projectTypes.find(p => p.value === form.projectType)?.label ?? form.projectType,
-      scale: scales.find(s => s.value === form.scale)?.label ?? form.scale,
-      budget: budgets.find(b => b.value === form.budget)?.label ?? form.budget,
+      company: form.company || undefined,
+      profession: t(`consult.professions.${form.profession}`),
+      projectType: t(`consult.projectTypes.${form.projectType}`),
+      scale: t(`consult.scales.${form.scale}`),
+      budget: t(`consult.budgets.${form.budget}`),
       contactMethod: form.contactMethod as 'email' | 'phone' | 'online',
       message: form.message, interestedProducts: form.interestedProducts,
     })
@@ -82,7 +75,12 @@ export default function ConsultPage() {
     setSubmitted(true)
   }
 
-  const stepLabels = ['ご職業', 'プロジェクト詳細', 'ご連絡先', '確認・送信']
+  const stepTitles = [
+    t('consult.professionTitle'),
+    t('consult.projectTitle'),
+    t('consult.contactTitle'),
+    t('consult.confirmTitle'),
+  ]
 
   if (submitted) {
     return (
@@ -91,9 +89,9 @@ export default function ConsultPage() {
           <div className="w-20 h-20 rounded-3xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 size={36} className="text-gold-400" />
           </div>
-          <h2 className="text-xl font-serif text-zinc-100 mb-3">相談リクエストを送信しました</h2>
-          <p className="text-zinc-400 text-sm leading-relaxed mb-6">担当者より2営業日以内にご連絡いたします。</p>
-          <Link href="/dashboard" className="btn-outline text-sm">ホームに戻る</Link>
+          <h2 className="text-xl font-serif text-zinc-100 mb-3">{t('consult.sent')}</h2>
+          <p className="text-zinc-400 text-sm leading-relaxed mb-6">{t('consult.sentDesc')}</p>
+          <Link href="/dashboard" className="btn-outline text-sm">{t('consult.goHome')}</Link>
         </motion.div>
       </div>
     )
@@ -106,8 +104,8 @@ export default function ConsultPage() {
           <ArrowLeft size={18} className="text-zinc-300" />
         </Link>
         <div>
-          <h1 className="text-lg font-medium text-zinc-100">照明コンサルティング</h1>
-          <p className="text-xs text-zinc-500">無料相談 · ECUANEST</p>
+          <h1 className="text-lg font-medium text-zinc-100">{t('consult.title')}</h1>
+          <p className="text-xs text-zinc-500">{t('consult.subtitle')}</p>
         </div>
       </div>
 
@@ -122,24 +120,24 @@ export default function ConsultPage() {
           </div>
         ))}
       </div>
-      <p className="text-xs text-zinc-500 mb-5">ステップ {step} / 4：{stepLabels[step - 1]}</p>
+      <p className="text-xs text-zinc-500 mb-5">{t('consult.step', { step: String(step) })}：{stepTitles[step - 1]}</p>
 
       <AnimatePresence mode="wait">
         {step === 1 && (
           <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <p className="text-sm text-zinc-300 mb-4">ご職業を教えてください</p>
+            <p className="text-sm text-zinc-300 mb-4">{t('consult.professionTitle')}</p>
             <div className="space-y-2 mb-5">
-              {professions.map(({ value, label, emoji }) => (
+              {PROFESSION_KEYS.map(({ value, emoji }) => (
                 <button key={value} onClick={() => set('profession', value)}
                   className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${form.profession === value ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-800 hover:border-zinc-700 text-zinc-400'}`}>
                   <span className="text-xl">{emoji}</span>
-                  <span className="text-sm">{label}</span>
+                  <span className="text-sm">{t(`consult.professions.${value}`)}</span>
                   {form.profession === value && <CheckCircle2 size={14} className="text-gold-400 ml-auto" />}
                 </button>
               ))}
             </div>
             <button onClick={() => setStep(2)} disabled={!form.profession} className="w-full btn-gold flex items-center justify-center gap-2 disabled:opacity-50">
-              次へ <ChevronRight size={16} />
+              {t('consult.next')} <ChevronRight size={16} />
             </button>
           </motion.div>
         )}
@@ -147,42 +145,42 @@ export default function ConsultPage() {
         {step === 2 && (
           <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-5">
             <div>
-              <p className="text-sm text-zinc-300 mb-3">プロジェクトの種類</p>
+              <p className="text-sm text-zinc-300 mb-3">{t('consult.projectType')}</p>
               <div className="grid grid-cols-2 gap-2">
-                {projectTypes.map(({ value, label, emoji }) => (
+                {PROJECT_TYPE_KEYS.map(({ value, emoji }) => (
                   <button key={value} onClick={() => set('projectType', value)}
                     className={`flex items-center gap-2 p-3 rounded-xl border text-sm transition-all ${form.projectType === value ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
-                    <span>{emoji}</span><span className="text-xs">{label}</span>
+                    <span>{emoji}</span><span className="text-xs">{t(`consult.projectTypes.${value}`)}</span>
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-sm text-zinc-300 mb-3">規模（床面積）</p>
+              <p className="text-sm text-zinc-300 mb-3">{t('consult.scale')}</p>
               <div className="grid grid-cols-2 gap-2">
-                {scales.map(({ value, label }) => (
-                  <button key={value} onClick={() => set('scale', value)}
-                    className={`p-3 rounded-xl border text-xs transition-all ${form.scale === value ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
-                    {label}
+                {SCALE_KEYS.map((key) => (
+                  <button key={key} onClick={() => set('scale', key)}
+                    className={`p-3 rounded-xl border text-xs transition-all ${form.scale === key ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
+                    {t(`consult.scales.${key}`)}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-sm text-zinc-300 mb-3">予算感</p>
+              <p className="text-sm text-zinc-300 mb-3">{t('consult.budget')}</p>
               <div className="space-y-2">
-                {budgets.map(({ value, label }) => (
-                  <button key={value} onClick={() => set('budget', value)}
-                    className={`w-full p-3 rounded-xl border text-xs text-left transition-all ${form.budget === value ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
-                    {label}
+                {BUDGET_KEYS.map((key) => (
+                  <button key={key} onClick={() => set('budget', key)}
+                    className={`w-full p-3 rounded-xl border text-xs text-left transition-all ${form.budget === key ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
+                    {t(`consult.budgets.${key}`)}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <p className="text-sm text-zinc-300 mb-3">気になった製品（複数選択可）</p>
+              <p className="text-sm text-zinc-300 mb-3">{t('consult.products')}</p>
               <div className="grid grid-cols-2 gap-2">
-                {productOptions.map(({ id, label }) => (
+                {PRODUCT_OPTIONS.map(({ id, label }) => (
                   <button key={id} onClick={() => toggleProduct(id)}
                     className={`p-3 rounded-xl border text-xs text-left transition-all ${form.interestedProducts.includes(id) ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
                     {form.interestedProducts.includes(id) && '✓ '}{label}
@@ -191,9 +189,9 @@ export default function ConsultPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="btn-outline px-5">戻る</button>
+              <button onClick={() => setStep(1)} className="btn-outline px-5">{t('consult.prev')}</button>
               <button onClick={() => setStep(3)} disabled={!form.projectType} className="flex-1 btn-gold flex items-center justify-center gap-2 disabled:opacity-50">
-                次へ <ChevronRight size={16} />
+                {t('consult.next')} <ChevronRight size={16} />
               </button>
             </div>
           </motion.div>
@@ -202,10 +200,10 @@ export default function ConsultPage() {
         {step === 3 && (
           <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
             {[
-              { key: 'name', label: 'お名前 *', type: 'text', placeholder: '山田 太郎' },
-              { key: 'company', label: '会社名・事務所名', type: 'text', placeholder: '株式会社○○' },
-              { key: 'email', label: 'メールアドレス *', type: 'email', placeholder: 'taro@example.com' },
-              { key: 'phone', label: '電話番号', type: 'tel', placeholder: '090-XXXX-XXXX' },
+              { key: 'name',    label: `${t('consult.nameLabel')} *`,    type: 'text',  placeholder: t('consult.namePlaceholder') },
+              { key: 'company', label: t('consult.companyLabel'),          type: 'text',  placeholder: t('consult.companyPlaceholder') },
+              { key: 'email',   label: `${t('consult.emailLabel')} *`,   type: 'email', placeholder: t('consult.emailPlaceholder') },
+              { key: 'phone',   label: t('consult.phoneLabel'),            type: 'tel',   placeholder: t('consult.phonePlaceholder') },
             ].map(({ key, label, type, placeholder }) => (
               <div key={key}>
                 <label className="text-xs text-zinc-500 mb-1.5 block">{label}</label>
@@ -214,26 +212,26 @@ export default function ConsultPage() {
               </div>
             ))}
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">ご希望の連絡方法</label>
+              <label className="text-xs text-zinc-500 mb-1.5 block">{t('consult.preferredContact')}</label>
               <div className="flex gap-2">
-                {[{ value: 'email', label: 'メール' }, { value: 'phone', label: '電話' }, { value: 'online', label: 'オンライン面談' }].map(({ value, label }) => (
-                  <button key={value} onClick={() => set('contactMethod', value)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xs transition-all ${form.contactMethod === value ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-700 text-zinc-500'}`}>
-                    {label}
+                {CONTACT_METHOD_KEYS.map((key) => (
+                  <button key={key} onClick={() => set('contactMethod', key)}
+                    className={`flex-1 py-2.5 rounded-xl border text-xs transition-all ${form.contactMethod === key ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-700 text-zinc-500'}`}>
+                    {t(`consult.contactMethods.${key}`)}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">ご要望・ご質問</label>
+              <label className="text-xs text-zinc-500 mb-1.5 block">{t('consult.requestLabel')}</label>
               <textarea value={form.message} onChange={e => set('message', e.target.value)}
-                placeholder="プロジェクトの詳細やご質問をお書きください..." rows={3}
+                placeholder={t('consult.requestPlaceholder')} rows={3}
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-gold-500/40 transition-all resize-none" />
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setStep(2)} className="btn-outline px-5">戻る</button>
+              <button onClick={() => setStep(2)} className="btn-outline px-5">{t('consult.prev')}</button>
               <button onClick={() => setStep(4)} disabled={!form.name || !form.email} className="flex-1 btn-gold flex items-center justify-center gap-2 disabled:opacity-50">
-                確認へ <ChevronRight size={16} />
+                {t('consult.confirmNext')} <ChevronRight size={16} />
               </button>
             </div>
           </motion.div>
@@ -242,17 +240,19 @@ export default function ConsultPage() {
         {step === 4 && (
           <motion.div key="s4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <div className="card p-5 mb-5 space-y-3">
-              <p className="text-sm font-medium text-zinc-200 mb-3">送信内容の確認</p>
+              <p className="text-sm font-medium text-zinc-200 mb-3">{t('consult.confirmTitle')}</p>
               {[
-                { label: 'お名前', value: form.name },
-                form.company && { label: '会社名', value: form.company },
-                { label: 'メール', value: form.email },
-                { label: '職業', value: professions.find(p => p.value === form.profession)?.label },
-                { label: 'プロジェクト', value: projectTypes.find(p => p.value === form.projectType)?.label },
-                { label: '規模', value: scales.find(s => s.value === form.scale)?.label },
-                { label: '予算', value: budgets.find(b => b.value === form.budget)?.label },
-                { label: '連絡方法', value: { email: 'メール', phone: '電話', online: 'オンライン面談' }[form.contactMethod] },
-                form.interestedProducts.length > 0 && { label: '気になる製品', value: form.interestedProducts.join(', ') },
+                { label: t('consult.nameLabel'),                    value: form.name },
+                form.company ? { label: t('consult.companyLabel'), value: form.company } : null,
+                { label: t('consult.emailLabel'),                   value: form.email },
+                { label: t('consult.confirmFields.profession'),     value: t(`consult.professions.${form.profession}`) },
+                { label: t('consult.confirmFields.project'),        value: t(`consult.projectTypes.${form.projectType}`) },
+                form.scale ? { label: t('consult.confirmFields.scale'), value: t(`consult.scales.${form.scale}`) } : null,
+                form.budget ? { label: t('consult.confirmFields.budget'), value: t(`consult.budgets.${form.budget}`) } : null,
+                { label: t('consult.confirmFields.contact'),        value: t(`consult.contactMethods.${form.contactMethod}`) },
+                form.interestedProducts.length > 0
+                  ? { label: t('consult.confirmFields.products'), value: form.interestedProducts.join(', ') }
+                  : null,
               ].filter(Boolean).map((item: any) => (
                 <div key={item.label} className="flex justify-between items-start gap-2">
                   <span className="text-xs text-zinc-500 flex-shrink-0">{item.label}</span>
@@ -261,9 +261,9 @@ export default function ConsultPage() {
               ))}
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setStep(3)} className="btn-outline px-5">戻る</button>
+              <button onClick={() => setStep(3)} className="btn-outline px-5">{t('consult.prev')}</button>
               <button onClick={handleSubmit} disabled={loading} className="flex-1 btn-gold flex items-center justify-center gap-2">
-                {loading ? <div className="w-4 h-4 border-2 border-zinc-950/30 border-t-zinc-950 rounded-full animate-spin" /> : '送信する'}
+                {loading ? <div className="w-4 h-4 border-2 border-zinc-950/30 border-t-zinc-950 rounded-full animate-spin" /> : t('consult.confirmBtn')}
               </button>
             </div>
           </motion.div>

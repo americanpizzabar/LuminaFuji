@@ -4,38 +4,41 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePhase } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
+import { useLanguage } from '@/lib/useLanguage'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import {
   Lightbulb, BookOpen, Map, MessageCircle, ShoppingBag,
-  Camera, Star, CalendarCheck, Clock, ExternalLink,
+  Camera, Star, ExternalLink,
   Sparkles, Building2, Bell, ChevronRight, Wifi,
-  Phone, AlertTriangle, Sun, Moon, Sunset
+  Phone, Sun, Moon, Sunset
 } from 'lucide-react'
 import { getFeaturedProducts } from '@/lib/products'
 import { getLightingAnalytics } from '@/lib/store'
 
-function getTimeGreeting() {
+type GreetingKey = 'morning' | 'afternoon' | 'evening' | 'night'
+
+function getGreetingKey(): { key: GreetingKey; Icon: typeof Sun } {
   const h = new Date().getHours()
-  if (h < 5) return { ja: 'おやすみなさい', en: 'Good night', icon: Moon }
-  if (h < 10) return { ja: 'おはようございます', en: 'Good morning', icon: Sun }
-  if (h < 17) return { ja: 'こんにちは', en: 'Good afternoon', icon: Sun }
-  if (h < 20) return { ja: 'こんばんは', en: 'Good evening', icon: Sunset }
-  return { ja: 'おやすみなさい', en: 'Good night', icon: Moon }
+  if (h < 5)  return { key: 'night',     Icon: Moon }
+  if (h < 10) return { key: 'morning',   Icon: Sun }
+  if (h < 17) return { key: 'afternoon', Icon: Sun }
+  if (h < 20) return { key: 'evening',   Icon: Sunset }
+  return { key: 'night', Icon: Moon }
 }
 
 export default function DashboardPage() {
   const { phase, guestInfo } = usePhase()
-  const greeting = getTimeGreeting()
-
-  if (phase === 'booked') return <BookedHome guestInfo={guestInfo} greeting={greeting} />
-  if (phase === 'staying') return <StayingHome guestInfo={guestInfo} greeting={greeting} />
-  return <PostHome guestInfo={guestInfo} greeting={greeting} />
+  if (phase === 'booked')  return <BookedHome guestInfo={guestInfo} />
+  if (phase === 'staying') return <StayingHome guestInfo={guestInfo} />
+  return <PostHome guestInfo={guestInfo} />
 }
 
 // ─── Booked ──────────────────────────────────────────────────────────────────
-function BookedHome({ guestInfo, greeting }: any) {
+function BookedHome({ guestInfo }: { guestInfo: any }) {
   const [store] = useStore()
+  const { t } = useLanguage()
   const settings = store.facilitySettings
+  const { key: greetKey } = getGreetingKey()
 
   const daysUntil = () => {
     if (!guestInfo?.checkIn) return 0
@@ -47,38 +50,35 @@ function BookedHome({ guestInfo, greeting }: any) {
       <AnnouncementBanner />
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="mb-6 pt-2">
-          <p className="section-title">予約済 · Reserved</p>
+          <p className="section-title">{t('home.booked.status')}</p>
           <h1 className="font-serif text-2xl text-zinc-100 leading-snug">
-            {greeting.ja}、<br />{guestInfo?.name?.split(' ')[0]}さん
+            {t(`home.greetings.${greetKey}`)}、<br />{guestInfo?.name?.split(' ')[0]}
           </h1>
-          <p className="text-zinc-500 text-sm mt-1">{greeting.en}, {guestInfo?.name}</p>
         </div>
 
-        {/* Countdown */}
         <div className="card p-5 mb-4 border-gold-500/20 bg-gradient-to-br from-amber-950/30 to-zinc-900">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-zinc-500 mb-1">チェックインまで</p>
-              <p className="text-4xl font-light text-gold-400 tabular-nums">{daysUntil()}<span className="text-xl ml-1">日</span></p>
+              <p className="text-xs text-zinc-500 mb-1">{t('home.booked.countdown')}</p>
+              <p className="text-4xl font-light text-gold-400 tabular-nums">{daysUntil()}<span className="text-xl ml-1">{t('home.booked.countdownUnit')}</span></p>
               <p className="text-xs text-zinc-400 mt-1">{guestInfo?.checkIn} {settings.checkInTime}〜</p>
             </div>
             <div className="text-5xl">🏔️</div>
           </div>
           <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-zinc-800">
             <div>
-              <p className="text-xs text-zinc-500">チェックイン</p>
+              <p className="text-xs text-zinc-500">{t('home.booked.checkin')}</p>
               <p className="text-sm text-zinc-200 font-medium">{guestInfo?.checkIn}</p>
               <p className="text-xs text-zinc-500">{settings.checkInTime}〜</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500">チェックアウト</p>
+              <p className="text-xs text-zinc-500">{t('home.booked.checkout')}</p>
               <p className="text-sm text-zinc-200 font-medium">{guestInfo?.checkOut}</p>
               <p className="text-xs text-zinc-500">〜{settings.checkOutTime}</p>
             </div>
           </div>
         </div>
 
-        {/* Quick info cards */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="card p-4 flex items-start gap-2">
             <Wifi size={15} className="text-gold-400 flex-shrink-0 mt-0.5" />
@@ -91,31 +91,29 @@ function BookedHome({ guestInfo, greeting }: any) {
           <div className="card p-4 flex items-start gap-2">
             <Phone size={15} className="text-gold-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs text-zinc-500 mb-0.5">ホスト連絡先</p>
+              <p className="text-xs text-zinc-500 mb-0.5">{t('home.booked.hostContact')}</p>
               <p className="text-xs text-zinc-200 font-medium">{settings.ownerPhone}</p>
             </div>
           </div>
         </div>
 
-        {/* Host message */}
         {settings.hostWelcomeMessage && (
           <div className="card p-4 mb-4 border-zinc-700/50">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm">💬</span>
-              <span className="text-xs text-zinc-500">ホストからのメッセージ</span>
+              <span className="text-xs text-zinc-500">{t('home.booked.hostMessage')}</span>
             </div>
             <p className="text-sm text-zinc-300 leading-relaxed">{settings.hostWelcomeMessage}</p>
           </div>
         )}
 
-        {/* Quick links */}
-        <p className="section-title">準備する</p>
+        <p className="section-title">{t('home.booked.prepare')}</p>
         <div className="grid grid-cols-2 gap-3 mb-4">
           {[
-            { href: '/dashboard/map', label: 'アクセス地図', sub: 'Local Map', icon: Map, emoji: '🗺️' },
-            { href: '/dashboard/guide', label: '施設ガイド', sub: 'Facility Guide', icon: BookOpen, emoji: '📋' },
-            { href: '/dashboard/products', label: '照明を予習する', sub: 'ECUANEST Preview', icon: Lightbulb, emoji: '✦' },
-            { href: '/dashboard/chat', label: 'ホストに質問', sub: 'Ask Host', icon: MessageCircle, emoji: '💬' },
+            { href: '/dashboard/map',      label: t('home.booked.accessMap'),       sub: 'Local Map',        emoji: '🗺️' },
+            { href: '/dashboard/guide',    label: t('home.booked.facilityGuide'),   sub: 'Facility Guide',   emoji: '📋' },
+            { href: '/dashboard/products', label: t('home.booked.lightingPreview'), sub: 'ECUANEST Preview', emoji: '✦'  },
+            { href: '/dashboard/chat',     label: t('home.booked.askHost'),          sub: 'Ask Host',         emoji: '💬' },
           ].map(({ href, label, sub, emoji }) => (
             <Link key={href} href={href} className="card p-4 flex flex-col gap-1.5 hover:border-zinc-700 transition-all active:scale-98">
               <span className="text-2xl">{emoji}</span>
@@ -125,18 +123,15 @@ function BookedHome({ guestInfo, greeting }: any) {
           ))}
         </div>
 
-        {/* ECUANEST teaser */}
         <div className="card p-5 overflow-hidden relative border-gold-500/10">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-900/15 to-transparent pointer-events-none" />
           <div className="relative">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs text-gold-500 font-medium tracking-wider uppercase">ECUANEST ショールーム</span>
+              <span className="text-xs text-gold-500 font-medium tracking-wider uppercase">{t('home.booked.showroomTitle')}</span>
             </div>
-            <p className="text-zinc-300 text-sm leading-relaxed mb-3">
-              このレジデンスは世界初の有機EL照明リビングショールーム。滞在中、最先端の光を自由にお楽しみください。
-            </p>
+            <p className="text-zinc-300 text-sm leading-relaxed mb-3">{t('home.booked.showroomDesc')}</p>
             <Link href="/dashboard/products" className="btn-gold inline-flex items-center gap-2 text-sm py-2.5 px-5">
-              製品を見る <Sparkles size={13} />
+              {t('home.booked.viewProducts')} <Sparkles size={13} />
             </Link>
           </div>
         </div>
@@ -146,12 +141,14 @@ function BookedHome({ guestInfo, greeting }: any) {
 }
 
 // ─── Staying ─────────────────────────────────────────────────────────────────
-function StayingHome({ guestInfo, greeting }: any) {
+function StayingHome({ guestInfo }: { guestInfo: any }) {
   const [store] = useStore()
+  const { t } = useLanguage()
   const analytics = getLightingAnalytics(store)
   const settings = store.facilitySettings
   const pendingReqs = store.serviceRequests.filter(r => r.status === 'pending').length
   const unreadMsgs = store.messages.filter(m => m.from === 'owner' && !m.readByGuest).length
+  const { key: greetKey } = getGreetingKey()
 
   const checkoutDate = guestInfo?.checkOut
   const daysLeft = checkoutDate
@@ -164,9 +161,9 @@ function StayingHome({ guestInfo, greeting }: any) {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="mb-5 pt-2 flex items-start justify-between">
           <div>
-            <p className="section-title">滞在中 · Staying</p>
+            <p className="section-title">{t('home.staying.status')}</p>
             <h1 className="font-serif text-2xl text-zinc-100 leading-snug">
-              {greeting.ja}
+              {t(`home.greetings.${greetKey}`)}
             </h1>
             <p className="text-zinc-500 text-sm mt-0.5">{guestInfo?.name?.split(' ')[0]} · {guestInfo?.reservationId}</p>
           </div>
@@ -182,7 +179,6 @@ function StayingHome({ guestInfo, greeting }: any) {
           )}
         </div>
 
-        {/* Lighting hero */}
         <Link href="/dashboard/lighting">
           <motion.div
             className="card p-5 mb-3 cursor-pointer overflow-hidden relative group"
@@ -197,8 +193,8 @@ function StayingHome({ guestInfo, greeting }: any) {
                   <span className="w-2 h-2 bg-gold-400 rounded-full animate-pulse" />
                   <span className="text-xs text-gold-400 font-medium">ECUANEST Brite 3 · LIVE</span>
                 </div>
-                <h2 className="text-xl font-medium text-zinc-100">照明コントロール</h2>
-                <p className="text-xs text-zinc-500 mt-0.5">タップして今すぐ操作 →</p>
+                <h2 className="text-xl font-medium text-zinc-100">{t('home.staying.lightingControl')}</h2>
+                <p className="text-xs text-zinc-500 mt-0.5">{t('home.staying.tapToOperate')}</p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
                 <Lightbulb size={22} className="text-gold-400" />
@@ -209,40 +205,40 @@ function StayingHome({ guestInfo, greeting }: any) {
                 <div className="h-full w-[70%] bg-gradient-to-r from-amber-700 to-gold-400 rounded-full" />
               </div>
               <span className="text-xs text-zinc-400">
-                {analytics.topScene ? `${analytics.topScene.name}モード` : 'くつろぎ · 70%'}
+                {analytics.topScene ? `${analytics.topScene.name}` : 'くつろぎ · 70%'}
               </span>
             </div>
           </motion.div>
         </Link>
 
-        {/* Status row */}
         <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="card p-3 flex flex-col items-center gap-1">
-            <Clock size={15} className="text-zinc-400" />
-            <p className="text-xs text-zinc-500">滞在</p>
-            <p className="text-sm font-medium text-zinc-200">{daysLeft > 0 ? `あと${daysLeft}日` : '本日'}</p>
-          </div>
           <div className="card p-3 flex flex-col items-center gap-1">
             <Wifi size={15} className="text-gold-400" />
             <p className="text-xs text-zinc-500">Wi-Fi</p>
             <p className="text-[11px] text-zinc-400 text-center leading-tight truncate w-full text-center">{settings.wifiName}</p>
           </div>
+          <div className="card p-3 flex flex-col items-center gap-1">
+            <Bell size={15} className="text-zinc-400" />
+            <p className="text-xs text-zinc-500">Stay</p>
+            <p className="text-sm font-medium text-zinc-200">
+              {daysLeft > 0 ? t('home.staying.stayRemaining', { n: String(daysLeft) }) : t('home.staying.stayToday')}
+            </p>
+          </div>
           <Link href="/dashboard/requests" className="card p-3 flex flex-col items-center gap-1 hover:border-zinc-700 transition-all relative">
             <Bell size={15} className="text-zinc-400" />
-            <p className="text-xs text-zinc-500">リクエスト</p>
-            <p className="text-sm font-medium text-zinc-200">{pendingReqs > 0 ? `${pendingReqs}件中` : '送る'}</p>
+            <p className="text-xs text-zinc-500">{t('home.staying.request')}</p>
+            <p className="text-sm font-medium text-zinc-200">{pendingReqs > 0 ? `${pendingReqs}` : t('home.staying.sendRequest')}</p>
             {pendingReqs > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full" />}
           </Link>
         </div>
 
-        {/* Quick actions */}
-        <p className="section-title mb-3">クイックアクション</p>
+        <p className="section-title mb-3">{t('home.staying.quickActions')}</p>
         <div className="grid grid-cols-2 gap-3 mb-5">
           {[
-            { href: '/dashboard/requests', label: 'サービスリクエスト', sub: 'タオル・アメニティなど', emoji: '🛎️' },
-            { href: '/dashboard/chat', label: 'コンシェルジュ', sub: 'AI · 多言語対応', emoji: '💬' },
-            { href: '/dashboard/map', label: '周辺スポット', sub: 'グルメ・体験', emoji: '🗺️' },
-            { href: '/dashboard/guestbook', label: '寄せ書きを書く', sub: '思い出を残す', emoji: '📸' },
+            { href: '/dashboard/requests', label: t('home.staying.serviceRequest'), sub: t('home.staying.serviceRequestSub'), emoji: '🛎️' },
+            { href: '/dashboard/chat',     label: t('home.staying.concierge'),       sub: t('home.staying.conciergeSub'),       emoji: '💬' },
+            { href: '/dashboard/map',      label: t('home.staying.nearbySpots'),     sub: t('home.staying.nearbySpotsSub'),     emoji: '🗺️' },
+            { href: '/dashboard/guestbook',label: t('home.staying.writeGuestbook'),  sub: t('home.staying.writeGuestbookSub'), emoji: '📸' },
           ].map(({ href, label, sub, emoji }) => (
             <Link key={href} href={href} className="card p-4 flex flex-col gap-1.5 hover:border-zinc-700 transition-all active:scale-98">
               <span className="text-2xl">{emoji}</span>
@@ -252,33 +248,29 @@ function StayingHome({ guestInfo, greeting }: any) {
           ))}
         </div>
 
-        {/* Host message */}
         {unreadMsgs > 0 && (
           <Link href="/dashboard/chat">
             <div className="card p-4 mb-4 border-blue-500/20 bg-blue-950/20">
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                <span className="text-xs text-blue-400">ホストからメッセージ</span>
+                <span className="text-xs text-blue-400">{t('home.staying.hostMessage')}</span>
               </div>
               <p className="text-sm text-zinc-300 line-clamp-2">
                 {store.messages.filter(m => m.from === 'owner').slice(-1)[0]?.content}
               </p>
-              <p className="text-xs text-zinc-500 mt-1">タップして確認 →</p>
+              <p className="text-xs text-zinc-500 mt-1">{t('home.staying.tapToCheck')}</p>
             </div>
           </Link>
         )}
 
-        {/* ECUANEST showcase */}
         <div className="card p-5 overflow-hidden relative border-gold-500/10">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-900/15 to-transparent pointer-events-none" />
           <div className="relative">
-            <p className="section-title">照明ショールーム</p>
-            <p className="text-zinc-300 text-sm leading-relaxed mb-3">
-              この部屋の照明は全て ECUANEST の有機EL製品。気になった照明を製品ページでチェックしてください。
-            </p>
+            <p className="section-title">{t('home.staying.showcaseTitle')}</p>
+            <p className="text-zinc-300 text-sm leading-relaxed mb-3">{t('home.staying.showcaseDesc')}</p>
             <div className="flex gap-2">
-              <Link href="/dashboard/products" className="flex-1 btn-gold text-sm py-2.5 text-center">製品を見る</Link>
-              <Link href="/dashboard/consult" className="flex-1 btn-outline text-sm py-2.5 text-center">相談する</Link>
+              <Link href="/dashboard/products" className="flex-1 btn-gold text-sm py-2.5 text-center">{t('home.staying.viewProducts')}</Link>
+              <Link href="/dashboard/consult"  className="flex-1 btn-outline text-sm py-2.5 text-center">{t('home.staying.consult')}</Link>
             </div>
           </div>
         </div>
@@ -288,8 +280,9 @@ function StayingHome({ guestInfo, greeting }: any) {
 }
 
 // ─── Post ─────────────────────────────────────────────────────────────────────
-function PostHome({ guestInfo, greeting }: any) {
+function PostHome({ guestInfo }: { guestInfo: any }) {
   const [store] = useStore()
+  const { t } = useLanguage()
   const analytics = getLightingAnalytics(store)
   const featured = getFeaturedProducts()
 
@@ -297,44 +290,44 @@ function PostHome({ guestInfo, greeting }: any) {
     <div className="page-container">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="mb-7 pt-2">
-          <p className="section-title">滞在後 · Post Stay</p>
-          <h1 className="font-serif text-2xl text-zinc-100 leading-snug">
-            ありがとうございました
-          </h1>
+          <p className="section-title">{t('home.post.status')}</p>
+          <h1 className="font-serif text-2xl text-zinc-100 leading-snug">{t('home.post.thanks')}</h1>
           <p className="text-zinc-500 text-sm mt-1">Thank you, {guestInfo?.name?.split(' ')[0]}</p>
         </div>
 
-        {/* Personalized lighting recommendation */}
         {analytics.topScene && (
           <div className="card p-5 mb-4 border-gold-500/20 bg-gradient-to-br from-amber-950/40 to-zinc-900">
             <div className="flex items-center gap-2 mb-3">
               <Star size={13} className="text-gold-400 fill-gold-400" />
-              <span className="text-xs text-gold-400 font-medium tracking-wide">パーソナライズされたご提案</span>
+              <span className="text-xs text-gold-400 font-medium tracking-wide">{t('home.post.personalizedLabel')}</span>
             </div>
-            <h2 className="text-lg font-serif text-zinc-100 mb-2">お気に入りの光を<br />ご自宅にも</h2>
-            <p className="text-zinc-400 text-sm leading-relaxed mb-4">
-              滞在中、<strong className="text-gold-400">「{analytics.topScene.name}」シーン</strong>を最もよくご利用いただきました（{analytics.topScene.count}回）。この光は ECUANEST Brite 3 で再現できます。
-            </p>
+            <h2 className="text-lg font-serif text-zinc-100 mb-2" style={{ whiteSpace: 'pre-line' }}>
+              {t('home.post.personalizedHeading')}
+            </h2>
+            <p className="text-zinc-400 text-sm leading-relaxed mb-4"
+              dangerouslySetInnerHTML={{ __html: t('home.post.personalizedDesc', {
+                scene: `<strong class="text-gold-400">${analytics.topScene.name}</strong>`,
+                count: String(analytics.topScene.count),
+              }) }}
+            />
             <Link href="/dashboard/products/brite-3" className="btn-gold inline-flex items-center gap-2 text-sm py-2.5 px-5">
-              Brite 3 を見る <Sparkles size={13} />
+              {t('home.post.viewBrite3')} <Sparkles size={13} />
             </Link>
           </div>
         )}
 
-        {/* Guestbook CTA */}
         <Link href="/dashboard/guestbook">
           <div className="card p-5 mb-4 flex items-center gap-4 hover:border-zinc-700 transition-all active:scale-98">
             <div className="w-14 h-14 rounded-2xl bg-zinc-800 flex items-center justify-center text-3xl flex-shrink-0">📸</div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-zinc-100">寄せ書きを残す</p>
-              <p className="text-xs text-zinc-500 mt-0.5">光の記憶を未来のゲストへ伝えよう</p>
+              <p className="text-sm font-medium text-zinc-100">{t('home.post.guestbookCTA')}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">{t('home.post.guestbookSub')}</p>
             </div>
             <ChevronRight size={16} className="text-zinc-600" />
           </div>
         </Link>
 
-        {/* Products */}
-        <p className="section-title">ECUANEST 製品</p>
+        <p className="section-title">{t('home.post.productsSection')}</p>
         <div className="space-y-2 mb-5">
           {featured.map(p => (
             <Link key={p.id} href={`/dashboard/products/${p.id}`}>
@@ -354,30 +347,28 @@ function PostHome({ guestInfo, greeting }: any) {
           ))}
         </div>
 
-        {/* CTA grid */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <Link href="/dashboard/consult" className="card p-4 text-center hover:border-zinc-700 transition-all active:scale-98">
             <Building2 size={22} className="text-gold-400 mx-auto mb-2" />
-            <p className="text-sm font-medium text-zinc-200">照明コンサル</p>
-            <p className="text-xs text-zinc-500 mt-0.5">無料・オンライン可</p>
+            <p className="text-sm font-medium text-zinc-200">{t('home.post.lightingConsult')}</p>
+            <p className="text-xs text-zinc-500 mt-0.5">{t('home.post.lightingConsultSub')}</p>
           </Link>
           <Link href="/dashboard/products" className="card p-4 text-center hover:border-zinc-700 transition-all active:scale-98">
             <ShoppingBag size={22} className="text-gold-400 mx-auto mb-2" />
-            <p className="text-sm font-medium text-zinc-200">全製品一覧</p>
-            <p className="text-xs text-zinc-500 mt-0.5">4シリーズ展開</p>
+            <p className="text-sm font-medium text-zinc-200">{t('home.post.allProducts')}</p>
+            <p className="text-xs text-zinc-500 mt-0.5">{t('home.post.allProductsSub')}</p>
           </Link>
         </div>
 
-        {/* Rebook */}
         <div className="card p-5 border-gold-500/20 bg-gradient-to-r from-amber-950/30 to-zinc-900">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🎁</span>
-            <span className="text-sm font-medium text-gold-400">リピーター特典</span>
+            <span className="text-sm font-medium text-gold-400">{t('home.post.repeaterBenefit')}</span>
           </div>
-          <p className="text-zinc-300 text-sm mb-3">次回のご予約で <strong className="text-gold-400">20% OFF</strong></p>
+          <p className="text-zinc-300 text-sm mb-3" dangerouslySetInnerHTML={{ __html: t('home.post.repeaterDesc') }} />
           <a href="https://www.airbnb.com" target="_blank" rel="noopener noreferrer"
             className="btn-gold inline-flex items-center gap-2 text-sm py-2.5 px-5">
-            再予約する <ExternalLink size={12} />
+            {t('home.post.rebook')} <ExternalLink size={12} />
           </a>
         </div>
       </motion.div>

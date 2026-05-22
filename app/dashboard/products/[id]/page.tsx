@@ -5,18 +5,20 @@ import { ArrowLeft, Lightbulb, ExternalLink, MessageCircle, CheckCircle2, Buildi
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { getProduct } from '@/lib/products'
+import { useLanguage } from '@/lib/useLanguage'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const { t } = useLanguage()
   const product = getProduct(id)
 
   if (!product) {
     return (
       <div className="page-container flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-zinc-500">製品が見つかりませんでした</p>
+          <p className="text-zinc-500">{t('products.notFound')}</p>
           <Link href="/dashboard/products" className="text-gold-400 text-sm mt-2 inline-block">
-            一覧に戻る
+            {t('products.backToList')}
           </Link>
         </div>
       </div>
@@ -26,7 +28,6 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-zinc-950 pb-28">
       <div className="max-w-[430px] mx-auto">
-        {/* Header */}
         <div className="flex items-center gap-3 px-4 pt-6 pb-4">
           <Link href="/dashboard/products" className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-all">
             <ArrowLeft size={18} className="text-zinc-300" />
@@ -36,7 +37,6 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Hero */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -69,13 +69,12 @@ export default function ProductDetailPage() {
             {product.featured && (
               <div className="mt-3 flex items-center gap-1.5 bg-gold-500/10 border border-gold-500/20 rounded-full px-3 py-1">
                 <CheckCircle2 size={11} className="text-gold-400" />
-                <span className="text-xs text-gold-400">この施設で使用中</span>
+                <span className="text-xs text-gold-400">{t('products.inUseTag')}</span>
               </div>
             )}
           </div>
         </motion.div>
 
-        {/* Description */}
         <div className="px-4 mb-5">
           <div className="card p-5">
             <p className="text-zinc-400 text-sm leading-relaxed">{product.description}</p>
@@ -93,9 +92,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Specs */}
         <div className="px-4 mb-5">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">仕様</p>
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">{t('products.specs')}</p>
           <div className="card overflow-hidden">
             <div className="divide-y divide-zinc-800/60">
               {Object.entries(product.specs).map(([key, value], i) => (
@@ -114,9 +112,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Room Usage */}
         <div className="px-4 mb-5">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">おすすめ用途</p>
+          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">{t('products.useCases')}</p>
           <div className="flex flex-wrap gap-2">
             {product.roomUsed.map((room) => (
               <span
@@ -129,13 +126,12 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Price */}
         <div className="px-4 mb-5">
           <div className="card p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs text-zinc-500 mb-1">参考価格</p>
+              <p className="text-xs text-zinc-500 mb-1">{t('products.price')}</p>
               <p className="text-xl font-medium text-gold-400">{product.price}</p>
-              <p className="text-xs text-zinc-600 mt-0.5">設置工事費別途 · 要見積もり</p>
+              <p className="text-xs text-zinc-600 mt-0.5">{t('products.priceNote')}</p>
             </div>
             <a
               href="https://ecuanest.com"
@@ -143,16 +139,15 @@ export default function ProductDetailPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-gold-400 transition-colors"
             >
-              公式サイト <ExternalLink size={12} />
+              {t('products.officialSite')} <ExternalLink size={12} />
             </a>
           </div>
         </div>
 
-        {/* CTAs */}
         <div className="px-4 space-y-3">
           <Link href="/dashboard/consult" className="btn-gold w-full flex items-center justify-center gap-2">
             <MessageCircle size={16} />
-            照明コンサルを予約する
+            {t('products.consultBtn')}
           </Link>
           <a
             href="https://ecuanest.com"
@@ -161,11 +156,11 @@ export default function ProductDetailPage() {
             className="btn-outline w-full flex items-center justify-center gap-2"
           >
             <ExternalLink size={16} />
-            ECUANEST 公式サイトで購入
+            {t('products.buyBtn')}
           </a>
           <Link href="/dashboard/consult" className="w-full flex items-center justify-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors py-2">
             <Building2 size={15} />
-            建築・設計関係者の方はこちら
+            {t('products.proBtn')}
           </Link>
         </div>
       </div>
