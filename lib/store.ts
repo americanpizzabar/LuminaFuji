@@ -8,6 +8,7 @@ export type ConsultStatus = 'new' | 'contacted' | 'quoted' | 'won' | 'lost'
 export type ServiceStatus = 'pending' | 'inProgress' | 'done'
 export type MaintenancePriority = 'low' | 'medium' | 'urgent'
 export type AnnouncementType = 'welcome' | 'info' | 'reminder' | 'promo'
+export type ReportPeriod = 'monthly' | 'quarterly' | 'semi' | 'annual'
 
 export interface GuestInfo {
   name: string
@@ -44,8 +45,12 @@ export interface ServiceRequest {
   status: ServiceStatus
   priority: 'normal' | 'urgent'
   createdAt: string
+  respondedAt?: string
+  completedAt?: string
   resolvedAt?: string
   ownerNote?: string
+  guestName?: string
+  guestId?: string
 }
 
 export interface GuestbookPost {
@@ -58,6 +63,14 @@ export interface GuestbookPost {
   date: string
   likes: number
   visible: boolean
+}
+
+export interface ConsultMessage {
+  id: string
+  from: 'owner' | 'lead'
+  content: string
+  createdAt: string
+  readByOwner: boolean
 }
 
 export interface ConsultRequest {
@@ -78,6 +91,7 @@ export interface ConsultRequest {
   status: ConsultStatus
   ownerNotes?: string
   source: 'lumina_fuji_stay' | 'direct'
+  consultMessages?: ConsultMessage[]
 }
 
 export interface LightingEvent {
@@ -105,12 +119,22 @@ export interface Announcement {
   createdAt: string
 }
 
+export interface NotificationSettings {
+  emailEnabled: boolean
+  emailAddress: string
+  lineNotifyEnabled: boolean
+  lineNotifyToken: string
+  slackEnabled: boolean
+  slackWebhook: string
+}
+
 export interface BookingRecord {
   id: string
   guestName: string
   nationality: string
   flag: string
   email: string
+  phone?: string
   checkIn: string
   checkOut: string
   platform: string
@@ -120,6 +144,8 @@ export interface BookingRecord {
   revenue: number
   status: 'confirmed' | 'staying' | 'completed' | 'cancelled'
   notes?: string
+  registeredByManager?: boolean
+  specialRequests?: string
 }
 
 export interface CleaningTask {
@@ -147,6 +173,7 @@ export interface AppStore {
   phase: GuestPhase
   guestInfo: GuestInfo | null
   facilitySettings: FacilitySettings
+  notificationSettings: NotificationSettings
   serviceRequests: ServiceRequest[]
   lightingHistory: LightingEvent[]
   guestbookPosts: GuestbookPost[]
@@ -208,6 +235,15 @@ const DEFAULT_ANNOUNCEMENTS: Announcement[] = [
   { id: 'ann1', content: '今夜、晴天の場合は富士山の星空観測に絶好のチャンスです🌟', contentEn: 'Tonight is a great chance to stargaze with Mount Fuji visible on clear skies 🌟', type: 'info', active: true, createdAt: '2026-05-10 18:00' },
 ]
 
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  emailEnabled: false,
+  emailAddress: '',
+  lineNotifyEnabled: false,
+  lineNotifyToken: '',
+  slackEnabled: false,
+  slackWebhook: '',
+}
+
 export const DEFAULT_FACILITY_SETTINGS: FacilitySettings = {
   wifiName: 'LuminaFuji_5G',
   wifiPassword: 'fuji2024view',
@@ -237,6 +273,7 @@ const DEFAULT_STORE: AppStore = {
   phase: 'staying',
   guestInfo: DEFAULT_GUEST_INFO,
   facilitySettings: DEFAULT_FACILITY_SETTINGS,
+  notificationSettings: DEFAULT_NOTIFICATION_SETTINGS,
   serviceRequests: [],
   lightingHistory: [],
   guestbookPosts: DEFAULT_GUESTBOOK,
@@ -419,4 +456,102 @@ export function getUnreadCounts(store: AppStore) {
   const newConsults = store.consultRequests.filter(c => c.status === 'new').length
   const pendingRequests = store.serviceRequests.filter(r => r.status === 'pending').length
   return { unreadMessages, newConsults, pendingRequests, total: unreadMessages + newConsults + pendingRequests }
+}
+
+// Service request time tracking
+export function respondToServiceRequest(id: string, note?: string): void {
+  updateStore({
+    serviceRequests: getStore().serviceRequests.map(r =>
+      r.id === id ? { ...r, status: 'inProgress' as ServiceStatus, respondedAt: new Date().toISOString(), ownerNote: note ?? r.ownerNote } : r
+    )
+  })
+}
+
+export function completeServiceRequest(id: string, note?: string): void {
+  updateStore({
+    serviceRequests: getStore().serviceRequests.map(r =>
+      r.id === id ? { ...r, status: 'done' as ServiceStatus, completedAt: new Date().toISOString(), resolvedAt: new Date().toISOString(), ownerNote: note ?? r.ownerNote } : r
+    )
+  })
+}
+
+// Booking records (manager registration)
+export function addBookingRecord(record: Omit<BookingRecord, 'id'>): BookingRecord {
+  const newRecord: BookingRecord = { ...record, id: `LF-${Date.now()}` }
+  const store = getStore()
+  updateStore({ bookingHistory: [newRecord, ...store.bookingHistory] })
+  return newRecord
+}
+
+export function updateBookingRecord(id: string, updates: Partial<BookingRecord>): void {
+  const store = getStore()
+  updateStore({ bookingHistory: store.bookingHistory.map(b => b.id === id ? { ...b, ...updates } : b) })
+}
+
+export function deleteBookingRecord(id: string): void {
+  const store = getStore()
+  updateStore({ bookingHistory: store.bookingHistory.filter(b => b.id !== id) })
+}
+
+// Notification settings
+export function setNotificationSettings(settings: NotificationSettings): void {
+  updateStore({ notificationSettings: settings })
+}
+
+// Consult messaging
+export function addConsultMessage(consultId: string, from: 'owner' | 'lead', content: string): void {
+  const store = getStore()
+  const msg: ConsultMessage = {
+    id: `cm-${Date.now()}`,
+    from, content,
+    createdAt: new Date().toLocaleString('ja-JP'),
+    readByOwner: from === 'owner',
+  }
+  updateStore({
+    consultRequests: store.consultRequests.map(r =>
+      r.id === consultId ? { ...r, consultMessages: [...(r.consultMessages ?? []), msg] } : r
+    )
+  })
+}
+
+// Time elapsed helper
+export function timeElapsed(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return '1分以内'
+  if (mins < 60) return `${mins}分前`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}時間前`
+  const days = Math.floor(hrs / 24)
+  return `${days}日前`
+}
+
+export function durationLabel(start: string, end: string): string {
+  const diff = new Date(end).getTime() - new Date(start).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 60) return `${mins}分`
+  const hrs = Math.floor(mins / 60)
+  const rem = mins % 60
+  return rem > 0 ? `${hrs}時間${rem}分` : `${hrs}時間`
+}
+
+// Extended revenue stats with period filter
+export function getRevenueStatsByPeriod(store: AppStore, period: ReportPeriod) {
+  const now = new Date()
+  const cutoff = new Date()
+  if (period === 'monthly')   cutoff.setMonth(now.getMonth() - 1)
+  if (period === 'quarterly') cutoff.setMonth(now.getMonth() - 3)
+  if (period === 'semi')      cutoff.setMonth(now.getMonth() - 6)
+  if (period === 'annual')    cutoff.setFullYear(now.getFullYear() - 1)
+
+  const bookings = store.bookingHistory.filter(b => {
+    const d = new Date(b.checkIn)
+    return d >= cutoff && d <= now && (b.status === 'completed' || b.status === 'staying')
+  })
+  const totalRevenue = bookings.reduce((s, b) => s + b.revenue, 0)
+  const totalNights = bookings.reduce((s, b) => s + b.nights, 0)
+  const avgPerNight = totalNights > 0 ? Math.round(totalRevenue / totalNights) : 0
+  const platforms: Record<string, number> = {}
+  bookings.forEach(b => { platforms[b.platform] = (platforms[b.platform] ?? 0) + b.revenue })
+  return { totalRevenue, totalNights, avgPerNight, bookingCount: bookings.length, platforms, bookings }
 }
