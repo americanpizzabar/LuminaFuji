@@ -134,7 +134,7 @@ export default function ProductDetailPage() {
               <p className="text-xs text-zinc-600 mt-0.5">{t('products.priceNote')}</p>
             </div>
             <a
-              href="https://ecuanest.com"
+              href="https://ecuanest.co.jp/index.html"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-gold-400 transition-colors"
@@ -150,7 +150,7 @@ export default function ProductDetailPage() {
             {t('products.consultBtn')}
           </Link>
           <a
-            href="https://ecuanest.com"
+            href="https://ecuanest.co.jp/index.html"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-outline w-full flex items-center justify-center gap-2"

@@ -3,20 +3,22 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, Calendar, CheckSquare, BarChart2, LogOut, Wrench, Bell } from 'lucide-react'
+import { LayoutDashboard, Users, CheckSquare, BarChart2, LogOut, Wrench, Settings } from 'lucide-react'
 import { PhaseProvider } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
 
 const navItems = [
   { href: '/manager/dashboard', label: '今日', icon: LayoutDashboard },
-  { href: '/manager/calendar', label: 'カレンダー', icon: Calendar },
+  { href: '/manager/guests', label: 'ゲスト', icon: Users },
   { href: '/manager/tasks', label: 'タスク', icon: CheckSquare },
   { href: '/manager/reports', label: 'レポート', icon: BarChart2 },
+  { href: '/manager/settings', label: '設定', icon: Settings },
 ]
 
 function ManagerLayoutInner({ children, pathname }: { children: React.ReactNode; pathname: string }) {
   const router = useRouter()
   const [store] = useStore()
+  const pendingRequests = store.serviceRequests.filter(r => r.status === 'pending').length
   const openMaintenance = store.maintenanceItems.filter(m => m.status === 'open').length
   const pendingClean = store.cleaningChecklist.filter(t => !t.done).length
 
@@ -35,9 +37,9 @@ function ManagerLayoutInner({ children, pathname }: { children: React.ReactNode;
             </div>
             <span className="text-sm font-medium text-zinc-200">Lumina Fuji</span>
             <span className="text-xs text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20">管理会社</span>
-            {(openMaintenance + pendingClean) > 0 && (
+            {(pendingRequests + openMaintenance) > 0 && (
               <span className="w-5 h-5 bg-amber-500 rounded-full text-[10px] text-zinc-950 flex items-center justify-center font-medium ml-1">
-                {openMaintenance + pendingClean}
+                {pendingRequests + openMaintenance}
               </span>
             )}
           </div>
@@ -61,10 +63,18 @@ function ManagerLayoutInner({ children, pathname }: { children: React.ReactNode;
         <div className="max-w-5xl mx-auto px-4 pt-2 pb-3 flex items-center justify-around">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href
+            const badge = href === '/manager/guests' ? pendingRequests : undefined
             return (
               <Link key={href} href={href}
-                className={`flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all ${isActive ? 'text-teal-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
+                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all relative ${isActive ? 'text-teal-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                <div className="relative">
+                  <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
+                  {badge ? (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 rounded-full text-[9px] text-zinc-950 flex items-center justify-center font-bold">
+                      {badge}
+                    </span>
+                  ) : null}
+                </div>
                 <span className="text-[10px]">{label}</span>
               </Link>
             )

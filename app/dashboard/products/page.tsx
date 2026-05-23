@@ -97,7 +97,7 @@ export default function ProductsPage() {
           <p className="text-sm font-medium text-zinc-200">ECUANEST</p>
           <p className="text-xs text-zinc-500 leading-relaxed">{t('products.brandSub')}</p>
         </div>
-        <a href="https://ecuanest.com" target="_blank" rel="noopener noreferrer"
+        <a href="https://ecuanest.co.jp/index.html" target="_blank" rel="noopener noreferrer"
           className="flex-shrink-0 flex items-center gap-1 text-xs text-gold-400 hover:text-gold-300">
           {t('products.officialSite')} <ExternalLink size={11} />
         </a>
@@ -132,7 +132,7 @@ export default function ProductsPage() {
           <Link href="/dashboard/consult" className="flex-1 btn-gold text-sm py-2.5 text-center">
             {t('products.ctaBtn')}
           </Link>
-          <a href="https://ecuanest.com" target="_blank" rel="noopener noreferrer"
+          <a href="https://ecuanest.co.jp/index.html" target="_blank" rel="noopener noreferrer"
             className="flex-1 btn-outline text-sm py-2.5 text-center flex items-center justify-center gap-1.5">
             {t('products.officialSite')} <ExternalLink size={11} />
           </a>

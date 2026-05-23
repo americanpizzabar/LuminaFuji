@@ -539,7 +539,7 @@ export default function OwnerSettingsPage() {
           <h2 className="text-sm font-medium text-zinc-200 mb-3">ECUANEST 連携</h2>
           <div className="space-y-2">
             <a
-              href="https://ecuanest.com"
+              href="https://ecuanest.co.jp/index.html"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between p-3 border border-zinc-700 rounded-xl hover:border-amber-500/30 hover:bg-amber-500/5 transition-all"
@@ -548,7 +548,7 @@ export default function OwnerSettingsPage() {
               <ExternalLink size={13} className="text-zinc-500" />
             </a>
             <a
-              href="https://ecuanest.com/partner"
+              href="https://ecuanest.co.jp/index.html"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between p-3 border border-zinc-700 rounded-xl hover:border-amber-500/30 hover:bg-amber-500/5 transition-all"
