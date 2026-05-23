@@ -48,6 +48,10 @@ function OwnerLayoutInner({ children, pathname }: { children: React.ReactNode, p
             )}
           </div>
           <div className="flex items-center gap-1">
+            <Link href="/manual"
+              className="text-xs text-zinc-500 hover:text-zinc-300 px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-all">
+              マニュアル
+            </Link>
             <Link href="/dashboard" target="_blank"
               className="text-xs text-zinc-500 hover:text-zinc-300 px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-all">
               ゲスト画面 →
