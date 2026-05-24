@@ -8,8 +8,8 @@ import Navigation from '@/components/Navigation'
 import PhaseSelector from '@/components/PhaseSelector'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import Link from 'next/link'
-import { BookOpen } from 'lucide-react'
-import { getStore } from '@/lib/store'
+import { BookOpen, LogOut } from 'lucide-react'
+import { getStore, clearGuestInfo } from '@/lib/store'
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -21,6 +21,25 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [router])
 
   return <>{children}</>
+}
+
+function LogoutButton() {
+  const router = useRouter()
+
+  const handleLogout = () => {
+    clearGuestInfo()
+    router.replace('/login')
+  }
+
+  return (
+    <button
+      onClick={handleLogout}
+      className="w-9 h-9 rounded-xl bg-zinc-800/80 backdrop-blur border border-zinc-700/50 flex items-center justify-center hover:bg-zinc-700 transition-all"
+      title="ログアウト"
+    >
+      <LogOut size={15} className="text-zinc-400" />
+    </button>
+  )
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -39,6 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <BookOpen size={15} className="text-zinc-400" />
               </Link>
               <LanguageSwitcher />
+              <LogoutButton />
             </div>
             <main>{children}</main>
             <Navigation />

@@ -327,6 +327,10 @@ export function setGuestInfo(info: GuestInfo): void {
   updateStore({ guestInfo: info })
 }
 
+export function clearGuestInfo(): void {
+  updateStore({ guestInfo: null })
+}
+
 export function setFacilitySettings(settings: FacilitySettings): void {
   updateStore({ facilitySettings: settings })
 }
