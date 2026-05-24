@@ -489,7 +489,25 @@ export function addBookingRecord(record: Omit<BookingRecord, 'id'>): BookingReco
 
 export function updateBookingRecord(id: string, updates: Partial<BookingRecord>): void {
   const store = getStore()
-  updateStore({ bookingHistory: store.bookingHistory.map(b => b.id === id ? { ...b, ...updates } : b) })
+  const updatedHistory = store.bookingHistory.map(b => b.id === id ? { ...b, ...updates } : b)
+
+  // guestInfo 同期: ログイン中のゲストの予約日程等が変更された場合、guestInfo も追従させる
+  let guestInfo = store.guestInfo
+  if (guestInfo && guestInfo.reservationId === id) {
+    guestInfo = {
+      ...guestInfo,
+      ...(updates.checkIn       !== undefined && { checkIn: updates.checkIn }),
+      ...(updates.checkOut      !== undefined && { checkOut: updates.checkOut }),
+      ...(updates.guestName     !== undefined && { name: updates.guestName }),
+      ...(updates.email         !== undefined && { email: updates.email }),
+      ...(updates.phone         !== undefined && { phone: updates.phone }),
+      ...(updates.adults        !== undefined && { adults: updates.adults }),
+      ...(updates.children      !== undefined && { children: updates.children }),
+      ...(updates.specialRequests !== undefined && { specialRequests: updates.specialRequests }),
+    }
+  }
+
+  updateStore({ bookingHistory: updatedHistory, guestInfo })
 }
 
 export function deleteBookingRecord(id: string): void {

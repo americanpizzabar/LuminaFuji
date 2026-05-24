@@ -11,6 +11,7 @@ import {
   Users, Plus, Calendar, ChevronLeft, ChevronRight, X, Edit2,
   Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp,
 } from 'lucide-react'
+import PhaseBadge from '@/components/PhaseBadge'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -256,9 +257,11 @@ function EditModal({
 
 function GuestListTab({
   bookings,
+  facilitySettings,
   onEdit,
 }: {
   bookings: BookingRecord[]
+  facilitySettings: { checkInTime: string; checkOutTime: string }
   onEdit: (b: BookingRecord) => void
 }) {
   const [filter, setFilter] = useState<string>('all')
@@ -316,6 +319,7 @@ function GuestListTab({
                         {b.status === 'staying' && (
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         )}
+                        <PhaseBadge checkIn={b.checkIn} checkOut={b.checkOut} settings={facilitySettings} />
                       </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs text-zinc-500">
                         <span className="flex items-center gap-1"><Clock size={10} /> {b.checkIn} 〜 {b.checkOut}</span>
@@ -841,7 +845,7 @@ export default function ManagerGuestsPage() {
           transition={{ duration: 0.18 }}
         >
           {activeTab === 'ゲスト一覧' && (
-            <GuestListTab bookings={bookings} onEdit={handleEdit} />
+            <GuestListTab bookings={bookings} facilitySettings={store.facilitySettings} onEdit={handleEdit} />
           )}
           {activeTab === '新規登録' && (
             <NewBookingTab onSuccess={() => setActiveTab('ゲスト一覧')} />

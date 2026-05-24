@@ -6,23 +6,24 @@ import { getStore, setPhase as storeSetPhase, setGuestInfo as storeSetGuestInfo,
 export type { GuestPhase }
 export type { GuestInfo }
 
-// ─── 自動フェーズ計算 ─────────────────────────────────────────────────────────
-// チェックイン日 checkInTime（デフォルト16:00）より前  → 'booked'
-// チェックイン後 〜 チェックアウト日 checkOutTime（デフォルト11:00）まで → 'staying'
-// チェックアウト以降 → 'post'
-function calcPhase(
-  guestInfo: GuestInfo,
+// ─── 自動フェーズ計算（共通ユーティリティ） ────────────────────────────────────
+// before checkIn 16:00 → 'booked'
+// checkIn 16:00 〜 checkOut 11:00 → 'staying'
+// after checkOut 11:00 → 'post'
+export function calcPhase(
+  checkIn: string,
+  checkOut: string,
   checkInTime: string = '16:00',
   checkOutTime: string = '11:00'
 ): GuestPhase {
   const now = new Date()
 
   const [ciH, ciM] = checkInTime.split(':').map(Number)
-  const checkInDt = new Date(guestInfo.checkIn)
+  const checkInDt = new Date(checkIn)
   checkInDt.setHours(ciH, ciM, 0, 0)
 
   const [coH, coM] = checkOutTime.split(':').map(Number)
-  const checkOutDt = new Date(guestInfo.checkOut)
+  const checkOutDt = new Date(checkOut)
   checkOutDt.setHours(coH, coM, 0, 0)
 
   if (now < checkInDt) return 'booked'
@@ -54,7 +55,7 @@ export function PhaseProvider({ children }: { children: React.ReactNode }) {
     const store = getStore()
     if (store.guestInfo) {
       const { checkInTime, checkOutTime } = store.facilitySettings
-      setAutoPhase(calcPhase(store.guestInfo, checkInTime, checkOutTime))
+      setAutoPhase(calcPhase(store.guestInfo.checkIn, store.guestInfo.checkOut, checkInTime, checkOutTime))
     }
   }
 
@@ -62,14 +63,12 @@ export function PhaseProvider({ children }: { children: React.ReactNode }) {
     const store = getStore()
     setGuestInfoState(store.guestInfo)
     setIsLoggedIn(!!store.guestInfo)
-
-    // 初回計算
     recalc()
 
     // 1分ごとに再計算（チェックイン・チェックアウト時刻で自動切り替え）
     const interval = setInterval(recalc, 60_000)
 
-    // 他タブからの guestInfo 変更を反映
+    // 他タブからの変更（オーナー/管理会社が日程変更した場合も含む）を反映
     const handler = (e: StorageEvent) => {
       if (e.key === 'lf_store_v3' && e.newValue) {
         try {
@@ -102,7 +101,6 @@ export function PhaseProvider({ children }: { children: React.ReactNode }) {
     setGuestInfoState(info)
     setIsLoggedIn(true)
     storeSetGuestInfo(info)
-    // guestInfo が変わったら手動オーバーライドをリセット
     setDemoOverride(null)
     recalc()
   }

@@ -13,6 +13,7 @@ import {
   Plus, RefreshCw, Bell, Users, Clock, Check,
 } from 'lucide-react'
 import { useState } from 'react'
+import PhaseBadge from '@/components/PhaseBadge'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -216,8 +217,11 @@ export default function ManagerDashboardPage() {
           </p>
           {currentBooking ? (
             <div>
-              <p className="text-sm font-medium text-zinc-100">{currentBooking.flag} {currentBooking.guestName}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">チェックアウト: {currentBooking.checkOut} {store.facilitySettings.checkOutTime}</p>
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="text-sm font-medium text-zinc-100">{currentBooking.flag} {currentBooking.guestName}</p>
+                <PhaseBadge checkIn={currentBooking.checkIn} checkOut={currentBooking.checkOut} settings={store.facilitySettings} />
+              </div>
+              <p className="text-xs text-zinc-500">チェックアウト: {currentBooking.checkOut} {store.facilitySettings.checkOutTime}</p>
               <p className="text-xs text-zinc-600 mt-0.5">{currentBooking.platform} · {currentBooking.adults}名</p>
             </div>
           ) : (
@@ -228,8 +232,11 @@ export default function ManagerDashboardPage() {
           <p className="text-xs text-zinc-500 mb-2">次のゲスト</p>
           {nextBooking ? (
             <div>
-              <p className="text-sm font-medium text-zinc-100">{nextBooking.flag} {nextBooking.guestName}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">チェックイン: {nextBooking.checkIn} {store.facilitySettings.checkInTime}</p>
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="text-sm font-medium text-zinc-100">{nextBooking.flag} {nextBooking.guestName}</p>
+                <PhaseBadge checkIn={nextBooking.checkIn} checkOut={nextBooking.checkOut} settings={store.facilitySettings} />
+              </div>
+              <p className="text-xs text-zinc-500">チェックイン: {nextBooking.checkIn} {store.facilitySettings.checkInTime}</p>
               <p className="text-xs text-zinc-600 mt-0.5">{nextBooking.platform} · {nextBooking.adults}名</p>
             </div>
           ) : (

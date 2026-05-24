@@ -13,6 +13,7 @@ import {
   updateServiceRequest, getStore, sendMessage as storeSendMessage
 } from '@/lib/store'
 import { useState, useEffect } from 'react'
+import PhaseBadge from '@/components/PhaseBadge'
 
 type DrawerKey = 'revenue' | 'avgPrice' | 'leads' | 'pending' | null
 
@@ -148,28 +149,34 @@ export default function OwnerDashboardPage() {
           )}
         </div>
 
-        {/* Phase display (auto-calculated from check-in/out dates) */}
+        {/* Phase display — per-booking, auto-calculated from dates */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
           <h2 className="text-sm font-medium text-zinc-200 mb-1 flex items-center gap-2">
             <Lightbulb size={14} className="text-gold-400" /> ゲスト体験フェーズ
           </h2>
-          <p className="text-xs text-zinc-500 mb-4">チェックイン・アウト時刻から自動切り替え</p>
-          <div className="space-y-2 mb-4">
-            {(['booked', 'staying', 'post'] as const).map(p => (
-              <div key={p}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${phase === p ? phaseConfig[p].color : 'border-zinc-800 text-zinc-600'}`}>
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${phase === p ? 'bg-current' : 'bg-zinc-700'}`} />
-                <div>
-                  <p className="text-sm font-medium">{phaseConfig[p].label}</p>
-                  <p className="text-xs opacity-70">{phaseConfig[p].desc}</p>
-                </div>
-                {phase === p && <span className="ml-auto text-xs">現在</span>}
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-zinc-600">
-            CI {store.facilitySettings.checkInTime} / CO {store.facilitySettings.checkOutTime} を基準に自動判定
+          <p className="text-xs text-zinc-500 mb-4">
+            CI {store.facilitySettings.checkInTime} / CO {store.facilitySettings.checkOutTime} から自動計算
           </p>
+          <div className="space-y-2">
+            {store.bookingHistory
+              .filter(b => b.status !== 'cancelled' && b.status !== 'completed')
+              .slice(0, 5)
+              .map(b => (
+                <div key={b.id} className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-800">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-base flex-shrink-0">{b.flag}</span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-zinc-200 truncate">{b.guestName}</p>
+                      <p className="text-[10px] text-zinc-500">{b.checkIn} → {b.checkOut}</p>
+                    </div>
+                  </div>
+                  <PhaseBadge checkIn={b.checkIn} checkOut={b.checkOut} settings={store.facilitySettings} />
+                </div>
+              ))}
+            {store.bookingHistory.filter(b => b.status !== 'cancelled' && b.status !== 'completed').length === 0 && (
+              <p className="text-xs text-zinc-600 text-center py-4">アクティブな予約はありません</p>
+            )}
+          </div>
           {lighting.topScene && (
             <div className="border-t border-zinc-800 pt-3 mt-3">
               <p className="text-xs text-zinc-500">最多使用シーン</p>
