@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Wrench, MessageSquare, CheckCircle2, Clock,
   AlertTriangle, Send, ChevronDown, ChevronUp, Calendar,
-  Bed, DollarSign, Filter, Plus, Edit2, X, Check, Trash2,
+  Bed, DollarSign, Filter, Plus, Edit2, X, Check, Trash2, Link2,
 } from 'lucide-react'
 import { useStore } from '@/lib/useStore'
 import {
@@ -274,6 +274,12 @@ function BookingModal({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+/** 招待リンクを生成してクリップボードにコピー */
+function generateInviteLink(booking: BookingRecord): string {
+  const encoded = btoa(encodeURIComponent(JSON.stringify(booking)))
+  return `${window.location.origin}/login?invite=${encoded}`
+}
+
 export default function GuestsPage() {
   const [store, update] = useStore()
   const [bookingFilter, setBookingFilter] = useState<BookingFilter>('all')
@@ -283,6 +289,7 @@ export default function GuestsPage() {
   const [msgInput, setMsgInput] = useState('')
   const [sending, setSending] = useState(false)
   const [activeSection, setActiveSection] = useState<ActiveSection>('bookings')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const filteredBookings =
     bookingFilter === 'all'
@@ -330,6 +337,14 @@ export default function GuestsPage() {
       update({ bookingHistory: getStore().bookingHistory })
     }
     closeModal()
+  }
+
+  const copyInviteLink = (booking: BookingRecord) => {
+    const link = generateInviteLink(booking)
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedId(booking.id)
+      setTimeout(() => setCopiedId(null), 2000)
+    })
   }
 
   const resolveServiceRequest = (id: string) => {
@@ -489,11 +504,26 @@ export default function GuestsPage() {
                                   <p className="text-xs text-zinc-300">{booking.notes}</p>
                                 </div>
                               )}
-                              {/* 編集ボタン */}
-                              <button onClick={() => openEdit(booking)}
-                                className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all">
-                                <Edit2 size={11} /> 予約を編集
-                              </button>
+                              {/* ボタン行 */}
+                              <div className="flex gap-2 flex-wrap">
+                                <button onClick={() => openEdit(booking)}
+                                  className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all">
+                                  <Edit2 size={11} /> 予約を編集
+                                </button>
+                                {booking.email && (
+                                  <button onClick={() => copyInviteLink(booking)}
+                                    className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border transition-all ${
+                                      copiedId === booking.id
+                                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
+                                    }`}>
+                                    {copiedId === booking.id
+                                      ? <><Check size={11} /> コピー済み</>
+                                      : <><Link2 size={11} /> 招待リンクをコピー</>
+                                    }
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </motion.div>
                         )}

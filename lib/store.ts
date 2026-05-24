@@ -23,6 +23,8 @@ export interface GuestInfo {
   adults: number
   children: number
   specialRequests?: string
+  /** デモセッション識別フラグ — ログインページ再訪で自動クリア */
+  isDemo?: boolean
 }
 
 export interface FacilitySettings {

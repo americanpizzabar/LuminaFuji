@@ -9,7 +9,7 @@ import {
 } from '@/lib/store'
 import {
   Users, Plus, Calendar, ChevronLeft, ChevronRight, X, Edit2,
-  Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp,
+  Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp, Link2,
 } from 'lucide-react'
 import PhaseBadge from '@/components/PhaseBadge'
 
@@ -255,6 +255,11 @@ function EditModal({
 
 // ─── Guest List Tab ───────────────────────────────────────────────────────────
 
+function generateInviteLink(booking: BookingRecord): string {
+  const encoded = btoa(encodeURIComponent(JSON.stringify(booking)))
+  return `${window.location.origin}/login?invite=${encoded}`
+}
+
 function GuestListTab({
   bookings,
   facilitySettings,
@@ -266,6 +271,15 @@ function GuestListTab({
 }) {
   const [filter, setFilter] = useState<string>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const copyInviteLink = (booking: BookingRecord) => {
+    const link = generateInviteLink(booking)
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedId(booking.id)
+      setTimeout(() => setCopiedId(null), 2000)
+    })
+  }
 
   const filtered = useMemo(() => {
     if (filter === 'all') return bookings
@@ -364,10 +378,25 @@ function GuestListTab({
                           <p className="text-xs text-zinc-400 bg-zinc-800/50 rounded-lg px-3 py-2">{(b as BookingRecord & { specialRequests?: string }).specialRequests}</p>
                         </div>
                       )}
-                      <button onClick={() => onEdit(b)}
-                        className="flex items-center gap-1.5 text-xs text-teal-400 hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 rounded-xl px-3 py-1.5 transition-all">
-                        <Edit2 size={11} /> 編集する
-                      </button>
+                      <div className="flex gap-2 flex-wrap">
+                        <button onClick={() => onEdit(b)}
+                          className="flex items-center gap-1.5 text-xs text-teal-400 hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 rounded-xl px-3 py-1.5 transition-all">
+                          <Edit2 size={11} /> 編集する
+                        </button>
+                        {b.email && (
+                          <button onClick={() => copyInviteLink(b)}
+                            className={`flex items-center gap-1.5 text-xs rounded-xl px-3 py-1.5 border transition-all ${
+                              copiedId === b.id
+                                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                                : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
+                            }`}>
+                            {copiedId === b.id
+                              ? <><Check size={11} /> コピー済み</>
+                              : <><Link2 size={11} /> 招待リンクをコピー</>
+                            }
+                          </button>
+                        )}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>

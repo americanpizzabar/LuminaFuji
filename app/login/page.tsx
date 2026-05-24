@@ -5,11 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Mail, ArrowRight, Sparkles, AlertCircle, CheckCircle2, RotateCcw, ChevronLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
-  getStore, setGuestInfo as storeSetGuestInfo, setPhase as storeSetPhase
+  getStore, updateStore, setGuestInfo as storeSetGuestInfo, setPhase as storeSetPhase,
+  clearGuestInfo,
 } from '@/lib/store'
-import type { GuestInfo } from '@/lib/store'
+import type { GuestInfo, BookingRecord } from '@/lib/store'
 
 type Step = 'input' | 'otp'
+
+/** 招待リンク param をデコードして BookingRecord を返す。失敗時は null */
+function decodeInvite(raw: string): BookingRecord | null {
+  try {
+    return JSON.parse(decodeURIComponent(atob(raw))) as BookingRecord
+  } catch {
+    return null
+  }
+}
 
 export default function LoginPage() {
   const [step, setStep] = useState<Step>('input')
@@ -23,9 +33,34 @@ export default function LoginPage() {
   const otpRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
+  // ── 初期化: 招待リンク処理 & ログイン済みチェック ──────────────────────────
   useEffect(() => {
-    if (getStore().guestInfo) {
-      router.replace('/dashboard')
+    // 1. 招待リンク (?invite=...) を読み込んでlocalStorageに注入
+    const params = new URLSearchParams(window.location.search)
+    const inviteParam = params.get('invite')
+    if (inviteParam) {
+      const booking = decodeInvite(inviteParam)
+      if (booking?.id && booking?.email) {
+        const store = getStore()
+        const alreadyExists = store.bookingHistory.some(b => b.id === booking.id)
+        if (!alreadyExists) {
+          updateStore({ bookingHistory: [...store.bookingHistory, booking] })
+        }
+        // メールアドレスを自動入力
+        setEmail(booking.email)
+      }
+    }
+
+    // 2. ログイン状態チェック
+    const store = getStore()
+    if (store.guestInfo) {
+      if (store.guestInfo.isDemo) {
+        // デモセッションはログインページ再訪で自動クリア
+        clearGuestInfo()
+      } else {
+        // 本物のログイン済みユーザーはダッシュボードへ
+        router.replace('/dashboard')
+      }
     }
   }, [router])
 
@@ -70,14 +105,17 @@ export default function LoginPage() {
     const trimmed = email.trim().toLowerCase()
     if (!trimmed) return
 
-    // Client-side booking check before calling API
+    // 予約チェック: localStorageにデータがある場合のみ照合
+    // (招待リンクなしで新規デバイスからアクセスした場合はスキップ)
     const store = getStore()
-    const booking = store.bookingHistory.find(
-      b => b.email?.toLowerCase() === trimmed
-    )
-    if (!booking) {
-      setError('ご予約情報が見つかりませんでした。ご予約時のメールアドレスをご確認ください。')
-      return
+    if (store.bookingHistory.length > 0) {
+      const booking = store.bookingHistory.find(
+        b => b.email?.toLowerCase() === trimmed
+      )
+      if (!booking) {
+        setError('ご予約情報が見つかりませんでした。\nホストから招待リンクを受け取り、そのリンクからアクセスしてください。')
+        return
+      }
     }
 
     const ok = await sendOtp(trimmed)
@@ -117,7 +155,9 @@ export default function LoginPage() {
         b => b.email?.toLowerCase() === verifiedEmail.toLowerCase()
       )
       if (!booking) {
-        setError('予約情報の取得に失敗しました。')
+        // 招待リンクなしでアクセスした場合など
+        setError('ご予約情報が見つかりませんでした。\nホストから招待リンクを受け取り、そのリンクからアクセスしてください。')
+        setStep('input')
         return
       }
       const platformMap: Record<string, GuestInfo['platform']> = {
@@ -164,22 +204,29 @@ export default function LoginPage() {
   }
 
   const handleDemoEntry = (phase: 'booked' | 'staying' | 'post') => {
+    const today = new Date()
+    const fmt = (d: Date) => d.toISOString().split('T')[0]
+    const ci = new Date(today); ci.setDate(today.getDate() - 1)
+    const co = new Date(today); co.setDate(today.getDate() + 2)
     const guestInfo: GuestInfo = {
       name: 'デモゲスト',
       email: 'demo@luminafuji.com',
       nationality: '日本',
       flag: '🇯🇵',
-      checkIn: '2026-05-23',
-      checkOut: '2026-05-25',
+      checkIn: fmt(ci),
+      checkOut: fmt(co),
       reservationId: 'LF-DEMO-001',
       platform: 'direct',
       adults: 2,
       children: 0,
+      isDemo: true,  // デモセッション識別フラグ
     }
     storeSetGuestInfo(guestInfo)
     storeSetPhase(phase)
     router.push('/dashboard')
   }
+
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
@@ -246,7 +293,7 @@ export default function LoginPage() {
                           className="flex items-start gap-2 text-red-400 text-xs mb-3 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2.5"
                         >
                           <AlertCircle size={13} className="flex-shrink-0 mt-0.5" />
-                          <span>{error}</span>
+                          <span className="whitespace-pre-line">{error}</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -323,7 +370,7 @@ export default function LoginPage() {
                           className="flex items-start gap-2 text-red-400 text-xs mb-3 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2.5"
                         >
                           <AlertCircle size={13} className="flex-shrink-0 mt-0.5" />
-                          <span>{error}</span>
+                          <span className="whitespace-pre-line">{error}</span>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -359,34 +406,36 @@ export default function LoginPage() {
             )}
           </AnimatePresence>
 
-          {/* Demo mode */}
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles size={14} className="text-gold-500" />
-              <span className="text-xs text-gold-500 font-medium tracking-wider uppercase">
-                デモモード
-              </span>
+          {/* デモモードパネル — NEXT_PUBLIC_DEMO_MODE=true の場合のみ表示 */}
+          {isDemoMode && (
+            <div className="card p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles size={14} className="text-gold-500" />
+                <span className="text-xs text-gold-500 font-medium tracking-wider uppercase">
+                  デモモード
+                </span>
+              </div>
+              <p className="text-zinc-500 text-xs mb-3">
+                体験フェーズを選んでアプリを試す
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { key: 'booked', label: '予約済', emoji: '📅' },
+                  { key: 'staying', label: '滞在中', emoji: '🏠' },
+                  { key: 'post', label: '滞在後', emoji: '✨' },
+                ].map(({ key, label, emoji }) => (
+                  <button
+                    key={key}
+                    onClick={() => handleDemoEntry(key as 'booked' | 'staying' | 'post')}
+                    className="flex flex-col items-center gap-1 py-2.5 border border-zinc-700 hover:border-zinc-600 rounded-xl text-xs text-zinc-400 hover:text-zinc-300 transition-all active:scale-95"
+                  >
+                    <span className="text-lg">{emoji}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <p className="text-zinc-500 text-xs mb-3">
-              体験フェーズを選んでアプリを試す
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { key: 'booked', label: '予約済', emoji: '📅' },
-                { key: 'staying', label: '滞在中', emoji: '🏠' },
-                { key: 'post', label: '滞在後', emoji: '✨' },
-              ].map(({ key, label, emoji }) => (
-                <button
-                  key={key}
-                  onClick={() => handleDemoEntry(key as 'booked' | 'staying' | 'post')}
-                  className="flex flex-col items-center gap-1 py-2.5 border border-zinc-700 hover:border-zinc-600 rounded-xl text-xs text-zinc-400 hover:text-zinc-300 transition-all active:scale-95"
-                >
-                  <span className="text-lg">{emoji}</span>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+          )}
         </motion.div>
 
         <p className="text-center text-zinc-700 text-xs mt-6">
