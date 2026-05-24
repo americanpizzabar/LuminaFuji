@@ -3,13 +3,12 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useStore } from '@/lib/useStore'
-import { usePhase } from '@/lib/phase'
 import {
   CalendarCheck, TrendingUp, Users, Building2,
-  ChevronRight, Bell, MessageSquare, Lightbulb, Send, X
+  ChevronRight, Bell, MessageSquare, Send, X
 } from 'lucide-react'
 import {
-  getRevenueStats, getLightingAnalytics, getUnreadCounts,
+  getRevenueStats, getUnreadCounts,
   updateServiceRequest, getStore, sendMessage as storeSendMessage
 } from '@/lib/store'
 import { useState, useEffect } from 'react'
@@ -17,17 +16,9 @@ import PhaseBadge from '@/components/PhaseBadge'
 
 type DrawerKey = 'revenue' | 'avgPrice' | 'leads' | 'pending' | null
 
-const phaseConfig = {
-  booked: { label: '予約済', color: 'text-blue-400 border-blue-500/30 bg-blue-500/10', desc: 'チェックイン前' },
-  staying: { label: '滞在中', color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10', desc: '照明・コンシェルジュ有効' },
-  post: { label: '滞在後', color: 'text-gold-400 border-gold-500/30 bg-gold-500/10', desc: 'ECUANEST提案モード' },
-}
-
 export default function OwnerDashboardPage() {
   const [store, update] = useStore()
-  const { phase } = usePhase()
   const revenue = getRevenueStats(store)
-  const lighting = getLightingAnalytics(store)
   const counts = getUnreadCounts(store)
   const [msgInput, setMsgInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -107,19 +98,21 @@ export default function OwnerDashboardPage() {
         ))}
       </div>
 
-      {/* Current guest + phase control */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-          <h2 className="text-sm font-medium text-zinc-200 mb-4">現在のゲスト</h2>
-          {currentBooking ? (
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-3xl">{currentBooking.flag}</span>
-                <div>
+      {/* Current guest */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+        <h2 className="text-sm font-medium text-zinc-200 mb-4">現在のゲスト</h2>
+        {currentBooking ? (
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl">{currentBooking.flag}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium text-zinc-100">{currentBooking.guestName}</p>
-                  <p className="text-xs text-zinc-500">{currentBooking.nationality} · {currentBooking.platform}</p>
+                  <PhaseBadge checkIn={currentBooking.checkIn} checkOut={currentBooking.checkOut} settings={store.facilitySettings} size="md" />
                 </div>
+                <p className="text-xs text-zinc-500 mt-0.5">{currentBooking.nationality} · {currentBooking.platform}</p>
               </div>
+            </div>
               <div className="grid grid-cols-2 gap-2 text-xs mb-4">
                 <div><p className="text-zinc-500">チェックイン</p><p className="text-zinc-200">{currentBooking.checkIn}</p></div>
                 <div><p className="text-zinc-500">チェックアウト</p><p className="text-zinc-200">{currentBooking.checkOut}</p></div>
@@ -141,51 +134,12 @@ export default function OwnerDashboardPage() {
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-zinc-600 text-sm">現在ゲストはいません</p>
-              {nextBooking && <p className="text-xs text-zinc-500 mt-1">次: {nextBooking.guestName} ({nextBooking.checkIn})</p>}
-            </div>
-          )}
-        </div>
-
-        {/* Phase display — per-booking, auto-calculated from dates */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-          <h2 className="text-sm font-medium text-zinc-200 mb-1 flex items-center gap-2">
-            <Lightbulb size={14} className="text-gold-400" /> ゲスト体験フェーズ
-          </h2>
-          <p className="text-xs text-zinc-500 mb-4">
-            CI {store.facilitySettings.checkInTime} / CO {store.facilitySettings.checkOutTime} から自動計算
-          </p>
-          <div className="space-y-2">
-            {store.bookingHistory
-              .filter(b => b.status !== 'cancelled' && b.status !== 'completed')
-              .slice(0, 5)
-              .map(b => (
-                <div key={b.id} className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-zinc-800/50 border border-zinc-800">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-base flex-shrink-0">{b.flag}</span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-zinc-200 truncate">{b.guestName}</p>
-                      <p className="text-[10px] text-zinc-500">{b.checkIn} → {b.checkOut}</p>
-                    </div>
-                  </div>
-                  <PhaseBadge checkIn={b.checkIn} checkOut={b.checkOut} settings={store.facilitySettings} />
-                </div>
-              ))}
-            {store.bookingHistory.filter(b => b.status !== 'cancelled' && b.status !== 'completed').length === 0 && (
-              <p className="text-xs text-zinc-600 text-center py-4">アクティブな予約はありません</p>
-            )}
+        ) : (
+          <div className="text-center py-6">
+            <p className="text-zinc-600 text-sm">現在ゲストはいません</p>
+            {nextBooking && <p className="text-xs text-zinc-500 mt-1">次: {nextBooking.guestName} ({nextBooking.checkIn})</p>}
           </div>
-          {lighting.topScene && (
-            <div className="border-t border-zinc-800 pt-3 mt-3">
-              <p className="text-xs text-zinc-500">最多使用シーン</p>
-              <p className="text-sm text-zinc-200 mt-0.5">
-                {lighting.topScene.name} <span className="text-zinc-500">({lighting.topScene.count}回)</span>
-              </p>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Pending service requests */}
@@ -236,11 +190,12 @@ export default function OwnerDashboardPage() {
                 <p className="text-sm text-zinc-200">{b.guestName}</p>
                 <p className="text-xs text-zinc-500">{b.checkIn} → {b.checkOut} · {b.nights}泊</p>
               </div>
-              <div className="text-right">
+              <div className="text-right flex flex-col items-end gap-1">
                 <span className={`text-xs px-2 py-0.5 rounded-full border ${b.status === 'staying' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 'text-blue-400 border-blue-500/30 bg-blue-500/10'}`}>
                   {b.status === 'staying' ? '滞在中' : '予約済'}
                 </span>
-                <p className="text-xs text-zinc-500 mt-0.5">¥{b.revenue.toLocaleString()}</p>
+                <PhaseBadge checkIn={b.checkIn} checkOut={b.checkOut} settings={store.facilitySettings} />
+                <p className="text-xs text-zinc-500">¥{b.revenue.toLocaleString()}</p>
               </div>
             </div>
           ))}
