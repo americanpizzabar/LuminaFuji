@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowLeft, MapPin, Clock, Star } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowLeft, MapPin, Clock, Star, Car, Bus, Navigation, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
 import { useLanguage } from '@/lib/useLanguage'
 
 type Category = 'all' | 'food' | 'nature' | 'activity' | 'shop'
+type MainTab = 'access' | 'spots'
 
 interface PlaceStatic {
   spotKey: string
@@ -35,9 +36,55 @@ const CATEGORY_KEYS: { key: Category; emoji: string }[] = [
   { key: 'shop',     emoji: '🛍️' },
 ]
 
+// ─── 交通手段データ（固定情報）───────────────────────────────────────────────
+interface CarRoute { from: string; via: string; time: string }
+interface BusRoute { from: string; fromSub?: string; line: string; note?: string; time: string; fare: string }
+
+const CAR_ROUTES: CarRoute[] = [
+  { from: '東京・新宿方面', via: '首都高 → 中央道 → 河口湖IC → 国道138号', time: '約90分' },
+  { from: '名古屋方面',     via: '東名高速 → 御殿場JCT → 東富士五湖道路 → 山中湖IC', time: '約2時間' },
+  { from: '三島・静岡方面', via: '東名高速 → 御殿場IC → 東富士五湖道路 → 山中湖IC', time: '約60分' },
+]
+
+const BUS_ROUTES: BusRoute[] = [
+  {
+    from: '新宿',
+    fromSub: 'バスタ新宿（4F）',
+    line: '富士急バス 山中湖・御殿場線',
+    time: '約2時間',
+    fare: '約2,100円',
+  },
+  {
+    from: '三島駅',
+    fromSub: '北口バスのりば',
+    line: '富士急バス 三島線',
+    time: '約1時間30分',
+    fare: '約1,750円',
+  },
+  {
+    from: '富士山駅',
+    fromSub: '富士急行線で新宿から約2時間（大月乗換）',
+    line: '富士急バス（路線バス）',
+    time: '約40分',
+    fare: '約740円',
+  },
+  {
+    from: '河口湖駅',
+    fromSub: '富士急行線で新宿から約1時間40分',
+    line: '富士急バス（路線バス）',
+    time: '約30分',
+    fare: '約520円',
+  },
+]
+
+// Google Maps URL for the property
+const MAPS_URL = 'https://maps.google.com/?q=35.41152,138.87371'
+
 export default function MapPage() {
   const { t } = useLanguage()
+  const [mainTab, setMainTab] = useState<MainTab>('access')
   const [activeCategory, setActiveCategory] = useState<Category>('all')
+  const [expandedBus, setExpandedBus] = useState<number | null>(null)
 
   const filtered = activeCategory === 'all'
     ? PLACES
@@ -45,7 +92,8 @@ export default function MapPage() {
 
   return (
     <div className="page-container">
-      <div className="flex items-center gap-3 mb-6">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-5">
         <Link href="/dashboard" className="w-9 h-9 rounded-xl bg-zinc-800 flex items-center justify-center hover:bg-zinc-700 transition-all">
           <ArrowLeft size={18} className="text-zinc-300" />
         </Link>
@@ -55,27 +103,27 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* Map Placeholder */}
+      {/* Map embed placeholder */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="rounded-2xl overflow-hidden mb-5 relative"
-        style={{ height: '200px' }}
+        style={{ height: '180px' }}
       >
         <div className="absolute inset-0 bg-zinc-900 border border-zinc-800 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-5xl mb-3">🗾</div>
+            <div className="text-5xl mb-2">🗾</div>
             <p className="text-sm text-zinc-400">{t('map.area')}</p>
-            <p className="text-xs text-zinc-600 mt-1">{t('map.areaSub')}</p>
+            <p className="text-xs text-zinc-600 mt-0.5">{t('map.areaSub')}</p>
           </div>
           <div className="absolute top-3 right-3">
             <a
-              href="https://maps.google.com/?q=Yamanakako,Yamanashi,Japan"
+              href={MAPS_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-zinc-300 flex items-center gap-1.5 hover:border-gold-500/30 transition-all"
             >
-              <MapPin size={11} className="text-gold-400" />
+              <Navigation size={11} className="text-gold-400" />
               {t('map.googleMaps')}
             </a>
           </div>
@@ -83,88 +131,288 @@ export default function MapPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/60 to-transparent pointer-events-none" />
       </motion.div>
 
-      {/* Category Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
-        {CATEGORY_KEYS.map(({ key, emoji }) => (
+      {/* Main tabs: アクセス / 周辺スポット */}
+      <div className="flex gap-2 mb-5">
+        {(['access', 'spots'] as const).map((tab) => (
           <button
-            key={key}
-            onClick={() => setActiveCategory(key)}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
-              activeCategory === key
+            key={tab}
+            onClick={() => setMainTab(tab)}
+            className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+              mainTab === tab
                 ? 'border-gold-500/40 bg-gold-500/10 text-gold-300'
-                : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'
+                : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
             }`}
           >
-            <span>{emoji}</span>
-            {t(`map.categories.${key === 'activity' ? 'experience' : key}`)}
+            {tab === 'access' ? t('map.access.tabAccess') : t('map.access.tabSpots')}
           </button>
         ))}
       </div>
 
-      {/* Place List */}
-      <motion.div
-        key={activeCategory}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="space-y-3"
-      >
-        {filtered.map((place) => {
-          const name = t(`map.spots.${place.spotKey}.name`)
-          const sub  = t(`map.spots.${place.spotKey}.sub`)
-          const dist = t(`map.spots.${place.spotKey}.dist`)
-          const desc = t(`map.spots.${place.spotKey}.desc`)
-          const tags = t(`map.spots.${place.spotKey}.tags`).split(/[、,]/).map(s => s.trim()).filter(Boolean)
+      <AnimatePresence mode="wait">
 
-          return (
-            <div key={place.spotKey} className="card p-4 hover:border-zinc-700 transition-all">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center text-2xl flex-shrink-0">
-                  {place.emoji}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-medium text-zinc-100">{name}</p>
-                      <p className="text-xs text-zinc-600">{sub}</p>
-                    </div>
-                    <div className="flex items-center gap-0.5 flex-shrink-0">
-                      {Array.from({ length: place.rating }).map((_, i) => (
-                        <Star key={i} size={10} className="text-gold-400 fill-gold-400" />
-                      ))}
-                    </div>
+        {/* ── アクセスタブ ── */}
+        {mainTab === 'access' && (
+          <motion.div
+            key="access"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25 }}
+            className="space-y-4"
+          >
+            {/* 住所カード */}
+            <div className="card p-4 border-gold-500/15 bg-gradient-to-br from-amber-950/20 to-zinc-900">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin size={14} className="text-gold-400" />
                   </div>
-                  <p className="text-xs text-zinc-500 leading-relaxed mt-1.5">{desc}</p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="flex items-center gap-1 text-xs text-zinc-500">
-                      <MapPin size={10} />
-                      {place.distanceKm}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs text-zinc-500">
-                      <Clock size={10} />
-                      {dist}
-                    </span>
-                  </div>
-                  <div className="flex gap-1.5 mt-2 flex-wrap">
-                    {tags.map((tag) => (
-                      <span key={tag} className="text-[10px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">
-                        {tag}
-                      </span>
-                    ))}
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-0.5">Lumina Fuji Residence Yamanakako</p>
+                    <p className="text-sm text-zinc-200 leading-relaxed">{t('map.access.address')}</p>
+                    <p className="text-xs text-emerald-400 mt-1.5 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                      {t('map.access.walkNote')}
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-1">{t('map.access.parking')}</p>
                   </div>
                 </div>
+                <a
+                  href={MAPS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0 flex items-center gap-1 text-[11px] text-gold-400 hover:text-gold-300 border border-gold-500/25 bg-gold-500/5 px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap"
+                >
+                  <Navigation size={10} />
+                  Maps
+                </a>
               </div>
             </div>
-          )
-        })}
-      </motion.div>
 
-      <div className="mt-4 text-center">
-        <p className="text-xs text-zinc-600">{t('map.chatLink')}</p>
-        <Link href="/dashboard/chat" className="text-xs text-gold-400 hover:text-gold-300 mt-1 inline-block">
-          {t('map.chatLinkSub')}
-        </Link>
-      </div>
+            {/* お車で */}
+            <div>
+              <p className="section-title mb-3">{t('map.access.byCar')}</p>
+              <div className="card overflow-hidden divide-y divide-zinc-800">
+                {CAR_ROUTES.map((r, i) => (
+                  <div key={i} className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Car size={13} className="text-zinc-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-zinc-100">{r.from}</p>
+                          <span className="flex items-center gap-1 text-xs text-amber-400 flex-shrink-0">
+                            <Clock size={10} />
+                            {r.time}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-500 mt-1 leading-relaxed">{r.via}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-zinc-600 mt-2 px-1 leading-relaxed">{t('map.access.carNote')}</p>
+            </div>
+
+            {/* バスで */}
+            <div>
+              <p className="section-title mb-3">{t('map.access.byBus')}</p>
+
+              {/* 共通ゴール: 平野バス停 */}
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <div className="flex-1 h-px bg-zinc-800" />
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 border border-emerald-500/25 bg-emerald-500/5 px-3 py-1 rounded-full">
+                  <MapPin size={9} />
+                  {t('map.access.busStop')} → 徒歩1分
+                </div>
+                <div className="flex-1 h-px bg-zinc-800" />
+              </div>
+
+              <div className="space-y-2">
+                {BUS_ROUTES.map((r, i) => {
+                  const isOpen = expandedBus === i
+                  return (
+                    <div key={i} className="card overflow-hidden">
+                      <button
+                        onClick={() => setExpandedBus(isOpen ? null : i)}
+                        className="w-full p-4 text-left hover:bg-zinc-800/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+                            <Bus size={14} className="text-blue-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <p className="text-sm font-medium text-zinc-100">{r.from}</p>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <span className="flex items-center gap-1 text-xs text-amber-400">
+                                  <Clock size={9} />
+                                  {r.time}
+                                </span>
+                                {isOpen ? <ChevronUp size={13} className="text-zinc-500" /> : <ChevronDown size={13} className="text-zinc-500" />}
+                              </div>
+                            </div>
+                            <p className="text-[11px] text-zinc-500 mt-0.5">{r.line}</p>
+                          </div>
+                        </div>
+                      </button>
+
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="border-t border-zinc-800 px-4 py-3 bg-zinc-800/20 space-y-2">
+                              {r.fromSub && (
+                                <div className="flex items-start gap-2">
+                                  <span className="text-[10px] text-zinc-500 w-14 flex-shrink-0 pt-0.5">のりば</span>
+                                  <p className="text-xs text-zinc-300">{r.fromSub}</p>
+                                </div>
+                              )}
+                              <div className="flex items-start gap-2">
+                                <span className="text-[10px] text-zinc-500 w-14 flex-shrink-0 pt-0.5">{t('map.access.duration')}</span>
+                                <p className="text-xs text-amber-300 font-medium">{r.time}</p>
+                              </div>
+                              <div className="flex items-start gap-2">
+                                <span className="text-[10px] text-zinc-500 w-14 flex-shrink-0 pt-0.5">{t('map.access.fare')}</span>
+                                <p className="text-xs text-zinc-300">{r.fare}</p>
+                              </div>
+                              {r.note && (
+                                <div className="flex items-start gap-2">
+                                  <span className="text-[10px] text-zinc-500 w-14 flex-shrink-0 pt-0.5">備考</span>
+                                  <p className="text-xs text-zinc-400">{r.note}</p>
+                                </div>
+                              )}
+                              <div className="pt-1">
+                                <a
+                                  href={`https://bus.fujikyu.co.jp/`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+                                >
+                                  富士急バス 時刻・予約 →
+                                </a>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* チャットリンク */}
+            <div className="text-center pt-2">
+              <p className="text-xs text-zinc-600">{t('map.chatLink')}</p>
+              <Link href="/dashboard/chat" className="text-xs text-gold-400 hover:text-gold-300 mt-1 inline-block">
+                {t('map.chatLinkSub')}
+              </Link>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── 周辺スポットタブ ── */}
+        {mainTab === 'spots' && (
+          <motion.div
+            key="spots"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.25 }}
+          >
+            {/* Category Filter */}
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-1 px-1">
+              {CATEGORY_KEYS.map(({ key, emoji }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveCategory(key)}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${
+                    activeCategory === key
+                      ? 'border-gold-500/40 bg-gold-500/10 text-gold-300'
+                      : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'
+                  }`}
+                >
+                  <span>{emoji}</span>
+                  {t(`map.categories.${key === 'activity' ? 'experience' : key}`)}
+                </button>
+              ))}
+            </div>
+
+            {/* Place List */}
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-3"
+            >
+              {filtered.map((place) => {
+                const name = t(`map.spots.${place.spotKey}.name`)
+                const sub  = t(`map.spots.${place.spotKey}.sub`)
+                const dist = t(`map.spots.${place.spotKey}.dist`)
+                const desc = t(`map.spots.${place.spotKey}.desc`)
+                const tags = t(`map.spots.${place.spotKey}.tags`).split(/[、,]/).map(s => s.trim()).filter(Boolean)
+
+                return (
+                  <div key={place.spotKey} className="card p-4 hover:border-zinc-700 transition-all">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center text-2xl flex-shrink-0">
+                        {place.emoji}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-medium text-zinc-100">{name}</p>
+                            <p className="text-xs text-zinc-600">{sub}</p>
+                          </div>
+                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                            {Array.from({ length: place.rating }).map((_, i) => (
+                              <Star key={i} size={10} className="text-gold-400 fill-gold-400" />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-xs text-zinc-500 leading-relaxed mt-1.5">{desc}</p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="flex items-center gap-1 text-xs text-zinc-500">
+                            <MapPin size={10} />
+                            {place.distanceKm}
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-zinc-500">
+                            <Clock size={10} />
+                            {dist}
+                          </span>
+                        </div>
+                        <div className="flex gap-1.5 mt-2 flex-wrap">
+                          {tags.map((tag) => (
+                            <span key={tag} className="text-[10px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </motion.div>
+
+            <div className="mt-4 text-center">
+              <p className="text-xs text-zinc-600">{t('map.chatLink')}</p>
+              <Link href="/dashboard/chat" className="text-xs text-gold-400 hover:text-gold-300 mt-1 inline-block">
+                {t('map.chatLinkSub')}
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
