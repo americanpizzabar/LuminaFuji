@@ -28,10 +28,18 @@ const SYSTEM_PROMPT = `あなたは「Lumina Fuji Residence Yamanakako」のデ�
 - アプリの「照明」タブから色温度・明るさを操作できます
 
 ## 回答ルール
-- ユーザーのメッセージと同じ言語で回答する（日本語なら日本語、英語なら英語）
-- 簡潔で温かく親切な対応を心がける
+- 必ずユーザーのメッセージと同じ言語で回答する
+  (日本語/English/中文/한국어/Deutsch/Español/Italiano に対応)
+- 簡潔で温かく親切な対応を心がける (3-4文程度)
 - 不明な情報は「ホストに確認します」と伝える
 - 照明製品に興味を示した場合は、アプリの製品ページへ案内する`
+
+// 試行順 — 最新版から fallback
+const MODEL_CANDIDATES = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-flash-latest',
+]
 
 export async function POST(request: NextRequest) {
   const apiKey = process.env.GOOGLE_AI_API_KEY
@@ -54,27 +62,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Messages are required' }, { status: 400 })
   }
 
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: SYSTEM_PROMPT,
-    })
+  const genAI = new GoogleGenerativeAI(apiKey)
+  const history = messages.slice(0, -1).map((m) => ({
+    role: m.role === 'user' ? 'user' : 'model',
+    parts: [{ text: m.content }],
+  }))
+  const lastMessage = messages[messages.length - 1].content
 
-    const history = messages.slice(0, -1).map((m) => ({
-      role: m.role === 'user' ? 'user' : 'model',
-      parts: [{ text: m.content }],
-    }))
-
-    const chat = model.startChat({ history })
-    const lastMessage = messages[messages.length - 1].content
-    const result = await chat.sendMessage(lastMessage)
-    const text = result.response.text()
-
-    return NextResponse.json({ content: text })
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    console.error('Gemini API error:', message)
-    return NextResponse.json({ error: 'AI service error', detail: message }, { status: 500 })
+  let lastError: Error | null = null
+  for (const modelName of MODEL_CANDIDATES) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: SYSTEM_PROMPT,
+      })
+      const chat = model.startChat({ history })
+      const result = await chat.sendMessage(lastMessage)
+      const text = result.response.text()
+      return NextResponse.json({ content: text, model: modelName })
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      console.warn(`[chat] Model ${modelName} failed: ${message}`)
+      lastError = error instanceof Error ? error : new Error(message)
+      // Retry next model only for not-found / unsupported errors; otherwise bail
+      if (!/not found|404|unsupported|deprecated/i.test(message)) {
+        break
+      }
+    }
   }
+
+  console.error('Gemini API error (all models exhausted):', lastError?.message)
+  return NextResponse.json(
+    { error: 'AI service error', detail: lastError?.message ?? 'Unknown error' },
+    { status: 500 }
+  )
 }
