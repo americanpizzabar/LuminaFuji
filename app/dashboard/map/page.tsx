@@ -36,55 +36,31 @@ const CATEGORY_KEYS: { key: Category; emoji: string }[] = [
   { key: 'shop',     emoji: '🛍️' },
 ]
 
-// ─── 交通手段データ（固定情報）───────────────────────────────────────────────
-interface CarRoute { from: string; via: string; time: string }
-interface BusRoute { from: string; fromSub?: string; line: string; note?: string; time: string; fare: string }
-
-const CAR_ROUTES: CarRoute[] = [
-  { from: '東京・新宿方面', via: '首都高 → 中央道 → 河口湖IC → 国道138号', time: '約90分' },
-  { from: '名古屋方面',     via: '東名高速 → 御殿場JCT → 東富士五湖道路 → 山中湖IC', time: '約2時間' },
-  { from: '三島・静岡方面', via: '東名高速 → 御殿場IC → 東富士五湖道路 → 山中湖IC', time: '約60分' },
-]
-
-const BUS_ROUTES: BusRoute[] = [
-  {
-    from: '新宿',
-    fromSub: 'バスタ新宿（4F）',
-    line: '富士急バス 山中湖・御殿場線',
-    time: '約2時間',
-    fare: '約2,100円',
-  },
-  {
-    from: '三島駅',
-    fromSub: '北口バスのりば',
-    line: '富士急バス 三島線',
-    time: '約1時間30分',
-    fare: '約1,750円',
-  },
-  {
-    from: '富士山駅',
-    fromSub: '富士急行線で新宿から約2時間（大月乗換）',
-    line: '富士急バス（路線バス）',
-    time: '約40分',
-    fare: '約740円',
-  },
-  {
-    from: '河口湖駅',
-    fromSub: '富士急行線で新宿から約1時間40分',
-    line: '富士急バス（路線バス）',
-    time: '約30分',
-    fare: '約520円',
-  },
-]
-
 // Google Maps URL for the property
 const MAPS_URL = 'https://maps.google.com/?q=Lumina+Fuji+Residence+Yamanakako+山梨県南都留郡山中湖村平野470-1'
+
+interface CarRoute { from: string; via: string; time: string }
+interface BusRoute { from: string; fromSub: string; line: string; time: string; fare: string }
 
 export default function MapPage() {
   const { t } = useLanguage()
   const [mainTab, setMainTab] = useState<MainTab>('access')
   const [activeCategory, setActiveCategory] = useState<Category>('all')
   const [expandedBus, setExpandedBus] = useState<number | null>(null)
+
+  // ルートデータを t() で多言語化
+  const CAR_ROUTES: CarRoute[] = [
+    { from: t('map.access.carFrom0'), via: t('map.access.carVia0'), time: t('map.access.carTime0') },
+    { from: t('map.access.carFrom1'), via: t('map.access.carVia1'), time: t('map.access.carTime1') },
+    { from: t('map.access.carFrom2'), via: t('map.access.carVia2'), time: t('map.access.carTime2') },
+  ]
+
+  const BUS_ROUTES: BusRoute[] = [
+    { from: t('map.access.busFrom0'), fromSub: t('map.access.busSub0'), line: t('map.access.busLine0'), time: t('map.access.busTime0'), fare: t('map.access.busFare0') },
+    { from: t('map.access.busFrom1'), fromSub: t('map.access.busSub1'), line: t('map.access.busLine1'), time: t('map.access.busTime1'), fare: t('map.access.busFare1') },
+    { from: t('map.access.busFrom2'), fromSub: t('map.access.busSub2'), line: t('map.access.busLine2'), time: t('map.access.busTime2'), fare: t('map.access.busFare2') },
+    { from: t('map.access.busFrom3'), fromSub: t('map.access.busSub3'), line: t('map.access.busLine3'), time: t('map.access.busTime3'), fare: t('map.access.busFare3') },
+  ]
 
   const filtered = activeCategory === 'all'
     ? PLACES
@@ -271,32 +247,26 @@ export default function MapPage() {
                             <div className="border-t border-zinc-800 px-4 py-3 bg-zinc-800/20 space-y-2">
                               {r.fromSub && (
                                 <div className="flex items-start gap-2">
-                                  <span className="text-[10px] text-zinc-500 w-14 flex-shrink-0 pt-0.5">のりば</span>
+                                  <span className="text-[10px] text-zinc-500 w-20 flex-shrink-0 pt-0.5">{t('map.access.boardingPoint')}</span>
                                   <p className="text-xs text-zinc-300">{r.fromSub}</p>
                                 </div>
                               )}
                               <div className="flex items-start gap-2">
-                                <span className="text-[10px] text-zinc-500 w-14 flex-shrink-0 pt-0.5">{t('map.access.duration')}</span>
+                                <span className="text-[10px] text-zinc-500 w-20 flex-shrink-0 pt-0.5">{t('map.access.duration')}</span>
                                 <p className="text-xs text-amber-300 font-medium">{r.time}</p>
                               </div>
                               <div className="flex items-start gap-2">
-                                <span className="text-[10px] text-zinc-500 w-14 flex-shrink-0 pt-0.5">{t('map.access.fare')}</span>
+                                <span className="text-[10px] text-zinc-500 w-20 flex-shrink-0 pt-0.5">{t('map.access.fare')}</span>
                                 <p className="text-xs text-zinc-300">{r.fare}</p>
                               </div>
-                              {r.note && (
-                                <div className="flex items-start gap-2">
-                                  <span className="text-[10px] text-zinc-500 w-14 flex-shrink-0 pt-0.5">備考</span>
-                                  <p className="text-xs text-zinc-400">{r.note}</p>
-                                </div>
-                              )}
                               <div className="pt-1">
                                 <a
-                                  href={`https://bus.fujikyu.co.jp/`}
+                                  href="https://bus.fujikyu.co.jp/"
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
                                 >
-                                  富士急バス 時刻・予約 →
+                                  {t('map.access.timetable')}
                                 </a>
                               </div>
                             </div>
