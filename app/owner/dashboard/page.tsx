@@ -24,7 +24,7 @@ const phaseConfig = {
 
 export default function OwnerDashboardPage() {
   const [store, update] = useStore()
-  const { phase, setPhase } = usePhase()
+  const { phase } = usePhase()
   const revenue = getRevenueStats(store)
   const lighting = getLightingAnalytics(store)
   const counts = getUnreadCounts(store)
@@ -148,27 +148,30 @@ export default function OwnerDashboardPage() {
           )}
         </div>
 
-        {/* Phase control */}
+        {/* Phase display (auto-calculated from check-in/out dates) */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
           <h2 className="text-sm font-medium text-zinc-200 mb-1 flex items-center gap-2">
             <Lightbulb size={14} className="text-gold-400" /> ゲスト体験フェーズ
           </h2>
-          <p className="text-xs text-zinc-500 mb-4">ゲスト画面の表示内容が即座に切り替わります</p>
+          <p className="text-xs text-zinc-500 mb-4">チェックイン・アウト時刻から自動切り替え</p>
           <div className="space-y-2 mb-4">
             {(['booked', 'staying', 'post'] as const).map(p => (
-              <button key={p} onClick={() => setPhase(p)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${phase === p ? phaseConfig[p].color : 'border-zinc-700 text-zinc-500 hover:border-zinc-600'}`}>
-                <div className={`w-2 h-2 rounded-full ${phase === p ? 'bg-current' : 'bg-zinc-700'}`} />
+              <div key={p}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left ${phase === p ? phaseConfig[p].color : 'border-zinc-800 text-zinc-600'}`}>
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${phase === p ? 'bg-current' : 'bg-zinc-700'}`} />
                 <div>
                   <p className="text-sm font-medium">{phaseConfig[p].label}</p>
                   <p className="text-xs opacity-70">{phaseConfig[p].desc}</p>
                 </div>
                 {phase === p && <span className="ml-auto text-xs">現在</span>}
-              </button>
+              </div>
             ))}
           </div>
+          <p className="text-xs text-zinc-600">
+            CI {store.facilitySettings.checkInTime} / CO {store.facilitySettings.checkOutTime} を基準に自動判定
+          </p>
           {lighting.topScene && (
-            <div className="border-t border-zinc-800 pt-3">
+            <div className="border-t border-zinc-800 pt-3 mt-3">
               <p className="text-xs text-zinc-500">最多使用シーン</p>
               <p className="text-sm text-zinc-200 mt-0.5">
                 {lighting.topScene.name} <span className="text-zinc-500">({lighting.topScene.count}回)</span>
