@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Wrench, MessageSquare, CheckCircle2, Clock,
   AlertTriangle, Send, ChevronDown, ChevronUp, Calendar,
-  Bed, DollarSign, Filter, Plus, Edit2, X, Check, Trash2, Link2, Mail,
+  Bed, DollarSign, Filter, Plus, Edit2, X, Check, Trash2, Link2, Mail, MapPin,
 } from 'lucide-react'
 import { useStore } from '@/lib/useStore'
 import {
   getStore, updateServiceRequest, updateMaintenanceItem,
   sendMessage as storeSendMessage,
   addBookingRecord, updateBookingRecord, deleteBookingRecord,
+  markGuestArrived, unmarkGuestArrived,
 } from '@/lib/store'
 import type { BookingRecord, ServiceRequest, MaintenanceItem } from '@/lib/store'
 import PhaseBadge from '@/components/PhaseBadge'
@@ -404,6 +405,16 @@ export default function GuestsPage() {
     }
   }
 
+  const handleMarkArrived = (bookingId: string) => {
+    markGuestArrived(bookingId)
+    update({ bookingHistory: getStore().bookingHistory })
+  }
+
+  const handleCancelArrival = (bookingId: string) => {
+    unmarkGuestArrived(bookingId)
+    update({ bookingHistory: getStore().bookingHistory })
+  }
+
   const resolveServiceRequest = (id: string) => {
     updateServiceRequest(id, { status: 'done', resolvedAt: new Date().toISOString() })
     update({ serviceRequests: getStore().serviceRequests })
@@ -550,7 +561,7 @@ export default function GuestsPage() {
                               <span className="text-sm font-medium text-zinc-100">{booking.guestName}</span>
                               <span className="text-xs text-zinc-500">{booking.nationality}</span>
                               {/* ゲスト体験フェーズ（自動計算） */}
-                              <PhaseBadge checkIn={booking.checkIn} checkOut={booking.checkOut} settings={store.facilitySettings} />
+                              <PhaseBadge checkIn={booking.checkIn} checkOut={booking.checkOut} settings={store.facilitySettings} arrivedAt={booking.arrivedAt} />
                               <span className={`text-[10px] px-2 py-0.5 rounded-full border ml-auto ${statusCfg.color}`}>{statusCfg.label}</span>
                             </div>
                             <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500 flex-wrap">
@@ -586,6 +597,20 @@ export default function GuestsPage() {
                                   className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all">
                                   <Edit2 size={11} /> 予約を編集
                                 </button>
+                                {/* 到着マーク / 取消 (オーナーはチェックイン前でも可) */}
+                                {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                                  !booking.arrivedAt ? (
+                                    <button onClick={() => handleMarkArrived(booking.id)}
+                                      className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all">
+                                      <MapPin size={11} /> 到着済みにする
+                                    </button>
+                                  ) : (
+                                    <button onClick={() => handleCancelArrival(booking.id)}
+                                      className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 transition-all">
+                                      <X size={11} /> 到着取消
+                                    </button>
+                                  )
+                                )}
                                 {booking.email && (
                                   <>
                                     <button onClick={() => handleResendInvite(booking)}

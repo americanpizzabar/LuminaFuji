@@ -25,6 +25,8 @@ export interface GuestInfo {
   specialRequests?: string
   /** デモセッション識別フラグ — ログインページ再訪で自動クリア */
   isDemo?: boolean
+  /** 到着マーク日時 (ISO string) — ゲストが「到着しました」を押した時刻 */
+  arrivedAt?: string
 }
 
 export interface FacilitySettings {
@@ -148,6 +150,8 @@ export interface BookingRecord {
   notes?: string
   registeredByManager?: boolean
   specialRequests?: string
+  /** 到着マーク日時 (ISO string) — ゲストが「到着しました」を押したとき */
+  arrivedAt?: string
 }
 
 export interface CleaningTask {
@@ -335,13 +339,14 @@ export function setGuestInfo(info: GuestInfo): void {
  * このデバイスを「クリーンなゲストデバイス」状態にする。
  * 維持されるもの: facilitySettings / notificationSettings / announcements / guestbookPosts (施設全体に関わるデータ)
  */
-export function resetStoreForGuest(guestInfo: GuestInfo, guestBooking: BookingRecord): void {
+export function resetStoreForGuest(guestInfo: GuestInfo, _guestBooking?: BookingRecord): void {
   const current = getStore()
   saveStore({
     ...current,
     guestInfo,
     phase: 'booked',                          // デモオーバーライドをリセット (自動計算に任せる)
-    bookingHistory: [guestBooking],           // 自分の予約のみ
+    // bookingHistoryはオーナー/管理会社が全台数管理する。消去するとゲスト追加のたびに
+    // 他のゲストが消えるバグの原因になるため維持する。
     messages: [],                             // 前ゲストとオーナーのチャットを除去
     serviceRequests: [],                      // 前ゲストのリクエストを除去
     lightingHistory: [],                      // 照明操作履歴をリセット
@@ -520,14 +525,20 @@ export function updateBookingRecord(id: string, updates: Partial<BookingRecord>)
   if (guestInfo && guestInfo.reservationId === id) {
     guestInfo = {
       ...guestInfo,
-      ...(updates.checkIn       !== undefined && { checkIn: updates.checkIn }),
-      ...(updates.checkOut      !== undefined && { checkOut: updates.checkOut }),
-      ...(updates.guestName     !== undefined && { name: updates.guestName }),
-      ...(updates.email         !== undefined && { email: updates.email }),
-      ...(updates.phone         !== undefined && { phone: updates.phone }),
-      ...(updates.adults        !== undefined && { adults: updates.adults }),
-      ...(updates.children      !== undefined && { children: updates.children }),
+      ...(updates.checkIn         !== undefined && { checkIn: updates.checkIn }),
+      ...(updates.checkOut        !== undefined && { checkOut: updates.checkOut }),
+      ...(updates.guestName       !== undefined && { name: updates.guestName }),
+      ...(updates.email           !== undefined && { email: updates.email }),
+      ...(updates.phone           !== undefined && { phone: updates.phone }),
+      ...(updates.adults          !== undefined && { adults: updates.adults }),
+      ...(updates.children        !== undefined && { children: updates.children }),
       ...(updates.specialRequests !== undefined && { specialRequests: updates.specialRequests }),
+      ...(updates.arrivedAt       !== undefined && { arrivedAt: updates.arrivedAt }),
+    }
+    // arrivedAtをundefinedにリセット (到着取消) する場合は明示的に除去
+    if (Object.prototype.hasOwnProperty.call(updates, 'arrivedAt') && updates.arrivedAt === undefined) {
+      const { arrivedAt: _a, ...rest } = guestInfo
+      guestInfo = rest as GuestInfo
     }
   }
 
@@ -537,6 +548,26 @@ export function updateBookingRecord(id: string, updates: Partial<BookingRecord>)
 export function deleteBookingRecord(id: string): void {
   const store = getStore()
   updateStore({ bookingHistory: store.bookingHistory.filter(b => b.id !== id) })
+}
+
+/** ゲストの到着マーク (bookingHistory + guestInfo を同期) */
+export function markGuestArrived(bookingId: string, arrivedAt?: string): void {
+  const arrivedTime = arrivedAt ?? new Date().toISOString()
+  updateBookingRecord(bookingId, { arrivedAt: arrivedTime })
+}
+
+/** 到着マーク取消 (bookingHistory + guestInfo を同期) */
+export function unmarkGuestArrived(bookingId: string): void {
+  const store = getStore()
+  const updatedHistory = store.bookingHistory.map(b =>
+    b.id === bookingId ? (({ arrivedAt: _a, ...rest }) => rest)(b) as BookingRecord : b
+  )
+  let guestInfo = store.guestInfo
+  if (guestInfo && guestInfo.reservationId === bookingId) {
+    const { arrivedAt: _a, ...rest } = guestInfo
+    guestInfo = rest as GuestInfo
+  }
+  saveStore({ ...store, bookingHistory: updatedHistory, guestInfo })
 }
 
 // Notification settings

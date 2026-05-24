@@ -7,14 +7,15 @@ export type { GuestPhase }
 export type { GuestInfo }
 
 // ─── 自動フェーズ計算（共通ユーティリティ） ────────────────────────────────────
-// before checkIn 16:00 → 'booked'
-// checkIn 16:00 〜 checkOut 11:00 → 'staying'
-// after checkOut 11:00 → 'post'
+// arrivedAt が設定済み かつ checkOut 前 → 'staying'
+// checkOut 後 → 'post'
+// それ以外 (arrivedAt 未設定) → 'booked' (チェックイン時刻前 or 未着)
 export function calcPhase(
   checkIn: string,
   checkOut: string,
   checkInTime: string = '16:00',
-  checkOutTime: string = '11:00'
+  checkOutTime: string = '11:00',
+  arrivedAt?: string
 ): GuestPhase {
   const now = new Date()
 
@@ -26,9 +27,12 @@ export function calcPhase(
   const checkOutDt = new Date(checkOut)
   checkOutDt.setHours(coH, coM, 0, 0)
 
-  if (now < checkInDt) return 'booked'
-  if (now < checkOutDt) return 'staying'
-  return 'post'
+  // チェックアウト後は常にpost
+  if (now >= checkOutDt) return 'post'
+  // 到着マーク済み (オーナー早期承認 or ゲスト自己申告) → staying
+  if (arrivedAt) return 'staying'
+  // チェックイン時刻前 or 時刻は過ぎたが未到着 → booked
+  return 'booked'
 }
 
 interface PhaseContextValue {
@@ -55,7 +59,7 @@ export function PhaseProvider({ children }: { children: React.ReactNode }) {
     const store = getStore()
     if (store.guestInfo) {
       const { checkInTime, checkOutTime } = store.facilitySettings
-      setAutoPhase(calcPhase(store.guestInfo.checkIn, store.guestInfo.checkOut, checkInTime, checkOutTime))
+      setAutoPhase(calcPhase(store.guestInfo.checkIn, store.guestInfo.checkOut, checkInTime, checkOutTime, store.guestInfo.arrivedAt))
     }
   }
 

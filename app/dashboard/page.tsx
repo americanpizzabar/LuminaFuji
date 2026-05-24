@@ -10,10 +10,10 @@ import {
   Lightbulb, BookOpen, Map, MessageCircle, ShoppingBag,
   Camera, Star, ExternalLink,
   Sparkles, Building2, Bell, ChevronRight, Wifi,
-  Phone, Sun, Moon, Sunset
+  Phone, Sun, Moon, Sunset, MapPin, X
 } from 'lucide-react'
 import { getFeaturedProducts } from '@/lib/products'
-import { getLightingAnalytics } from '@/lib/store'
+import { getLightingAnalytics, markGuestArrived, unmarkGuestArrived } from '@/lib/store'
 
 type GreetingKey = 'morning' | 'afternoon' | 'evening' | 'night'
 
@@ -35,7 +35,7 @@ export default function DashboardPage() {
 
 // ─── Booked ──────────────────────────────────────────────────────────────────
 function BookedHome({ guestInfo }: { guestInfo: any }) {
-  const [store] = useStore()
+  const [store, update] = useStore()
   const { t } = useLanguage()
   const settings = store.facilitySettings
   const { key: greetKey } = getGreetingKey()
@@ -43,6 +43,31 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
   const daysUntil = () => {
     if (!guestInfo?.checkIn) return 0
     return Math.max(0, Math.ceil((new Date(guestInfo.checkIn).getTime() - Date.now()) / 86400000))
+  }
+
+  // チェックイン時刻を過ぎているか判定
+  const checkInDt = (() => {
+    if (!guestInfo?.checkIn) return null
+    const [h, m] = settings.checkInTime.split(':').map(Number)
+    const d = new Date(guestInfo.checkIn)
+    d.setHours(h, m, 0, 0)
+    return d
+  })()
+  const canMarkArrival = checkInDt !== null && Date.now() >= checkInDt.getTime()
+  const arrivedAt: string | undefined = store.guestInfo?.arrivedAt
+
+  const handleMarkArrived = () => {
+    if (!store.guestInfo?.reservationId) return
+    const now = new Date().toISOString()
+    markGuestArrived(store.guestInfo.reservationId, now)
+    update({ guestInfo: { ...store.guestInfo, arrivedAt: now } })
+  }
+
+  const handleCancelArrival = () => {
+    if (!store.guestInfo?.reservationId) return
+    unmarkGuestArrived(store.guestInfo.reservationId)
+    const { arrivedAt: _a, ...rest } = store.guestInfo
+    update({ guestInfo: rest as typeof store.guestInfo })
   }
 
   return (
@@ -77,6 +102,35 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
               <p className="text-xs text-zinc-500">〜{settings.checkOutTime}</p>
             </div>
           </div>
+
+          {/* 到着ボタン: チェックイン時刻を過ぎたら表示 */}
+          {canMarkArrival && !arrivedAt && (
+            <div className="mt-4 pt-4 border-t border-zinc-800">
+              <p className="text-xs text-zinc-500 mb-3">{t('home.booked.arrivalNote')}</p>
+              <button
+                onClick={handleMarkArrived}
+                className="w-full py-3 rounded-xl bg-gold-500 hover:bg-gold-400 text-zinc-950 font-medium text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+              >
+                <MapPin size={16} />
+                {t('home.booked.markArrived')}
+              </button>
+            </div>
+          )}
+          {arrivedAt && (
+            <div className="mt-4 pt-4 border-t border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+                <span className="text-xs text-emerald-400">{t('home.booked.arrivedStatus')}</span>
+              </div>
+              <button
+                onClick={handleCancelArrival}
+                className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+              >
+                <X size={11} />
+                {t('home.booked.cancelArrival')}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">

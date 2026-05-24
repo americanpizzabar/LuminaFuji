@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/lib/useStore'
 import {
   addBookingRecord, updateBookingRecord, deleteBookingRecord, getStore,
+  markGuestArrived, unmarkGuestArrived,
   BookingRecord,
 } from '@/lib/store'
 import {
   Users, Plus, Calendar, ChevronLeft, ChevronRight, X, Edit2,
-  Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp, Link2, Mail, AlertTriangle,
+  Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp, Link2, Mail, AlertTriangle, MapPin,
 } from 'lucide-react'
 import PhaseBadge from '@/components/PhaseBadge'
 
@@ -293,6 +294,7 @@ function GuestListTab({
   facilitySettings: { checkInTime: string; checkOutTime: string }
   onEdit: (b: BookingRecord) => void
 }) {
+  const [, update] = useStore()
   const [filter, setFilter] = useState<string>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -324,6 +326,16 @@ function GuestListTab({
     } else {
       showTabToast('error', `送信失敗: ${result.error ?? ''}`)
     }
+  }
+
+  const handleMarkArrived = (bookingId: string) => {
+    markGuestArrived(bookingId)
+    update({ bookingHistory: getStore().bookingHistory })
+  }
+
+  const handleCancelArrival = (bookingId: string) => {
+    unmarkGuestArrived(bookingId)
+    update({ bookingHistory: getStore().bookingHistory })
   }
 
   const filtered = useMemo(() => {
@@ -378,7 +390,7 @@ function GuestListTab({
                         {b.status === 'staying' && (
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         )}
-                        <PhaseBadge checkIn={b.checkIn} checkOut={b.checkOut} settings={facilitySettings} />
+                        <PhaseBadge checkIn={b.checkIn} checkOut={b.checkOut} settings={facilitySettings} arrivedAt={b.arrivedAt} />
                       </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs text-zinc-500">
                         <span className="flex items-center gap-1"><Clock size={10} /> {b.checkIn} 〜 {b.checkOut}</span>
@@ -428,6 +440,20 @@ function GuestListTab({
                           className="flex items-center gap-1.5 text-xs text-teal-400 hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 rounded-xl px-3 py-1.5 transition-all">
                           <Edit2 size={11} /> 編集する
                         </button>
+                        {/* 到着マーク / 取消 */}
+                        {b.status !== 'completed' && b.status !== 'cancelled' && (
+                          !b.arrivedAt ? (
+                            <button onClick={() => handleMarkArrived(b.id)}
+                              className="flex items-center gap-1.5 text-xs rounded-xl px-3 py-1.5 border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all">
+                              <MapPin size={11} /> 到着済みにする
+                            </button>
+                          ) : (
+                            <button onClick={() => handleCancelArrival(b.id)}
+                              className="flex items-center gap-1.5 text-xs rounded-xl px-3 py-1.5 border border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50 transition-all">
+                              <X size={11} /> 到着取消
+                            </button>
+                          )
+                        )}
                         {b.email && (
                           <>
                             <button onClick={() => handleResendInvite(b)}

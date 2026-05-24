@@ -5,6 +5,7 @@ interface Props {
   checkIn: string
   checkOut: string
   settings: Pick<FacilitySettings, 'checkInTime' | 'checkOutTime'>
+  arrivedAt?: string
   size?: 'sm' | 'md'
 }
 
@@ -14,9 +15,9 @@ const PHASE_CONFIG: Record<GuestPhase, { label: string; emoji: string; cls: stri
   post:    { label: '滞在後', emoji: '✨', cls: 'text-gold-400 bg-gold-500/10 border-gold-500/30' },
 }
 
-export default function PhaseBadge({ checkIn, checkOut, settings, size = 'sm' }: Props) {
+export default function PhaseBadge({ checkIn, checkOut, settings, arrivedAt, size = 'sm' }: Props) {
   if (!checkIn || !checkOut) return null
-  const phase = calcPhase(checkIn, checkOut, settings.checkInTime, settings.checkOutTime)
+  const phase = calcPhase(checkIn, checkOut, settings.checkInTime, settings.checkOutTime, arrivedAt)
   const c = PHASE_CONFIG[phase]
   const textSize = size === 'md' ? 'text-xs' : 'text-[10px]'
   return (

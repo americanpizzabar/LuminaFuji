@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(0)
   const [inviteEmail, setInviteEmail] = useState<string | null>(null)
+  const [inviteBookingId, setInviteBookingId] = useState<string | null>(null)
   const [lang, setLang] = useState<LangKey>('ja')
   const otpRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -50,6 +51,7 @@ export default function LoginPage() {
         }
         setEmail(booking.email)
         setInviteEmail(booking.email.toLowerCase())
+        setInviteBookingId(booking.id)
       }
     }
 
@@ -124,9 +126,11 @@ export default function LoginPage() {
       }
       const verifiedEmail: string = data.value
       const store = getStore()
-      const booking = store.bookingHistory.find(
-        b => b.email?.toLowerCase() === verifiedEmail.toLowerCase()
-      )
+      // 招待リンク経由の場合は予約ID優先で特定 (同一メールで複数予約があっても正しく識別)
+      // 招待なしの場合はメールアドレスで検索
+      const booking = inviteBookingId
+        ? store.bookingHistory.find(b => b.id === inviteBookingId)
+        : store.bookingHistory.find(b => b.email?.toLowerCase() === verifiedEmail.toLowerCase())
       if (!booking) {
         setError(t.errorNotFound); setStep('input'); return
       }
