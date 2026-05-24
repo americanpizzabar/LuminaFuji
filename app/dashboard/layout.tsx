@@ -11,11 +11,23 @@ import Link from 'next/link'
 import { BookOpen, LogOut } from 'lucide-react'
 import { getStore, clearGuestInfo } from '@/lib/store'
 
+/** 旧 DEFAULT_GUEST_INFO (Yamada Taro / guest@example.com) のシードデータか判定 */
+function isStaleSeedGuest(info: { email?: string; name?: string } | null | undefined): boolean {
+  return info?.email === 'guest@example.com' && info?.name === 'Yamada Taro'
+}
+
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    if (!getStore().guestInfo) {
+    const info = getStore().guestInfo
+    // 古いシードデータ (Yamada Taro) を検出してログアウト → 自動的にログイン画面へ
+    if (isStaleSeedGuest(info)) {
+      clearGuestInfo()
+      router.replace('/login')
+      return
+    }
+    if (!info) {
       router.replace('/login')
     }
   }, [router])

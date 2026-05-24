@@ -272,8 +272,8 @@ export const DEFAULT_GUEST_INFO: GuestInfo = {
 }
 
 const DEFAULT_STORE: AppStore = {
-  phase: 'staying',
-  guestInfo: DEFAULT_GUEST_INFO,
+  phase: 'booked',
+  guestInfo: null,
   facilitySettings: DEFAULT_FACILITY_SETTINGS,
   notificationSettings: DEFAULT_NOTIFICATION_SETTINGS,
   serviceRequests: [],
@@ -327,6 +327,28 @@ export function setPhase(phase: GuestPhase): void {
 
 export function setGuestInfo(info: GuestInfo): void {
   updateStore({ guestInfo: info })
+}
+
+/**
+ * ゲストがOTP認証でログインした際に呼び出す。
+ * シードデータ・前のゲストセッションのデータをクリアし、
+ * このデバイスを「クリーンなゲストデバイス」状態にする。
+ * 維持されるもの: facilitySettings / notificationSettings / announcements / guestbookPosts (施設全体に関わるデータ)
+ */
+export function resetStoreForGuest(guestInfo: GuestInfo, guestBooking: BookingRecord): void {
+  const current = getStore()
+  saveStore({
+    ...current,
+    guestInfo,
+    phase: 'booked',                          // デモオーバーライドをリセット (自動計算に任せる)
+    bookingHistory: [guestBooking],           // 自分の予約のみ
+    messages: [],                             // 前ゲストとオーナーのチャットを除去
+    serviceRequests: [],                      // 前ゲストのリクエストを除去
+    lightingHistory: [],                      // 照明操作履歴をリセット
+    cleaningChecklist: DEFAULT_CLEANING_CHECKLIST.map(t => ({ ...t, done: false, doneAt: undefined, doneBy: undefined })),
+    maintenanceItems: [],
+    consultRequests: [],                      // オーナー側のリード情報を除去
+  })
 }
 
 export function clearGuestInfo(): void {

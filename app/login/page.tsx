@@ -6,7 +6,7 @@ import { Mail, ArrowRight, Sparkles, AlertCircle, CheckCircle2, RotateCcw, Chevr
 import { useRouter } from 'next/navigation'
 import {
   getStore, updateStore, setGuestInfo as storeSetGuestInfo, setPhase as storeSetPhase,
-  clearGuestInfo,
+  clearGuestInfo, resetStoreForGuest,
 } from '@/lib/store'
 import type { GuestInfo, BookingRecord } from '@/lib/store'
 import { LANGS, LANG_ORDER, detectLang, saveLang, type LangKey } from '@/lib/i18n-login'
@@ -53,10 +53,12 @@ export default function LoginPage() {
       }
     }
 
-    // ログイン済みチェック
+    // ログイン済みチェック (デモセッション・旧シードデータは自動クリア)
     const store = getStore()
-    if (store.guestInfo) {
-      if (store.guestInfo.isDemo) { clearGuestInfo() }
+    const info = store.guestInfo
+    const isStaleSeed = info?.email === 'guest@example.com' && info?.name === 'Yamada Taro'
+    if (info) {
+      if (info.isDemo || isStaleSeed) { clearGuestInfo() }
       else { router.replace('/dashboard') }
     }
   }, [router])
@@ -131,7 +133,7 @@ export default function LoginPage() {
       const platformMap: Record<string, GuestInfo['platform']> = {
         airbnb: 'airbnb', 'booking.com': 'booking.com', direct: 'direct', other: 'other',
       }
-      storeSetGuestInfo({
+      const guestInfo: GuestInfo = {
         name: booking.guestName,
         email: booking.email ?? '',
         phone: (booking as typeof booking & { phone?: string }).phone,
@@ -144,7 +146,9 @@ export default function LoginPage() {
         adults: booking.adults,
         children: booking.children,
         specialRequests: (booking as typeof booking & { specialRequests?: string }).specialRequests,
-      })
+      }
+      // シードデータ・前セッションのデータをクリアして、このデバイスをこのゲスト専用状態にする
+      resetStoreForGuest(guestInfo, booking)
       router.push('/dashboard')
     } finally { setLoading(false) }
   }
