@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(0)
+  const [inviteEmail, setInviteEmail] = useState<string | null>(null)
   const otpRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
@@ -46,8 +47,9 @@ export default function LoginPage() {
         if (!alreadyExists) {
           updateStore({ bookingHistory: [...store.bookingHistory, booking] })
         }
-        // メールアドレスを自動入力
+        // メールアドレスを自動入力 & 招待リンク経由の email を記録
         setEmail(booking.email)
+        setInviteEmail(booking.email.toLowerCase())
       }
     }
 
@@ -105,19 +107,15 @@ export default function LoginPage() {
     const trimmed = email.trim().toLowerCase()
     if (!trimmed) return
 
-    // 予約チェック: localStorageにデータがある場合のみ照合
-    // (招待リンクなしで新規デバイスからアクセスした場合はスキップ)
-    const store = getStore()
-    if (store.bookingHistory.length > 0) {
-      const booking = store.bookingHistory.find(
-        b => b.email?.toLowerCase() === trimmed
-      )
-      if (!booking) {
-        setError('ご予約情報が見つかりませんでした。\nホストから招待リンクを受け取り、そのリンクからアクセスしてください。')
-        return
-      }
+    // 招待リンク経由の場合のみ事前チェック
+    // (招待リンクのメールアドレスと入力値が異なる場合はミスタイプの可能性)
+    if (inviteEmail && inviteEmail !== trimmed) {
+      setError('招待リンクのメールアドレスと一致しません。\n入力内容をご確認ください。')
+      return
     }
 
+    // 招待リンクなしの場合 or リンクと一致する場合 → OTPを送信
+    // (本人確認は OTP 認証で行う)
     const ok = await sendOtp(trimmed)
     if (ok) {
       setOtp('')
