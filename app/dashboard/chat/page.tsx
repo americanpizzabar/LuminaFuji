@@ -6,6 +6,7 @@ import { ArrowLeft, Send, Sparkles, RefreshCw } from 'lucide-react'
 import Link from 'next/link'
 import { useLanguage } from '@/lib/useLanguage'
 import { translations } from '@/lib/i18n'
+import { useStore } from '@/lib/useStore'
 
 interface Message {
   id: string
@@ -16,6 +17,7 @@ interface Message {
 
 export default function ChatPage() {
   const { t, lang } = useLanguage()
+  const [store] = useStore()
   const suggestions: string[] = translations[lang]?.chat?.suggestions ?? translations.ja.chat.suggestions
 
   const buildWelcome = (): Message => ({
@@ -52,10 +54,30 @@ export default function ChatPage() {
     let isQuotaError = false
     let errorDetail: string | null = null
     try {
+      // ゲスト固有の context (滞在日程・施設の入退館時刻) を API に渡す
+      const guestContext = store.guestInfo ? {
+        name: store.guestInfo.name,
+        checkIn: store.guestInfo.checkIn,
+        checkOut: store.guestInfo.checkOut,
+        adults: store.guestInfo.adults,
+        children: store.guestInfo.children,
+        nationality: store.guestInfo.nationality,
+      } : null
+      const facilityContext = {
+        checkInTime: store.facilitySettings.checkInTime,
+        checkOutTime: store.facilitySettings.checkOutTime,
+        wifiName: store.facilitySettings.wifiName,
+        wifiPassword: store.facilitySettings.wifiPassword,
+      }
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({
+          messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
+          guest: guestContext,
+          facility: facilityContext,
+          lang,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
