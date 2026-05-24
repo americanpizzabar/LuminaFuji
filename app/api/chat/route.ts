@@ -65,7 +65,12 @@ export async function POST(request: NextRequest) {
   }
 
   const genAI = new GoogleGenerativeAI(apiKey)
-  const history = messages.slice(0, -1).map((m) => ({
+
+  // Gemini requires history to start with a 'user' role.
+  // Drop any leading assistant/model messages (e.g. the welcome bubble).
+  const historyRaw = messages.slice(0, -1)
+  const firstUserIdx = historyRaw.findIndex(m => m.role === 'user')
+  const history = (firstUserIdx === -1 ? [] : historyRaw.slice(firstUserIdx)).map((m) => ({
     role: m.role === 'user' ? 'user' : 'model',
     parts: [{ text: m.content }],
   }))
