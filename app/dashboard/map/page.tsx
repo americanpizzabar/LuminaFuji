@@ -78,7 +78,7 @@ const BUS_ROUTES: BusRoute[] = [
 ]
 
 // Google Maps URL for the property
-const MAPS_URL = 'https://maps.google.com/?q=山梨県南都留郡山中湖村平野470-1'
+const MAPS_URL = 'https://maps.google.com/?q=Lumina+Fuji+Residence+Yamanakako+山梨県南都留郡山中湖村平野470-1'
 
 export default function MapPage() {
   const { t } = useLanguage()
