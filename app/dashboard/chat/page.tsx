@@ -49,6 +49,7 @@ export default function ChatPage() {
     setLoading(true)
 
     let isConfigError = false
+    let isQuotaError = false
     let errorDetail: string | null = null
     try {
       const res = await fetch('/api/chat', {
@@ -58,7 +59,8 @@ export default function ChatPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        if (res.status === 503) { isConfigError = true }
+        if (res.status === 503) isConfigError = true
+        if (res.status === 429 || data.error === 'QUOTA_EXCEEDED') isQuotaError = true
         errorDetail = data.detail || data.error || `HTTP ${res.status}`
         throw new Error(data.error || 'API error')
       }
@@ -67,10 +69,17 @@ export default function ChatPage() {
       if (!errorDetail) {
         errorDetail = err instanceof Error ? err.message : 'Unknown error'
       }
-      const baseMsg = isConfigError ? `⚠️ ${t('chat.apiError')}` : t('chat.genericError')
+      let baseMsg: string
+      if (isConfigError) {
+        baseMsg = `⚠️ ${t('chat.apiError')}`
+      } else if (isQuotaError) {
+        baseMsg = `⚠️ ${t('chat.quotaError')}`
+      } else {
+        baseMsg = t('chat.genericError')
+      }
       setMessages(prev => [...prev, {
         id: (Date.now()+1).toString(), role: 'assistant',
-        content: `${baseMsg}\n\n[debug] ${errorDetail}`,
+        content: baseMsg,
         timestamp: new Date(),
       }])
     } finally {

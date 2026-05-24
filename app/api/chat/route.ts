@@ -34,12 +34,13 @@ const SYSTEM_PROMPT = `あなたは「Lumina Fuji Residence Yamanakako」のデ�
 - 不明な情報は「ホストに確認します」と伝える
 - 照明製品に興味を示した場合は、アプリの製品ページへ案内する`
 
-// 試行順 — SDK ^0.21.0 で動作確認済みのモデルを優先
+// 試行順: 各モデルは別のクォータを持つため、429時も次を試す
+// 1.5-flash 系を優先 (新規 API キーで無料枠が残っている可能性が高い)
 const MODEL_CANDIDATES = [
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-001',
   'gemini-1.5-flash-latest',
   'gemini-1.5-flash',
+  'gemini-1.5-flash-8b',
+  'gemini-2.0-flash',
   'gemini-2.5-flash',
 ]
 
@@ -91,16 +92,25 @@ export async function POST(request: NextRequest) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       console.warn(`[chat] ${modelName} → ${message}`)
       attempts.push({ model: modelName, error: message })
-      // Auth / quota / billing errors → リトライしても無駄なので即終了
-      if (/401|403|api[_ ]?key|permission|quota|billing|invalid/i.test(message)) {
+      // Auth/key/permission errors: リトライしても無駄なので即終了
+      // Quota (429) は次のモデルを試す (モデル毎に別クォータ)
+      if (/401|403|api[_ ]?key|permission|invalid api key/i.test(message)) {
         break
       }
     }
   }
 
-  // 詳細を全て返してデバッグしやすくする
+  // 全モデル失敗
   const detail = attempts.map(a => `${a.model}: ${a.error}`).join(' | ')
+  const allQuotaExhausted = attempts.length > 0 && attempts.every(a => /429|quota|rate limit|too many requests/i.test(a.error))
   console.error('[chat] All model candidates exhausted:', detail)
+
+  if (allQuotaExhausted) {
+    return NextResponse.json(
+      { error: 'QUOTA_EXCEEDED', detail, attempts },
+      { status: 429 }
+    )
+  }
   return NextResponse.json(
     { error: 'AI service error', detail, attempts },
     { status: 500 }
