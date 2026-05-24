@@ -157,7 +157,7 @@ const ja = {
     access: {
       tabAccess: 'アクセス', tabSpots: '周辺スポット',
       address: '〒401-0502 山梨県南都留郡山中湖村平野470-1',
-      walkNote: '平野バス停より徒歩1分',
+      walkNote: '平野バス停より徒歩10分',
       parking: '🅿️ 駐車場2台（無料）',
       byCar: '🚗 お車で',
       byBus: '🚌 バスで',
@@ -361,7 +361,7 @@ const en: TranslationDict = {
     access: {
       tabAccess: 'Access', tabSpots: 'Nearby Spots',
       address: '〒401-0502 Yamanakako-mura, Minamitsuru, Yamanashi 470-1 Hirano',
-      walkNote: '1 min walk from Hirano bus stop',
+      walkNote: '10 min walk from Hirano bus stop',
       parking: '🅿️ Free parking (2 cars)',
       byCar: '🚗 By Car',
       byBus: '🚌 By Bus',
@@ -565,7 +565,7 @@ const zh: TranslationDict = {
     access: {
       tabAccess: '交通路线', tabSpots: '周边景点',
       address: '〒401-0502 山梨县南都留郡山中湖村平野470-1',
-      walkNote: '从平野公交站步行1分钟',
+      walkNote: '从平野公交站步行10分钟',
       parking: '🅿️ 免费停车场（2辆）',
       byCar: '🚗 自驾',
       byBus: '🚌 乘公交',
@@ -769,7 +769,7 @@ const ko: TranslationDict = {
     access: {
       tabAccess: '교통 안내', tabSpots: '주변 명소',
       address: '〒401-0502 야마나시현 미나미쓰루군 야마나카코무라 히라노 470-1',
-      walkNote: '히라노 버스 정류장에서 도보 1분',
+      walkNote: '히라노 버스 정류장에서 도보 10분',
       parking: '🅿️ 무료 주차장 (2대)',
       byCar: '🚗 자동차로',
       byBus: '🚌 버스로',
@@ -973,7 +973,7 @@ const fr: TranslationDict = {
     access: {
       tabAccess: 'Accès', tabSpots: 'À proximité',
       address: '〒401-0502 470-1 Hirano, Yamanakako-mura, Minamitsuru, Yamanashi',
-      walkNote: '1 min à pied de l\'arrêt Hirano',
+      walkNote: '10 min à pied de l\'arrêt Hirano',
       parking: '🅿️ Parking gratuit (2 voitures)',
       byCar: '🚗 En voiture',
       byBus: '🚌 En bus',

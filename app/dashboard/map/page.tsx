@@ -78,7 +78,7 @@ const BUS_ROUTES: BusRoute[] = [
 ]
 
 // Google Maps URL for the property
-const MAPS_URL = 'https://maps.google.com/?q=35.41152,138.87371'
+const MAPS_URL = 'https://maps.google.com/?q=山梨県南都留郡山中湖村平野470-1'
 
 export default function MapPage() {
   const { t } = useLanguage()
@@ -225,7 +225,7 @@ export default function MapPage() {
                 <div className="flex-1 h-px bg-zinc-800" />
                 <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 border border-emerald-500/25 bg-emerald-500/5 px-3 py-1 rounded-full">
                   <MapPin size={9} />
-                  {t('map.access.busStop')} → 徒歩1分
+                  {t('map.access.busStop')} → 徒歩10分
                 </div>
                 <div className="flex-1 h-px bg-zinc-800" />
               </div>
