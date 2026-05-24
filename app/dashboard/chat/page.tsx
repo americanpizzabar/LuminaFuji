@@ -49,6 +49,7 @@ export default function ChatPage() {
     setLoading(true)
 
     let isConfigError = false
+    let errorDetail: string | null = null
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -58,13 +59,18 @@ export default function ChatPage() {
       const data = await res.json()
       if (!res.ok) {
         if (res.status === 503) { isConfigError = true }
+        errorDetail = data.detail || data.error || `HTTP ${res.status}`
         throw new Error(data.error || 'API error')
       }
       setMessages(prev => [...prev, { id: (Date.now()+1).toString(), role: 'assistant', content: data.content, timestamp: new Date() }])
-    } catch {
+    } catch (err) {
+      if (!errorDetail) {
+        errorDetail = err instanceof Error ? err.message : 'Unknown error'
+      }
+      const baseMsg = isConfigError ? `⚠️ ${t('chat.apiError')}` : t('chat.genericError')
       setMessages(prev => [...prev, {
         id: (Date.now()+1).toString(), role: 'assistant',
-        content: isConfigError ? `⚠️ ${t('chat.apiError')}` : t('chat.genericError'),
+        content: `${baseMsg}\n\n[debug] ${errorDetail}`,
         timestamp: new Date(),
       }])
     } finally {

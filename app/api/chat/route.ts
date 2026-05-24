@@ -34,11 +34,13 @@ const SYSTEM_PROMPT = `あなたは「Lumina Fuji Residence Yamanakako」のデ�
 - 不明な情報は「ホストに確認します」と伝える
 - 照明製品に興味を示した場合は、アプリの製品ページへ案内する`
 
-// 試行順 — 最新版から fallback
+// 試行順 — SDK ^0.21.0 で動作確認済みのモデルを優先
 const MODEL_CANDIDATES = [
-  'gemini-2.5-flash',
   'gemini-2.0-flash',
-  'gemini-flash-latest',
+  'gemini-2.0-flash-001',
+  'gemini-1.5-flash-latest',
+  'gemini-1.5-flash',
+  'gemini-2.5-flash',
 ]
 
 export async function POST(request: NextRequest) {
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
   }))
   const lastMessage = messages[messages.length - 1].content
 
-  let lastError: Error | null = null
+  const attempts: { model: string; error: string }[] = []
   for (const modelName of MODEL_CANDIDATES) {
     try {
       const model = genAI.getGenerativeModel({
@@ -82,18 +84,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ content: text, model: modelName })
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unknown error'
-      console.warn(`[chat] Model ${modelName} failed: ${message}`)
-      lastError = error instanceof Error ? error : new Error(message)
-      // Retry next model only for not-found / unsupported errors; otherwise bail
-      if (!/not found|404|unsupported|deprecated/i.test(message)) {
+      console.warn(`[chat] ${modelName} → ${message}`)
+      attempts.push({ model: modelName, error: message })
+      // Auth / quota / billing errors → リトライしても無駄なので即終了
+      if (/401|403|api[_ ]?key|permission|quota|billing|invalid/i.test(message)) {
         break
       }
     }
   }
 
-  console.error('Gemini API error (all models exhausted):', lastError?.message)
+  // 詳細を全て返してデバッグしやすくする
+  const detail = attempts.map(a => `${a.model}: ${a.error}`).join(' | ')
+  console.error('[chat] All model candidates exhausted:', detail)
   return NextResponse.json(
-    { error: 'AI service error', detail: lastError?.message ?? 'Unknown error' },
+    { error: 'AI service error', detail, attempts },
     { status: 500 }
   )
 }
