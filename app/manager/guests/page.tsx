@@ -9,7 +9,7 @@ import {
 } from '@/lib/store'
 import {
   Users, Plus, Calendar, ChevronLeft, ChevronRight, X, Edit2,
-  Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp, Link2,
+  Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp, Link2, Mail, AlertTriangle,
 } from 'lucide-react'
 import PhaseBadge from '@/components/PhaseBadge'
 
@@ -260,6 +260,30 @@ function generateInviteLink(booking: BookingRecord): string {
   return `${window.location.origin}/login?invite=${encoded}`
 }
 
+async function sendInviteMail(booking: BookingRecord): Promise<{ ok: boolean; error?: string }> {
+  if (!booking.email) return { ok: false, error: 'No email' }
+  try {
+    const res = await fetch('/api/auth/send-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: booking.email,
+        guestName: booking.guestName,
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        inviteLink: generateInviteLink(booking),
+      }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      return { ok: false, error: data.error ?? `HTTP ${res.status}` }
+    }
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'network error' }
+  }
+}
+
 function GuestListTab({
   bookings,
   facilitySettings,
@@ -272,6 +296,14 @@ function GuestListTab({
   const [filter, setFilter] = useState<string>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [emailingId, setEmailingId] = useState<string | null>(null)
+  const [emailSentId, setEmailSentId] = useState<string | null>(null)
+  const [tabToast, setTabToast] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+
+  const showTabToast = (kind: 'success' | 'error', text: string) => {
+    setTabToast({ kind, text })
+    setTimeout(() => setTabToast(null), 3000)
+  }
 
   const copyInviteLink = (booking: BookingRecord) => {
     const link = generateInviteLink(booking)
@@ -279,6 +311,19 @@ function GuestListTab({
       setCopiedId(booking.id)
       setTimeout(() => setCopiedId(null), 2000)
     })
+  }
+
+  const handleResendInvite = async (booking: BookingRecord) => {
+    setEmailingId(booking.id)
+    const result = await sendInviteMail(booking)
+    setEmailingId(null)
+    if (result.ok) {
+      setEmailSentId(booking.id)
+      setTimeout(() => setEmailSentId(null), 2500)
+      showTabToast('success', `${booking.email} に招待メールを送信しました`)
+    } else {
+      showTabToast('error', `送信失敗: ${result.error ?? ''}`)
+    }
   }
 
   const filtered = useMemo(() => {
@@ -384,17 +429,33 @@ function GuestListTab({
                           <Edit2 size={11} /> 編集する
                         </button>
                         {b.email && (
-                          <button onClick={() => copyInviteLink(b)}
-                            className={`flex items-center gap-1.5 text-xs rounded-xl px-3 py-1.5 border transition-all ${
-                              copiedId === b.id
-                                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                                : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
-                            }`}>
-                            {copiedId === b.id
-                              ? <><Check size={11} /> コピー済み</>
-                              : <><Link2 size={11} /> 招待リンクをコピー</>
-                            }
-                          </button>
+                          <>
+                            <button onClick={() => handleResendInvite(b)}
+                              disabled={emailingId === b.id}
+                              className={`flex items-center gap-1.5 text-xs rounded-xl px-3 py-1.5 border transition-all ${
+                                emailSentId === b.id
+                                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                                  : 'border-gold-500/30 bg-gold-500/10 text-gold-400 hover:bg-gold-500/20 disabled:opacity-50'
+                              }`}>
+                              {emailSentId === b.id
+                                ? <><Check size={11} /> 送信済み</>
+                                : emailingId === b.id
+                                  ? <><Mail size={11} className="animate-pulse" /> 送信中…</>
+                                  : <><Mail size={11} /> 招待メールを送信</>
+                              }
+                            </button>
+                            <button onClick={() => copyInviteLink(b)}
+                              className={`flex items-center gap-1.5 text-xs rounded-xl px-3 py-1.5 border transition-all ${
+                                copiedId === b.id
+                                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                                  : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
+                              }`}>
+                              {copiedId === b.id
+                                ? <><Check size={11} /> コピー済み</>
+                                : <><Link2 size={11} /> リンクをコピー</>
+                              }
+                            </button>
+                          </>
                         )}
                       </div>
                     </motion.div>
@@ -405,6 +466,25 @@ function GuestListTab({
           })}
         </div>
       )}
+
+      {/* Toast */}
+      <AnimatePresence>
+        {tabToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-2xl text-xs font-medium shadow-xl flex items-center gap-2 max-w-[90%] ${
+              tabToast.kind === 'success'
+                ? 'bg-emerald-500 text-zinc-950'
+                : 'bg-red-500 text-white'
+            }`}
+          >
+            {tabToast.kind === 'success' ? <Check size={14} /> : <AlertTriangle size={14} />}
+            <span>{tabToast.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -436,9 +516,9 @@ function NewBookingTab({
     return Object.keys(e).length === 0
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return
-    addBookingRecord({
+    const created = addBookingRecord({
       guestName: form.guestName,
       email: form.email,
       nationality: form.nationality,
@@ -456,6 +536,12 @@ function NewBookingTab({
     update({ bookingHistory: getStore().bookingHistory })
     setToast(true)
     setForm(emptyForm())
+
+    // 新規予約 & メールあり → 自動で招待メールを送信
+    if (created?.email) {
+      sendInviteMail(created).catch(() => {/* fail silently; can resend manually */})
+    }
+
     setTimeout(() => {
       setToast(false)
       onSuccess()

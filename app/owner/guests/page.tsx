@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Wrench, MessageSquare, CheckCircle2, Clock,
   AlertTriangle, Send, ChevronDown, ChevronUp, Calendar,
-  Bed, DollarSign, Filter, Plus, Edit2, X, Check, Trash2, Link2,
+  Bed, DollarSign, Filter, Plus, Edit2, X, Check, Trash2, Link2, Mail,
 } from 'lucide-react'
 import { useStore } from '@/lib/useStore'
 import {
@@ -280,6 +280,31 @@ function generateInviteLink(booking: BookingRecord): string {
   return `${window.location.origin}/login?invite=${encoded}`
 }
 
+/** 招待メールを送信 */
+async function sendInviteMail(booking: BookingRecord): Promise<{ ok: boolean; error?: string }> {
+  if (!booking.email) return { ok: false, error: 'No email' }
+  try {
+    const res = await fetch('/api/auth/send-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: booking.email,
+        guestName: booking.guestName,
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        inviteLink: generateInviteLink(booking),
+      }),
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      return { ok: false, error: data.error ?? `HTTP ${res.status}` }
+    }
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'network error' }
+  }
+}
+
 export default function GuestsPage() {
   const [store, update] = useStore()
   const [bookingFilter, setBookingFilter] = useState<BookingFilter>('all')
@@ -290,6 +315,14 @@ export default function GuestsPage() {
   const [sending, setSending] = useState(false)
   const [activeSection, setActiveSection] = useState<ActiveSection>('bookings')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [emailingId, setEmailingId] = useState<string | null>(null)
+  const [emailSentId, setEmailSentId] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ kind: 'success' | 'error'; text: string } | null>(null)
+
+  const showToast = (kind: 'success' | 'error', text: string) => {
+    setToast({ kind, text })
+    setTimeout(() => setToast(null), 3000)
+  }
 
   const filteredBookings =
     bookingFilter === 'all'
@@ -304,9 +337,10 @@ export default function GuestsPage() {
   const openNew  = ()                  => { setModalBooking(null); setShowModal('new') }
   const closeModal = () => { setShowModal(null); setModalBooking(null) }
 
-  const handleSave = (data: Partial<BookingRecord>) => {
+  const handleSave = async (data: Partial<BookingRecord>) => {
+    let createdBooking: BookingRecord | null = null
     if (showModal === 'new') {
-      addBookingRecord({
+      createdBooking = addBookingRecord({
         guestName: data.guestName ?? '',
         email: data.email ?? '',
         phone: data.phone,
@@ -329,6 +363,16 @@ export default function GuestsPage() {
     }
     update({ bookingHistory: getStore().bookingHistory })
     closeModal()
+
+    // 新規予約 & メールあり → 自動で招待メールを送信
+    if (createdBooking?.email) {
+      const result = await sendInviteMail(createdBooking)
+      if (result.ok) {
+        showToast('success', `${createdBooking.email} に招待メールを送信しました`)
+      } else {
+        showToast('error', `招待メール送信失敗: ${result.error ?? ''} (リンクは手動でコピーできます)`)
+      }
+    }
   }
 
   const handleDelete = () => {
@@ -345,6 +389,19 @@ export default function GuestsPage() {
       setCopiedId(booking.id)
       setTimeout(() => setCopiedId(null), 2000)
     })
+  }
+
+  const handleResendInvite = async (booking: BookingRecord) => {
+    setEmailingId(booking.id)
+    const result = await sendInviteMail(booking)
+    setEmailingId(null)
+    if (result.ok) {
+      setEmailSentId(booking.id)
+      setTimeout(() => setEmailSentId(null), 2500)
+      showToast('success', `${booking.email} に招待メールを送信しました`)
+    } else {
+      showToast('error', `送信失敗: ${result.error ?? ''}`)
+    }
   }
 
   const resolveServiceRequest = (id: string) => {
@@ -385,6 +442,25 @@ export default function GuestsPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-5">
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-2xl text-xs font-medium shadow-xl flex items-center gap-2 max-w-[90%] ${
+              toast.kind === 'success'
+                ? 'bg-emerald-500 text-zinc-950'
+                : 'bg-red-500 text-white'
+            }`}
+          >
+            {toast.kind === 'success' ? <Check size={14} /> : <AlertTriangle size={14} />}
+            <span>{toast.text}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Edit / New modal */}
       <AnimatePresence>
@@ -511,17 +587,33 @@ export default function GuestsPage() {
                                   <Edit2 size={11} /> 予約を編集
                                 </button>
                                 {booking.email && (
-                                  <button onClick={() => copyInviteLink(booking)}
-                                    className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border transition-all ${
-                                      copiedId === booking.id
-                                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                                        : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
-                                    }`}>
-                                    {copiedId === booking.id
-                                      ? <><Check size={11} /> コピー済み</>
-                                      : <><Link2 size={11} /> 招待リンクをコピー</>
-                                    }
-                                  </button>
+                                  <>
+                                    <button onClick={() => handleResendInvite(booking)}
+                                      disabled={emailingId === booking.id}
+                                      className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border transition-all ${
+                                        emailSentId === booking.id
+                                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                                          : 'border-gold-500/30 bg-gold-500/10 text-gold-400 hover:bg-gold-500/20 disabled:opacity-50'
+                                      }`}>
+                                      {emailSentId === booking.id
+                                        ? <><Check size={11} /> 送信済み</>
+                                        : emailingId === booking.id
+                                          ? <><Mail size={11} className="animate-pulse" /> 送信中…</>
+                                          : <><Mail size={11} /> 招待メールを送信</>
+                                      }
+                                    </button>
+                                    <button onClick={() => copyInviteLink(booking)}
+                                      className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl border transition-all ${
+                                        copiedId === booking.id
+                                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                                          : 'border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
+                                      }`}>
+                                      {copiedId === booking.id
+                                        ? <><Check size={11} /> コピー済み</>
+                                        : <><Link2 size={11} /> リンクをコピー</>
+                                      }
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             </div>
