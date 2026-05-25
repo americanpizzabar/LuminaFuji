@@ -87,7 +87,7 @@ export default function GuestbookPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', damping: 25 }}
-              className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-3xl p-6"
+              className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-3xl p-6 max-h-[85vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
                 <h2 className="font-medium text-zinc-100">{t('guestbook.formTitle')}</h2>
