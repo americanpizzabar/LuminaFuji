@@ -8,8 +8,8 @@ import { useLanguage } from '@/lib/useLanguage'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import CompanionInvite from '@/components/CompanionInvite'
 import {
-  Lightbulb, BookOpen, Map, MessageCircle,
-  Camera, Star, ExternalLink,
+  Lightbulb, BookOpen, MessageCircle,
+  Star, ExternalLink,
   Bell, ChevronRight, Wifi,
   Phone, Sun, Moon, Sunset, MapPin, X, ArrowRight,
   Navigation2
