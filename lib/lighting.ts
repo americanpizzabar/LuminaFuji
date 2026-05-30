@@ -3,7 +3,6 @@ export interface LightingScene {
   nameJa: string
   nameEn: string
   brightness: number
-  colorTemp: number
   icon: string
   description: string
 }
@@ -16,13 +15,23 @@ export interface Zone {
   brightness: number
 }
 
+/**
+ * OLEDWorks Brite 3 は色温度固定（電球色 3000K）の有機ELパネル。
+ * CRI > 90 / R9 > 50。調色機能は持たないため、本アプリでは明るさ（調光）のみを制御する。
+ */
+export const FIXED_CCT = 3000
+export const FIXED_CCT_LABEL = '電球色 3000K'
+
+/**
+ * シーン = 明るさ（ムード）プリセット。色温度は固定のため brightness のみが変化する。
+ * OLED は調光するほど自然に暖色化する（dim-to-warm）ため、暗いシーンほど温かみが増す。
+ */
 export const SCENES: LightingScene[] = [
   {
     id: 'dawn',
     nameJa: '夜明け',
     nameEn: 'Dawn',
     brightness: 15,
-    colorTemp: 2700,
     icon: '🌅',
     description: '柔らかな夜明けの光',
   },
@@ -31,7 +40,6 @@ export const SCENES: LightingScene[] = [
     nameJa: '朝',
     nameEn: 'Morning',
     brightness: 70,
-    colorTemp: 4000,
     icon: '☀️',
     description: '清々しい朝の光',
   },
@@ -40,7 +48,6 @@ export const SCENES: LightingScene[] = [
     nameJa: '昼',
     nameEn: 'Daytime',
     brightness: 100,
-    colorTemp: 5000,
     icon: '🌤',
     description: '明るく活発な昼の光',
   },
@@ -49,7 +56,6 @@ export const SCENES: LightingScene[] = [
     nameJa: '夕暮れ',
     nameEn: 'Dusk',
     brightness: 40,
-    colorTemp: 2900,
     icon: '🌇',
     description: '暖かな夕暮れの光',
   },
@@ -58,7 +64,6 @@ export const SCENES: LightingScene[] = [
     nameJa: 'くつろぎ',
     nameEn: 'Relax',
     brightness: 25,
-    colorTemp: 2700,
     icon: '🕯️',
     description: 'リラックスのための暖かな光',
   },
@@ -67,16 +72,14 @@ export const SCENES: LightingScene[] = [
     nameJa: '読書',
     nameEn: 'Reading',
     brightness: 60,
-    colorTemp: 4500,
     icon: '📖',
-    description: '目に優しい読書用の光',
+    description: '目に優しい読書の光',
   },
   {
     id: 'sleep',
     nameJa: '就寝',
     nameEn: 'Sleep',
     brightness: 5,
-    colorTemp: 2700,
     icon: '🌙',
     description: '眠りを誘う最小限の光',
   },
@@ -89,19 +92,21 @@ export const DEFAULT_ZONES: Zone[] = [
   { id: 'entrance', nameJa: 'エントランス', nameEn: 'Entrance', isOn: true, brightness: 60 },
 ]
 
-export function colorTempToRgb(kelvin: number): string {
-  const t = Math.max(0, Math.min(1, (kelvin - 2700) / (6500 - 2700)))
-  // 2700K → deep amber (255,140,50)  6500K → cool blue-white (210,230,255)
-  const r = Math.round(255 - 45 * t)
-  const g = Math.round(140 + 90 * t)
-  const b = Math.round(50 + 205 * t)
+/**
+ * 明るさに応じた発光色を返す（OLED の dim-to-warm 特性を再現）。
+ * 色温度は固定だが、調光すると物理的に暖色へシフトする現象を視覚化する。
+ *   brightness 100% → 電球色 3000K に近い warm white ≈ rgb(255,197,143)
+ *   brightness   0% → 深い飴色のキャンドル光 ≈ rgb(255,128,46)
+ */
+export function brightnessToWarmRgb(brightness: number): string {
+  const t = Math.max(0, Math.min(1, brightness / 100))
+  const r = 255
+  const g = Math.round(128 + 69 * t)
+  const b = Math.round(46 + 97 * t)
   return `rgb(${r}, ${g}, ${b})`
 }
 
-export function getColorTempLabel(kelvin: number): string {
-  if (kelvin <= 2900) return '電球色'
-  if (kelvin <= 3500) return '温白色'
-  if (kelvin <= 4500) return '白色'
-  if (kelvin <= 5500) return '昼白色'
-  return '昼光色'
+/** 固定色温度（3000K）の代表色。プレビュー等の静的表示用。 */
+export function fixedCctRgb(): string {
+  return brightnessToWarmRgb(100)
 }

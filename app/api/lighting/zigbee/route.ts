@@ -1,22 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
- * Zigbee2MQTT integration via HTTP REST API.
+ * ───────────────────────────────────────────────────────────────────────────
+ *  Zigbee2MQTT 照明連携 (OLEDWorks Brite 3 / 電球色 3000K 固定)
+ * ───────────────────────────────────────────────────────────────────────────
  *
- * Required env vars (set on the home server / Vercel):
- *   ZIGBEE_BRIDGE_URL   — e.g. http://192.168.1.100:8080   (Zigbee2MQTT frontend URL)
- *   ZIGBEE_API_TOKEN    — optional auth token for the bridge
- *   ZIGBEE_DEVICES      — JSON map of zone → friendly name
- *                         e.g. {"living":"living_light","bedroom":"bedroom_light","all":"group_all"}
+ *  Zigbee2MQTT の正式な制御方法は MQTT です（汎用 REST API は存在しません）。
+ *  本ルートは MQTT ブローカー (Mosquitto 等) に接続し、以下のトピックへ publish します:
  *
- * If ZIGBEE_BRIDGE_URL is not set the route returns simulated=true and still
- * reports success, so the UI works in demo mode without any hardware.
+ *      zigbee2mqtt/<friendly_name>/set
+ *      payload: {"state":"ON","brightness":0-254,"transition":1}
+ *
+ *  Brite 3 は色温度固定のため color_temp は送信しません（state と brightness のみ）。
+ *
+ *  必要な環境変数 (.env.local / Vercel Environment Variables):
+ *    ZIGBEE_MQTT_URL       MQTT ブローカー URL  例: mqtt://192.168.1.50:1883
+ *    ZIGBEE_MQTT_USERNAME  ブローカー認証ユーザー名 (任意)
+ *    ZIGBEE_MQTT_PASSWORD  ブローカー認証パスワード (任意)
+ *    ZIGBEE_BASE_TOPIC     ベーストピック (既定: zigbee2mqtt)
+ *    ZIGBEE_DEVICES        ゾーン→friendly_name の JSON マップ
+ *                          例: {"all":"lumina_all","living":"lumina_living", ...}
+ *                          "all" は全灯を束ねる Zigbee グループの friendly_name
+ *
+ *  ZIGBEE_MQTT_URL が未設定の場合はシミュレーションモードで動作し、
+ *  UI は通常どおり反応しますが実際の照明には送信しません（ハード無しでデモ可能）。
+ *
+ *  ※ Node ランタイムが必須（TCP ソケットを使うため Edge では動作しません）
  */
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 interface ZigbeeCommand {
   state?: 'ON' | 'OFF'
-  brightness?: number   // 0–254
-  color_temp?: number   // Mireds (154–500)
+  brightness?: number // 0–254
+  transition?: number // 秒
 }
 
 interface DeviceMap {
@@ -31,109 +48,147 @@ function getDeviceMap(): DeviceMap {
   }
 }
 
-async function sendToZigbee(deviceName: string, command: ZigbeeCommand): Promise<boolean> {
-  const bridgeUrl = process.env.ZIGBEE_BRIDGE_URL
-  if (!bridgeUrl) return false
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-  if (process.env.ZIGBEE_API_TOKEN) {
-    headers['Authorization'] = `Bearer ${process.env.ZIGBEE_API_TOKEN}`
-  }
-
-  // Zigbee2MQTT REST API: POST /api/devices/{friendlyName}/action
-  const url = `${bridgeUrl.replace(/\/$/, '')}/api/devices/${encodeURIComponent(deviceName)}/action`
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(command),
-    signal: AbortSignal.timeout(3000),
-  })
-
-  return res.ok
+function getBaseTopic(): string {
+  return (process.env.ZIGBEE_BASE_TOPIC ?? 'zigbee2mqtt').replace(/\/$/, '')
 }
 
-// GET — health check / connection status
-export async function GET() {
-  const bridgeUrl = process.env.ZIGBEE_BRIDGE_URL
+// ── MQTT singleton (サーバーレス再実行間で接続を再利用) ──────────────────────
+type MqttClientLike = {
+  connected: boolean
+  publish: (topic: string, msg: string, cb?: (err?: Error) => void) => void
+  end: (force?: boolean) => void
+}
 
-  if (!bridgeUrl) {
-    return NextResponse.json({ connected: false, simulated: true, reason: 'ZIGBEE_BRIDGE_URL not set' })
+declare global {
+  // eslint-disable-next-line no-var
+  var __zigbeeMqttClient: MqttClientLike | null | undefined
+}
+
+async function getMqttClient(): Promise<MqttClientLike | null> {
+  const url = process.env.ZIGBEE_MQTT_URL
+  if (!url) return null
+
+  if (global.__zigbeeMqttClient?.connected) {
+    return global.__zigbeeMqttClient
   }
 
   try {
-    const headers: Record<string, string> = {}
-    if (process.env.ZIGBEE_API_TOKEN) {
-      headers['Authorization'] = `Bearer ${process.env.ZIGBEE_API_TOKEN}`
-    }
-    const res = await fetch(`${bridgeUrl.replace(/\/$/, '')}/api/health`, {
-      headers,
-      signal: AbortSignal.timeout(2000),
+    // 動的 import: mqtt 未インストールでもアプリ全体は起動できる（シミュレーション動作）
+    const mqttModule = await import('mqtt').catch(() => null)
+    if (!mqttModule) return null
+    const mqtt = (mqttModule as any).default ?? mqttModule
+
+    const client: MqttClientLike = await new Promise((resolve, reject) => {
+      const c = mqtt.connect(url, {
+        username: process.env.ZIGBEE_MQTT_USERNAME || undefined,
+        password: process.env.ZIGBEE_MQTT_PASSWORD || undefined,
+        connectTimeout: 3000,
+        reconnectPeriod: 0,
+        clientId: `luminafuji_${Math.random().toString(16).slice(2, 10)}`,
+      })
+      c.on('connect', () => resolve(c))
+      c.on('error', (err: Error) => {
+        c.end(true)
+        reject(err)
+      })
+      setTimeout(() => reject(new Error('MQTT connect timeout')), 3500)
     })
-    return NextResponse.json({ connected: res.ok, simulated: false })
+
+    global.__zigbeeMqttClient = client
+    return client
   } catch {
-    return NextResponse.json({ connected: false, simulated: true, reason: 'bridge unreachable' })
+    global.__zigbeeMqttClient = null
+    return null
   }
 }
 
-// POST — send lighting command to one or all zones
+async function publishCommand(friendlyName: string, command: ZigbeeCommand): Promise<boolean> {
+  const client = await getMqttClient()
+  if (!client) return false
+
+  const topic = `${getBaseTopic()}/${friendlyName}/set`
+  return new Promise((resolve) => {
+    client.publish(topic, JSON.stringify(command), (err) => resolve(!err))
+  })
+}
+
+// ── GET: 接続ステータス ──────────────────────────────────────────────────────
+export async function GET() {
+  if (!process.env.ZIGBEE_MQTT_URL) {
+    return NextResponse.json({
+      connected: false,
+      simulated: true,
+      reason: 'ZIGBEE_MQTT_URL not set',
+    })
+  }
+
+  const client = await getMqttClient()
+  return NextResponse.json({
+    connected: !!client?.connected,
+    simulated: !client?.connected,
+    baseTopic: getBaseTopic(),
+  })
+}
+
+// ── POST: 照明コマンド送信 ────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null)
-
   if (!body?.command) {
     return NextResponse.json({ success: false, error: 'Missing command' }, { status: 400 })
   }
 
   const zone: string = body.zone ?? 'all'
-  const command: ZigbeeCommand = body.command
+  const raw = body.command as { state?: 'ON' | 'OFF'; brightness?: number }
 
-  const bridgeUrl = process.env.ZIGBEE_BRIDGE_URL
-  if (!bridgeUrl) {
-    // Simulated — just echo success
+  // Brite 3 は色温度固定 → state / brightness / transition のみを送信
+  const command: ZigbeeCommand = {
+    state: raw.state ?? (raw.brightness && raw.brightness > 0 ? 'ON' : 'OFF'),
+    transition: 1,
+  }
+  if (typeof raw.brightness === 'number') {
+    command.brightness = Math.max(0, Math.min(254, Math.round(raw.brightness)))
+  }
+
+  // ブローカー未設定 → シミュレーション
+  if (!process.env.ZIGBEE_MQTT_URL) {
     return NextResponse.json({ success: true, zigbee: false, simulated: true, zone, command })
   }
 
   const deviceMap = getDeviceMap()
 
-  // Determine which device(s) to control
-  let devicesToControl: string[]
-
+  // 対象デバイスの解決
+  let devices: string[]
   if (zone === 'all') {
-    const allDevice = deviceMap['all']
-    if (allDevice) {
-      devicesToControl = [allDevice]
-    } else {
-      // Control every individual zone
-      devicesToControl = Object.values(deviceMap).filter(Boolean)
-    }
+    devices = deviceMap['all'] ? [deviceMap['all']] : Object.values(deviceMap).filter(Boolean)
   } else {
     const device = deviceMap[zone]
     if (!device) {
-      return NextResponse.json({
-        success: false,
-        error: `Zone "${zone}" not found in ZIGBEE_DEVICES`,
-      }, { status: 404 })
+      return NextResponse.json(
+        { success: false, error: `Zone "${zone}" not in ZIGBEE_DEVICES` },
+        { status: 404 }
+      )
     }
-    devicesToControl = [device]
+    devices = [device]
   }
 
-  if (devicesToControl.length === 0) {
-    return NextResponse.json({ success: true, zigbee: false, simulated: true, reason: 'no devices configured' })
+  if (devices.length === 0) {
+    return NextResponse.json({
+      success: true,
+      zigbee: false,
+      simulated: true,
+      reason: 'no devices configured',
+    })
   }
 
-  const results = await Promise.allSettled(
-    devicesToControl.map(device => sendToZigbee(device, command))
-  )
-
-  const allOk = results.every(r => r.status === 'fulfilled' && r.value === true)
+  const results = await Promise.allSettled(devices.map((d) => publishCommand(d, command)))
+  const allOk = results.every((r) => r.status === 'fulfilled' && r.value === true)
 
   return NextResponse.json({
     success: true,
     zigbee: allOk,
     simulated: !allOk,
     zone,
-    devices: devicesToControl,
+    devices,
+    command,
   })
 }

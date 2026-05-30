@@ -10,7 +10,7 @@ import {
   Lightbulb, BookOpen, Map, MessageCircle, ShoppingBag,
   Camera, Star, ExternalLink,
   Sparkles, Building2, Bell, ChevronRight, Wifi,
-  Phone, Sun, Moon, Sunset, MapPin, X, Zap, ArrowRight,
+  Phone, Sun, Moon, Sunset, MapPin, X, ArrowRight,
   Navigation2
 } from 'lucide-react'
 import { getFeaturedProducts } from '@/lib/products'
@@ -388,7 +388,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                         animate={{ opacity: [1, 0.4, 1] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       />
-                      <span className="text-xs text-gold-400 font-medium tracking-wide">ECUANEST · LIVE</span>
+                      <span className="text-xs text-gold-400 font-medium tracking-wide">OLEDWorks Brite 3 · LIVE</span>
                     </div>
                     <h2 className="text-2xl font-serif text-zinc-50">{t('home.staying.lightingControl')}</h2>
                     <p className="text-xs text-zinc-500 mt-0.5">{t('home.staying.tapToOperate')}</p>

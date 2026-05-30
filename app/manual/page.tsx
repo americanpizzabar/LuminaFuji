@@ -161,6 +161,7 @@ export default function ManualPage() {
                 { href: '#guest', label: 'ゲスト用アプリ', emoji: '🏠' },
                 { href: '#manager', label: '管理会社用アプリ', emoji: '🔧' },
                 { href: '#owner', label: 'オーナー用アプリ', emoji: '🛡️' },
+                { href: '#lighting', label: '照明（Zigbee）設定', emoji: '💡' },
                 { href: '#env', label: '環境変数・設定', emoji: '⚙️' },
                 { href: '#faq', label: 'よくある質問', emoji: '❓' },
               ].map(({ href, label, emoji }) => (
@@ -279,7 +280,7 @@ export default function ManualPage() {
               <p className="text-sm font-semibold text-zinc-200">主な機能</p>
             </div>
             <div className="px-5">
-              <FeatureRow icon={<Lightbulb size={15} />} title="照明コントロール" desc="ECUANEST Brite 3 の明るさ・色温度・シーン・エリアを自由に調整。7種のプリセット（夜明け〜就寝）収録。" />
+              <FeatureRow icon={<Lightbulb size={15} />} title="照明コントロール" desc="OLEDWorks Brite 3（電球色 3000K 固定）の明るさ・シーン・エリアを調整。7種のムードプリセット（夜明け〜就寝）収録。OLEDは調光すると自然に暖色化します。滞在中はZigbeeで実機と自動連携。" />
               <FeatureRow icon={<Bell size={15} />} title="サービスリクエスト" desc="タオル・アメニティ補充、温度調整、修理、タクシー手配など6種類。急ぎフラグ付き。ホストに即時通知。" />
               <FeatureRow icon={<MessageCircle size={15} />} title="AIコンシェルジュ" desc="Google Gemini 搭載のAIチャット。施設情報・周辺案内・照明操作方法など多言語対応（日英中韓仏）。" />
               <FeatureRow icon={<BookOpen size={15} />} title="施設ガイド" desc="チェックイン/アウト時刻、WiFi情報、アメニティ、照明の使い方、ルール、緊急連絡先をアコーディオン表示。" />
@@ -443,6 +444,141 @@ export default function ManualPage() {
           </div>
         </Section>
 
+        {/* ── LIGHTING / ZIGBEE ── */}
+        <Section id="lighting" title="照明（Zigbee）設定" emoji="💡">
+          {/* Intro */}
+          <div className="card p-5 mb-4 border-gold-500/20 bg-gradient-to-br from-amber-950/20 to-zinc-900">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb size={16} className="text-gold-400" />
+              <span className="text-sm font-semibold text-gold-300">OLEDWorks Brite 3 ＋ Zigbee2MQTT</span>
+            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              照明は <strong className="text-zinc-200">OLEDWorks Brite 3（電球色 3000K 固定）</strong> を使用します。色温度は変わらないため、
+              アプリが制御するのは <strong className="text-zinc-200">点灯/消灯</strong> と <strong className="text-zinc-200">明るさ</strong> のみです。
+              OLED は光を絞るほど自然に暖かみが増します（dim-to-warm）。
+              ゲストには接続作業をさせず、<strong className="text-gold-400">ご滞在中のみ自動でZigbee連携</strong>し操作できる状態にします。
+            </p>
+          </div>
+
+          {/* Architecture */}
+          <div className="card p-5 mb-4">
+            <p className="text-sm font-semibold text-zinc-200 mb-3">仕組み（データの流れ）</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 overflow-x-auto">
+              <pre className="text-[11px] text-zinc-400 leading-relaxed whitespace-pre">{`アプリ (滞在中のみ)
+   │ HTTPS
+   ▼
+Next.js API  /api/lighting/zigbee
+   │ MQTT publish
+   │ zigbee2mqtt/<名前>/set
+   │ {"state":"ON","brightness":178}
+   ▼
+MQTTブローカー (Mosquitto)
+   ▼
+Zigbee2MQTT  ──Zigbee──▶  調光モジュール
+   ▼
+OLEDWorks Brite 3 パネル`}</pre>
+            </div>
+            <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
+              Zigbee2MQTT に汎用RESTは無いため、制御は <strong className="text-zinc-400">MQTT</strong> で行います。
+              アプリは <code className="text-gold-400">zigbee2mqtt/&lt;friendly_name&gt;/set</code> に publish します。
+            </p>
+          </div>
+
+          {/* Hardware */}
+          <div className="card overflow-hidden mb-4">
+            <div className="px-5 py-4 border-b border-zinc-800">
+              <p className="text-sm font-semibold text-zinc-200">必要な機材</p>
+            </div>
+            <div className="px-5">
+              <FeatureRow icon={<span className="text-xs">1</span>} title="常時稼働サーバー" desc="Raspberry Pi 4 (4GB+) またはミニPC。Zigbee2MQTT と Mosquitto を常時稼働させます。" />
+              <FeatureRow icon={<span className="text-xs">2</span>} title="Zigbeeコーディネーター" desc="Sonoff Zigbee 3.0 USB Dongle Plus / ConBee II などのUSBドングル。" />
+              <FeatureRow icon={<span className="text-xs">3</span>} title="Zigbee調光モジュール" desc="OLEDドライバの調光方式に合わせる（0-10V / 位相制御 / PWM）。Brite 3 を調光できる信号を出力します。" />
+              <FeatureRow icon={<span className="text-xs">4</span>} title="調光対応ドライバ" desc="Brite 3 の定格に合う調光対応の定電流/定電圧ドライバ。" />
+            </div>
+            <div className="px-5 pb-4">
+              <div className="mt-2 p-3 bg-amber-950/20 border border-amber-500/20 rounded-xl">
+                <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                  ⚠️ OLEDパネルの配線・ドライバ選定・100V結線は<strong className="text-amber-200">必ず電気工事士などの有資格者</strong>が行ってください。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Steps */}
+          <div className="card p-5 mb-4">
+            <p className="text-sm font-semibold text-zinc-200 mb-3">設定手順</p>
+            <ol className="space-y-2.5">
+              {[
+                'サーバーに Mosquitto（MQTTブローカー）を導入し、ユーザー名/パスワード認証を有効化',
+                'Zigbee2MQTT を導入し、configuration.yaml に MQTT接続情報とコーディネーターのポートを設定',
+                'systemd で Mosquitto・Zigbee2MQTT を自動起動に登録',
+                'Web UI（:8080）で Permit join を一時ON → 調光モジュールをペアリング → 完了後OFFに戻す',
+                '各デバイスの friendly_name を lumina_living / lumina_bedroom などに命名',
+                '全灯グループ lumina_all を作成し4ゾーンを追加（反応が速くなる・推奨）',
+                'mosquitto_pub で直接 publish し、照明が点灯/調光することをテスト',
+                'アプリの環境変数（下記）を設定して Redeploy',
+              ].map((step, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full bg-gold-500/20 border border-gold-500/30 text-gold-400 text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{step}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Test command */}
+          <div className="card p-5 mb-4">
+            <p className="text-sm font-semibold text-zinc-200 mb-2">動作テスト（MQTT直叩き）</p>
+            <p className="text-xs text-zinc-500 mb-3">サーバー上で実行し、照明が反応すればZigbee側は完了です。</p>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-start gap-2">
+              <code className="text-[11px] text-zinc-300 leading-relaxed flex-1 break-all">{`mosquitto_pub -h localhost -u lumina -P *** -t 'zigbee2mqtt/lumina_all/set' -m '{"state":"ON","brightness":178,"transition":1}'`}</code>
+              <CopyButton text={`mosquitto_pub -h localhost -u lumina -P *** -t 'zigbee2mqtt/lumina_all/set' -m '{"state":"ON","brightness":178,"transition":1}'`} />
+            </div>
+          </div>
+
+          {/* Env vars for zigbee */}
+          <div className="card overflow-hidden mb-4">
+            <div className="px-5 py-4 border-b border-zinc-800">
+              <p className="text-sm font-semibold text-zinc-200">照明用の環境変数</p>
+            </div>
+            <div className="px-5">
+              <EnvRow name="ZIGBEE_MQTT_URL" desc="MQTTブローカーのURL。未設定の場合はシミュレーションモード（UIは反応するが実機には送信しない）で動作します。" example="mqtt://192.168.1.50:1883" />
+              <EnvRow name="ZIGBEE_MQTT_USERNAME" desc="MQTTブローカーの認証ユーザー名。" example="lumina" />
+              <EnvRow name="ZIGBEE_MQTT_PASSWORD" desc="MQTTブローカーの認証パスワード。" example="********" />
+              <EnvRow name="ZIGBEE_BASE_TOPIC" desc="Zigbee2MQTTのベーストピック。既定は zigbee2mqtt。" example="zigbee2mqtt" />
+              <EnvRow name="ZIGBEE_DEVICES" desc="ゾーン→friendly_nameのJSONマップ。allは全灯グループ名を指定。" example={`{"all":"lumina_all","living":"lumina_living",...}`} />
+            </div>
+          </div>
+
+          {/* Troubleshooting */}
+          <div className="card p-5 mb-4">
+            <p className="text-sm font-semibold text-zinc-200 mb-3">トラブルシューティング</p>
+            <div className="space-y-2.5">
+              {[
+                { s: 'バッジが「シミュレーション」のまま', a: 'ZIGBEE_MQTT_URL未設定、またはブローカー未到達。mosquitto_sub で疎通確認。' },
+                { s: '「接続中」から進まない', a: 'ファイアウォール / 認証情報 / URLのスキーム（mqtt://）を確認。' },
+                { s: '操作しても照明が反応しない', a: 'friendly_name と ZIGBEE_DEVICES の綴りが一致しているか。直叩きで切り分け。' },
+                { s: '明るさが粗い・ちらつく', a: 'OLEDドライバの調光方式とZigbee調光器の出力方式（0-10V/PWM/位相）が一致しているか確認。' },
+              ].map(({ s, a }) => (
+                <div key={s} className="flex items-start gap-3 py-1">
+                  <span className="text-red-400/80 text-xs mt-0.5 flex-shrink-0">●</span>
+                  <div>
+                    <p className="text-xs font-medium text-zinc-300">{s}</p>
+                    <p className="text-[11px] text-zinc-500 leading-relaxed mt-0.5">{a}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              📘 詳細な手順は <code className="text-gold-400">docs/ZIGBEE_SETUP.md</code> を参照してください。
+              ネットワーク構成（クラウド配信時のトンネル方式）やセキュリティの注意点も記載しています。
+            </p>
+          </div>
+        </Section>
+
         {/* ── ENV ── */}
         <Section id="env" title="環境変数・設定" emoji="⚙️">
           <div className="card p-4 mb-4 border-amber-500/20 bg-amber-950/10">
@@ -531,6 +667,14 @@ export default function ManualPage() {
               {
                 q: '本番環境でPINコードを変更したい',
                 a: 'Vercelの環境変数 NEXT_PUBLIC_OWNER_PIN (オーナー) と NEXT_PUBLIC_MANAGER_PIN (管理会社) に新しいPINを設定してRedeploy してください。',
+              },
+              {
+                q: '照明が動かない / 「シミュレーション」と表示される',
+                a: 'ZIGBEE_MQTT_URL が未設定か、MQTTブローカーに到達できていません。照明（Zigbee）設定セクションの手順に従い、サーバーで mosquitto_pub の直叩きテストが通るか確認してから、アプリの環境変数を設定してRedeployしてください。なお実際の操作は「滞在中」フェーズのみ有効です。',
+              },
+              {
+                q: '照明の色（色温度）を変えられないのはなぜ？',
+                a: '照明に採用している OLEDWorks Brite 3 は色温度が電球色 3000K に固定された有機ELパネルのため、調色機能はありません。OLEDの特性として、明るさを絞ると自然に暖かな色合いへ変化します（dim-to-warm）。',
               },
               {
                 q: 'データはどこに保存されている？',
