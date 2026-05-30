@@ -69,7 +69,7 @@ export default function OwnerDashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-medium text-zinc-100">オーナーダッシュボード</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">Lumina Fuji Residence Yamanakako</p>
+          <p className="text-sm text-zinc-300 mt-0.5">Lumina Fuji Residence Yamanakako</p>
         </div>
         {counts.total > 0 && (
           <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-3 py-1.5 rounded-xl">
@@ -91,9 +91,9 @@ export default function OwnerDashboardPage() {
               <Icon size={16} className={color} />
             </div>
             <p className="text-xl font-light text-zinc-100">{value}</p>
-            <p className="text-xs text-zinc-600 mt-0.5">{label}</p>
-            <p className="text-xs text-zinc-500">{sub}</p>
-            <p className={`text-[10px] mt-1.5 ${color} opacity-70`}>詳細を見る →</p>
+            <p className="text-xs text-zinc-400 mt-0.5">{label}</p>
+            <p className="text-xs text-zinc-300">{sub}</p>
+            <p className={`text-[11px] mt-1.5 ${color} opacity-70`}>詳細を見る →</p>
           </button>
         ))}
       </div>
@@ -110,23 +110,23 @@ export default function OwnerDashboardPage() {
                   <p className="font-medium text-zinc-100">{currentBooking.guestName}</p>
                   <PhaseBadge checkIn={currentBooking.checkIn} checkOut={currentBooking.checkOut} settings={store.facilitySettings} size="md" />
                 </div>
-                <p className="text-xs text-zinc-500 mt-0.5">{currentBooking.nationality} · {currentBooking.platform}</p>
+                <p className="text-xs text-zinc-300 mt-0.5">{currentBooking.nationality} · {currentBooking.platform}</p>
               </div>
             </div>
               <div className="grid grid-cols-2 gap-2 text-xs mb-4">
-                <div><p className="text-zinc-500">チェックイン</p><p className="text-zinc-200">{currentBooking.checkIn}</p></div>
-                <div><p className="text-zinc-500">チェックアウト</p><p className="text-zinc-200">{currentBooking.checkOut}</p></div>
-                <div><p className="text-zinc-500">大人/子供</p><p className="text-zinc-200">{currentBooking.adults}名/{currentBooking.children}名</p></div>
-                <div><p className="text-zinc-500">売上</p><p className="text-zinc-200">¥{currentBooking.revenue.toLocaleString()}</p></div>
+                <div><p className="text-zinc-300">チェックイン</p><p className="text-zinc-200">{currentBooking.checkIn}</p></div>
+                <div><p className="text-zinc-300">チェックアウト</p><p className="text-zinc-200">{currentBooking.checkOut}</p></div>
+                <div><p className="text-zinc-300">大人/子供</p><p className="text-zinc-200">{currentBooking.adults}名/{currentBooking.children}名</p></div>
+                <div><p className="text-zinc-300">売上</p><p className="text-zinc-200">¥{currentBooking.revenue.toLocaleString()}</p></div>
               </div>
               {/* Message to guest */}
               <div className="border-t border-zinc-800 pt-3">
-                <p className="text-xs text-zinc-500 mb-2">ゲストへメッセージ</p>
+                <p className="text-xs text-zinc-300 mb-2">ゲストへメッセージ</p>
                 <div className="flex gap-2">
                   <input value={msgInput} onChange={e => setMsgInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && sendOwnerMessage()}
                     placeholder="例：明日の天気は晴れの予報です☀️"
-                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/40 transition-all" />
+                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/40 transition-all" />
                   <button onClick={sendOwnerMessage} disabled={!msgInput.trim() || sending}
                     className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 flex items-center justify-center transition-all disabled:opacity-50">
                     <Send size={14} className="text-white" />
@@ -136,8 +136,8 @@ export default function OwnerDashboardPage() {
             </div>
         ) : (
           <div className="text-center py-6">
-            <p className="text-zinc-600 text-sm">現在ゲストはいません</p>
-            {nextBooking && <p className="text-xs text-zinc-500 mt-1">次: {nextBooking.guestName} ({nextBooking.checkIn})</p>}
+            <p className="text-zinc-400 text-sm">現在ゲストはいません</p>
+            {nextBooking && <p className="text-xs text-zinc-300 mt-1">次: {nextBooking.guestName} ({nextBooking.checkIn})</p>}
           </div>
         )}
       </div>
@@ -158,8 +158,8 @@ export default function OwnerDashboardPage() {
               <div key={req.id} className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-xl">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-zinc-200 font-medium">{req.label}</p>
-                  {req.description !== req.label && <p className="text-xs text-zinc-500 mt-0.5 truncate">{req.description}</p>}
-                  <p className="text-[10px] text-zinc-600 mt-0.5">
+                  {req.description !== req.label && <p className="text-xs text-zinc-300 mt-0.5 truncate">{req.description}</p>}
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
                     {req.priority === 'urgent' && <span className="text-red-400 mr-1">急ぎ ·</span>}
                     {new Date(req.createdAt).toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -178,7 +178,7 @@ export default function OwnerDashboardPage() {
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-zinc-200">今後の予約</h2>
-          <Link href="/owner/guests" className="text-xs text-zinc-500 hover:text-blue-400 transition-colors flex items-center gap-1">
+          <Link href="/owner/guests" className="text-xs text-zinc-300 hover:text-blue-400 transition-colors flex items-center gap-1">
             全て見る <ChevronRight size={12} />
           </Link>
         </div>
@@ -188,14 +188,14 @@ export default function OwnerDashboardPage() {
               <span className="text-xl flex-shrink-0">{b.flag}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-zinc-200">{b.guestName}</p>
-                <p className="text-xs text-zinc-500">{b.checkIn} → {b.checkOut} · {b.nights}泊</p>
+                <p className="text-xs text-zinc-300">{b.checkIn} → {b.checkOut} · {b.nights}泊</p>
               </div>
               <div className="text-right flex flex-col items-end gap-1">
                 <span className={`text-xs px-2 py-0.5 rounded-full border ${b.status === 'staying' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 'text-blue-400 border-blue-500/30 bg-blue-500/10'}`}>
                   {b.status === 'staying' ? '滞在中' : '予約済'}
                 </span>
                 <PhaseBadge checkIn={b.checkIn} checkOut={b.checkOut} settings={store.facilitySettings} />
-                <p className="text-xs text-zinc-500">¥{b.revenue.toLocaleString()}</p>
+                <p className="text-xs text-zinc-300">¥{b.revenue.toLocaleString()}</p>
               </div>
             </div>
           ))}
@@ -207,17 +207,17 @@ export default function OwnerDashboardPage() {
         <Link href="/owner/consults" className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-zinc-700 transition-all text-center">
           <Building2 size={20} className="text-gold-400 mx-auto mb-2" />
           <p className="text-xs text-zinc-300">コンサルリード</p>
-          <p className="text-xs text-zinc-600 mt-0.5">{store.consultRequests.filter(c => c.status === 'new').length}件新着</p>
+          <p className="text-xs text-zinc-400 mt-0.5">{store.consultRequests.filter(c => c.status === 'new').length}件新着</p>
         </Link>
         <Link href="/owner/guestbook" className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-zinc-700 transition-all text-center">
           <MessageSquare size={20} className="text-purple-400 mx-auto mb-2" />
           <p className="text-xs text-zinc-300">寄せ書き</p>
-          <p className="text-xs text-zinc-600 mt-0.5">{store.guestbookPosts.length}件</p>
+          <p className="text-xs text-zinc-400 mt-0.5">{store.guestbookPosts.length}件</p>
         </Link>
         <Link href="/owner/analytics" className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-zinc-700 transition-all text-center">
           <TrendingUp size={20} className="text-blue-400 mx-auto mb-2" />
           <p className="text-xs text-zinc-300">詳細分析</p>
-          <p className="text-xs text-zinc-600 mt-0.5">照明・売上</p>
+          <p className="text-xs text-zinc-400 mt-0.5">照明・売上</p>
         </Link>
       </div>
 
@@ -272,27 +272,27 @@ export default function OwnerDashboardPage() {
                   <>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="bg-zinc-800/60 rounded-xl p-3 text-center">
-                        <p className="text-[10px] text-zinc-500 mb-1">総収益</p>
+                        <p className="text-[11px] text-zinc-300 mb-1">総収益</p>
                         <p className="text-base font-light text-emerald-400">¥{(revenue.totalRevenue / 10000).toFixed(1)}万</p>
                       </div>
                       <div className="bg-zinc-800/60 rounded-xl p-3 text-center">
-                        <p className="text-[10px] text-zinc-500 mb-1">予約数</p>
+                        <p className="text-[11px] text-zinc-300 mb-1">予約数</p>
                         <p className="text-base font-light text-zinc-200">{revenue.bookingCount}組</p>
                       </div>
                       <div className="bg-zinc-800/60 rounded-xl p-3 text-center">
-                        <p className="text-[10px] text-zinc-500 mb-1">泊数</p>
+                        <p className="text-[11px] text-zinc-300 mb-1">泊数</p>
                         <p className="text-base font-light text-zinc-200">{revenue.totalNights}泊</p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs text-zinc-500 mb-3">直近の予約</p>
+                      <p className="text-xs text-zinc-300 mb-3">直近の予約</p>
                       <div className="space-y-2">
                         {revenueBookings.map(b => (
                           <div key={b.id} className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-xl">
                             <span className="text-xl flex-shrink-0">{b.flag}</span>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium text-zinc-200">{b.guestName}</p>
-                              <p className="text-[10px] text-zinc-500">{b.checkIn} · {b.nights}泊 · {b.platform}</p>
+                              <p className="text-[11px] text-zinc-300">{b.checkIn} · {b.nights}泊 · {b.platform}</p>
                             </div>
                             <p className="text-xs text-emerald-400 font-medium">¥{b.revenue.toLocaleString()}</p>
                           </div>
@@ -307,20 +307,20 @@ export default function OwnerDashboardPage() {
                   <>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="bg-zinc-800/60 rounded-xl p-3 text-center">
-                        <p className="text-[10px] text-zinc-500 mb-1">平均</p>
+                        <p className="text-[11px] text-zinc-300 mb-1">平均</p>
                         <p className="text-base font-light text-blue-400">¥{revenue.avgPerNight.toLocaleString()}</p>
                       </div>
                       <div className="bg-zinc-800/60 rounded-xl p-3 text-center">
-                        <p className="text-[10px] text-zinc-500 mb-1">最低</p>
+                        <p className="text-[11px] text-zinc-300 mb-1">最低</p>
                         <p className="text-base font-light text-zinc-200">¥{minPrice.toLocaleString()}</p>
                       </div>
                       <div className="bg-zinc-800/60 rounded-xl p-3 text-center">
-                        <p className="text-[10px] text-zinc-500 mb-1">最高</p>
+                        <p className="text-[11px] text-zinc-300 mb-1">最高</p>
                         <p className="text-base font-light text-zinc-200">¥{maxPrice.toLocaleString()}</p>
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs text-zinc-500 mb-3">予約別 1泊単価</p>
+                      <p className="text-xs text-zinc-300 mb-3">予約別 1泊単価</p>
                       <div className="space-y-2">
                         {revenueBookings.map(b => {
                           const perNight = Math.round(b.revenue / b.nights)
@@ -329,9 +329,9 @@ export default function OwnerDashboardPage() {
                               <span className="text-xl flex-shrink-0">{b.flag}</span>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium text-zinc-200">{b.guestName}</p>
-                                <p className="text-[10px] text-zinc-500">{b.checkIn} · {b.nights}泊 · {b.platform}</p>
+                                <p className="text-[11px] text-zinc-300">{b.checkIn} · {b.nights}泊 · {b.platform}</p>
                               </div>
-                              <p className="text-xs text-blue-400 font-medium">¥{perNight.toLocaleString()}<span className="text-zinc-600">/泊</span></p>
+                              <p className="text-xs text-blue-400 font-medium">¥{perNight.toLocaleString()}<span className="text-zinc-400">/泊</span></p>
                             </div>
                           )
                         })}
@@ -344,7 +344,7 @@ export default function OwnerDashboardPage() {
                 {activeDrawer === 'leads' && (
                   <>
                     {newLeads.length === 0 ? (
-                      <p className="text-center text-zinc-600 text-sm py-6">新規リードはありません</p>
+                      <p className="text-center text-zinc-400 text-sm py-6">新規リードはありません</p>
                     ) : (
                       <div className="space-y-3">
                         {newLeads.map(lead => (
@@ -352,12 +352,12 @@ export default function OwnerDashboardPage() {
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <p className="text-sm font-medium text-zinc-100">{lead.name}</p>
-                                {lead.company && <p className="text-xs text-zinc-500">{lead.company}</p>}
+                                {lead.company && <p className="text-xs text-zinc-300">{lead.company}</p>}
                               </div>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 flex-shrink-0">新着</span>
+                              <span className="text-[11px] px-2 py-0.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 flex-shrink-0">新着</span>
                             </div>
                             <p className="text-xs text-zinc-400">{lead.projectType} · {lead.scale}</p>
-                            <p className="text-[10px] text-zinc-600">{lead.submittedAt}</p>
+                            <p className="text-[11px] text-zinc-400">{lead.submittedAt}</p>
                           </div>
                         ))}
                       </div>
@@ -369,7 +369,7 @@ export default function OwnerDashboardPage() {
                 {activeDrawer === 'pending' && (
                   <>
                     {pendingReqs.length === 0 ? (
-                      <p className="text-center text-zinc-600 text-sm py-6">未対応リクエストはありません</p>
+                      <p className="text-center text-zinc-400 text-sm py-6">未対応リクエストはありません</p>
                     ) : (
                       <div className="space-y-3">
                         {pendingReqs.map(req => (
@@ -377,13 +377,13 @@ export default function OwnerDashboardPage() {
                             <div className="flex items-start justify-between gap-2 mb-1">
                               <p className="text-sm font-medium text-zinc-100">{req.label}</p>
                               {req.priority === 'urgent' && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 flex-shrink-0">急ぎ</span>
+                                <span className="text-[11px] px-1.5 py-0.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 flex-shrink-0">急ぎ</span>
                               )}
                             </div>
                             {req.description && req.description !== req.label && (
-                              <p className="text-xs text-zinc-500 mb-1">{req.description}</p>
+                              <p className="text-xs text-zinc-300 mb-1">{req.description}</p>
                             )}
-                            <p className="text-[10px] text-zinc-600">
+                            <p className="text-[11px] text-zinc-400">
                               {new Date(req.createdAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>

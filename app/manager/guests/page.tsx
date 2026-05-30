@@ -36,8 +36,8 @@ const FILTER_TABS: { key: string; label: string }[] = [
 ]
 
 const INPUT_CLASS =
-  'w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-teal-500/40 transition-all'
-const LABEL_CLASS = 'text-xs text-zinc-500 mb-1 block'
+  'w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-teal-500/40 transition-all'
+const LABEL_CLASS = 'text-xs text-zinc-300 mb-1 block'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -244,7 +244,7 @@ function EditModal({
                 <Check size={14} /> 保存する
               </button>
               <button onClick={() => setConfirmDelete(true)} className="w-10 flex items-center justify-center bg-zinc-800 hover:bg-red-500/20 border border-zinc-700 hover:border-red-500/30 rounded-xl transition-all">
-                <Trash2 size={14} className="text-zinc-500 hover:text-red-400" />
+                <Trash2 size={14} className="text-zinc-300 hover:text-red-400" />
               </button>
             </>
           )}
@@ -357,7 +357,7 @@ function GuestListTab({
           <button key={ft.key} onClick={() => setFilter(ft.key)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${filter === ft.key
               ? 'bg-teal-500/20 border border-teal-500/30 text-teal-300'
-              : 'bg-zinc-800/50 border border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}>
+              : 'bg-zinc-800/50 border border-zinc-800 text-zinc-300 hover:text-zinc-300'}`}>
             {ft.label}
             {counts[ft.key] ? <span className="ml-1 opacity-60">{counts[ft.key]}</span> : null}
           </button>
@@ -366,7 +366,7 @@ function GuestListTab({
 
       {/* Booking cards */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-zinc-600 text-sm">該当する予約はありません</div>
+        <div className="text-center py-12 text-zinc-400 text-sm">該当する予約はありません</div>
       ) : (
         <div className="space-y-3">
           {filtered.map(b => {
@@ -384,7 +384,7 @@ function GuestListTab({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-medium text-zinc-100">{b.guestName}</p>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${cfg.text} ${cfg.border} ${cfg.bg}`}>
+                        <span className={`text-[11px] px-1.5 py-0.5 rounded-full border ${cfg.text} ${cfg.border} ${cfg.bg}`}>
                           {cfg.label}
                         </span>
                         {b.status === 'staying' && (
@@ -392,17 +392,17 @@ function GuestListTab({
                         )}
                         <PhaseBadge checkIn={b.checkIn} checkOut={b.checkOut} settings={facilitySettings} arrivedAt={b.arrivedAt} />
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs text-zinc-500">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs text-zinc-300">
                         <span className="flex items-center gap-1"><Clock size={10} /> {b.checkIn} 〜 {b.checkOut}</span>
                         <span>{b.platform}</span>
                         <span>{b.nights}泊 · {b.adults}名{b.children > 0 ? `+${b.children}` : ''}</span>
                         <span className="text-zinc-400">¥{b.revenue.toLocaleString()}</span>
                       </div>
                       {b.notes && !isExpanded && (
-                        <p className="text-xs text-zinc-600 mt-1 truncate">{b.notes}</p>
+                        <p className="text-xs text-zinc-400 mt-1 truncate">{b.notes}</p>
                       )}
                     </div>
-                    <div className="flex-shrink-0 text-zinc-600">
+                    <div className="flex-shrink-0 text-zinc-400">
                       {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </div>
                   </div>
@@ -418,20 +418,20 @@ function GuestListTab({
                       className="border-t border-zinc-800 px-4 pb-4 pt-3"
                     >
                       <div className="grid grid-cols-2 gap-2 text-xs text-zinc-400 mb-3">
-                        <div><span className="text-zinc-600">メール</span><br />{b.email || '—'}</div>
-                        <div><span className="text-zinc-600">国籍</span><br />{b.nationality || '—'}</div>
-                        <div><span className="text-zinc-600">予約ID</span><br />{b.id}</div>
-                        <div><span className="text-zinc-600">料金/泊</span><br />¥{b.nights > 0 ? Math.round(b.revenue / b.nights).toLocaleString() : '—'}</div>
+                        <div><span className="text-zinc-400">メール</span><br />{b.email || '—'}</div>
+                        <div><span className="text-zinc-400">国籍</span><br />{b.nationality || '—'}</div>
+                        <div><span className="text-zinc-400">予約ID</span><br />{b.id}</div>
+                        <div><span className="text-zinc-400">料金/泊</span><br />¥{b.nights > 0 ? Math.round(b.revenue / b.nights).toLocaleString() : '—'}</div>
                       </div>
                       {b.notes && (
                         <div className="mb-2">
-                          <p className="text-[10px] text-zinc-600 mb-0.5">メモ</p>
+                          <p className="text-[11px] text-zinc-400 mb-0.5">メモ</p>
                           <p className="text-xs text-zinc-400 bg-zinc-800/50 rounded-lg px-3 py-2">{b.notes}</p>
                         </div>
                       )}
                       {(b as BookingRecord & { specialRequests?: string }).specialRequests && (
                         <div className="mb-3">
-                          <p className="text-[10px] text-zinc-600 mb-0.5">特別リクエスト</p>
+                          <p className="text-[11px] text-zinc-400 mb-0.5">特別リクエスト</p>
                           <p className="text-xs text-zinc-400 bg-zinc-800/50 rounded-lg px-3 py-2">{(b as BookingRecord & { specialRequests?: string }).specialRequests}</p>
                         </div>
                       )}
@@ -594,7 +594,7 @@ function NewBookingTab({
             <label className={LABEL_CLASS}>ゲスト名 <span className="text-red-400">*</span></label>
             <input value={form.guestName} onChange={e => set('guestName', e.target.value)}
               placeholder="例: Yamada Taro" className={INPUT_CLASS + (errors.guestName ? ' border-red-500/40' : '')} />
-            {errors.guestName && <p className="text-[10px] text-red-400 mt-0.5">{errors.guestName}</p>}
+            {errors.guestName && <p className="text-[11px] text-red-400 mt-0.5">{errors.guestName}</p>}
           </div>
         </div>
 
@@ -625,13 +625,13 @@ function NewBookingTab({
             <label className={LABEL_CLASS}>チェックイン <span className="text-red-400">*</span></label>
             <input type="date" value={form.checkIn} onChange={e => set('checkIn', e.target.value)}
               className={INPUT_CLASS + (errors.checkIn ? ' border-red-500/40' : '')} />
-            {errors.checkIn && <p className="text-[10px] text-red-400 mt-0.5">{errors.checkIn}</p>}
+            {errors.checkIn && <p className="text-[11px] text-red-400 mt-0.5">{errors.checkIn}</p>}
           </div>
           <div>
             <label className={LABEL_CLASS}>チェックアウト <span className="text-red-400">*</span></label>
             <input type="date" value={form.checkOut} onChange={e => set('checkOut', e.target.value)}
               className={INPUT_CLASS + (errors.checkOut ? ' border-red-500/40' : '')} />
-            {errors.checkOut && <p className="text-[10px] text-red-400 mt-0.5">{errors.checkOut}</p>}
+            {errors.checkOut && <p className="text-[11px] text-red-400 mt-0.5">{errors.checkOut}</p>}
           </div>
         </div>
 
@@ -664,7 +664,7 @@ function NewBookingTab({
         <div>
           <label className={LABEL_CLASS}>売上 (円)</label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">¥</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-300 text-sm">¥</span>
             <input type="number" value={form.revenue} onChange={e => set('revenue', Number(e.target.value))}
               className={INPUT_CLASS + ' pl-7'} />
           </div>
@@ -780,7 +780,7 @@ function CalendarTab({
           </button>
           <div className="text-center">
             <h2 className="text-sm font-medium text-zinc-200">{viewYear}年 {viewMonth + 1}月</h2>
-            <p className="text-[10px] text-zinc-500 mt-0.5">{monthBookings.length}件 · ¥{totalRevenue.toLocaleString()}</p>
+            <p className="text-[11px] text-zinc-300 mt-0.5">{monthBookings.length}件 · ¥{totalRevenue.toLocaleString()}</p>
           </div>
           <button onClick={nextMonth} className="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-all">
             <ChevronRight size={15} className="text-zinc-400" />
@@ -790,7 +790,7 @@ function CalendarTab({
         {/* Day headers */}
         <div className="grid grid-cols-7 mb-1">
           {['日', '月', '火', '水', '木', '金', '土'].map((d, i) => (
-            <div key={d} className={`text-center text-[10px] py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-zinc-500'}`}>{d}</div>
+            <div key={d} className={`text-center text-[11px] py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-zinc-300'}`}>{d}</div>
           ))}
         </div>
 
@@ -821,11 +821,11 @@ function CalendarTab({
                 {firstBooking && (
                   <div className="flex items-center gap-px mt-0.5">
                     <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[firstBooking.status]}`} />
-                    {dayBookings.length > 1 && <span className="text-[8px] text-zinc-500">+{dayBookings.length - 1}</span>}
+                    {dayBookings.length > 1 && <span className="text-[8px] text-zinc-300">+{dayBookings.length - 1}</span>}
                   </div>
                 )}
                 {firstBooking && (
-                  <span className="text-[9px] leading-none mt-0.5 truncate w-full text-center px-0.5">{firstBooking.flag}</span>
+                  <span className="text-[11px] leading-none mt-0.5 truncate w-full text-center px-0.5">{firstBooking.flag}</span>
                 )}
               </button>
             )
@@ -842,7 +842,7 @@ function CalendarTab({
           ].map(({ dot, label }) => (
             <div key={label} className="flex items-center gap-1.5">
               <div className={`w-2.5 h-2.5 rounded-full ${dot}`} />
-              <span className="text-[10px] text-zinc-500">{label}</span>
+              <span className="text-[11px] text-zinc-300">{label}</span>
             </div>
           ))}
         </div>
@@ -855,7 +855,7 @@ function CalendarTab({
           animate={{ opacity: 1, y: 0 }}
           className="bg-zinc-900 border border-teal-500/20 rounded-2xl p-4 space-y-2"
         >
-          <p className="text-xs text-zinc-500 mb-3">{viewMonth + 1}月{selectedDay}日の予約</p>
+          <p className="text-xs text-zinc-300 mb-3">{viewMonth + 1}月{selectedDay}日の予約</p>
           {dayMap[selectedDay].map(b => {
             const cfg = STATUS_CONFIG[b.status]
             return (
@@ -864,9 +864,9 @@ function CalendarTab({
                 <span className="text-xl">{b.flag}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-zinc-200">{b.guestName}</p>
-                  <p className="text-xs text-zinc-500">{b.checkIn} 〜 {b.checkOut} · ¥{b.revenue.toLocaleString()}</p>
+                  <p className="text-xs text-zinc-300">{b.checkIn} 〜 {b.checkOut} · ¥{b.revenue.toLocaleString()}</p>
                 </div>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${cfg.text} ${cfg.border}`}>{cfg.label}</span>
+                <span className={`text-[11px] px-1.5 py-0.5 rounded-full border ${cfg.text} ${cfg.border}`}>{cfg.label}</span>
               </button>
             )
           })}
@@ -882,7 +882,7 @@ function CalendarTab({
           )}
         </h2>
         {monthBookings.length === 0 ? (
-          <p className="text-zinc-600 text-sm text-center py-6">この月の予約はありません</p>
+          <p className="text-zinc-400 text-sm text-center py-6">この月の予約はありません</p>
         ) : (
           <div className="space-y-2">
             {monthBookings.map(b => {
@@ -894,15 +894,15 @@ function CalendarTab({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-sm font-medium text-zinc-200">{b.guestName}</p>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${cfg.text} ${cfg.border}`}>{cfg.label}</span>
+                      <span className={`text-[11px] px-1.5 py-0.5 rounded-full border ${cfg.text} ${cfg.border}`}>{cfg.label}</span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-zinc-500">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-zinc-300">
                       <span className="flex items-center gap-1"><Clock size={10} /> {b.checkIn} 〜 {b.checkOut}</span>
                       <span className="flex items-center gap-1"><Users size={10} /> {b.adults + b.children}名</span>
                       <span>{b.platform} · {b.nights}泊 · ¥{b.revenue.toLocaleString()}</span>
                     </div>
                   </div>
-                  <Edit2 size={12} className="text-zinc-600 flex-shrink-0 mt-1" />
+                  <Edit2 size={12} className="text-zinc-400 flex-shrink-0 mt-1" />
                 </button>
               )
             })}
@@ -949,12 +949,12 @@ export default function ManagerGuestsPage() {
           <h1 className="text-xl font-medium text-zinc-100 flex items-center gap-2">
             <Users size={18} className="text-teal-400" /> ゲスト管理
           </h1>
-          <p className="text-sm text-zinc-500 mt-0.5">
+          <p className="text-sm text-zinc-300 mt-0.5">
             全{bookings.length}件 · 滞在中{bookings.filter(b => b.status === 'staying').length}組
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-zinc-500 bg-zinc-800 border border-zinc-700 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+          <span className="text-xs text-zinc-300 bg-zinc-800 border border-zinc-700 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
             <DollarSign size={11} className="text-teal-400" />
             ¥{bookings.filter(b => b.status !== 'cancelled').reduce((s, b) => s + b.revenue, 0).toLocaleString()}
           </span>
@@ -967,7 +967,7 @@ export default function ManagerGuestsPage() {
           <button key={t} onClick={() => setActiveTab(t)}
             className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${activeTab === t
               ? 'bg-teal-500/20 text-teal-300 border border-teal-500/20'
-              : 'text-zinc-500 hover:text-zinc-300'}`}>
+              : 'text-zinc-300 hover:text-zinc-300'}`}>
             {t === 'ゲスト一覧' && <Globe size={11} className="inline mr-1" />}
             {t === '新規登録' && <Plus size={11} className="inline mr-1" />}
             {t === 'カレンダー' && <Calendar size={11} className="inline mr-1" />}

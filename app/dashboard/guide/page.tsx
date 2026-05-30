@@ -88,7 +88,7 @@ function AccordionItem({ section, t, dynamicValues }: { section: GuideSection; t
         </div>
         <span className="flex-1 text-sm font-medium text-zinc-200">{t(section.titleKey)}</span>
         <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown size={16} className="text-zinc-500" />
+          <ChevronDown size={16} className="text-zinc-300" />
         </motion.div>
       </button>
 
@@ -105,7 +105,7 @@ function AccordionItem({ section, t, dynamicValues }: { section: GuideSection; t
               <div className="divide-y divide-zinc-800/50">
                 {section.items.map(({ labelKey, valueKey, dynamic }) => (
                   <div key={labelKey} className="flex gap-3 py-3">
-                    <span className="text-xs text-zinc-500 flex-shrink-0 w-24 leading-relaxed">{t(labelKey)}</span>
+                    <span className="text-xs text-zinc-300 flex-shrink-0 w-24 leading-relaxed">{t(labelKey)}</span>
                     <span className="text-xs text-zinc-300 leading-relaxed">
                       {dynamic ? (dynamicValues[valueKey] ?? '') : t(valueKey)}
                     </span>
@@ -137,7 +137,7 @@ export default function GuidePage() {
         </Link>
         <div>
           <h1 className="text-lg font-medium text-zinc-100">{t('guide.title')}</h1>
-          <p className="text-xs text-zinc-500">{t('guide.subtitle')}</p>
+          <p className="text-xs text-zinc-300">{t('guide.subtitle')}</p>
         </div>
       </div>
 
@@ -146,7 +146,7 @@ export default function GuidePage() {
           <span className="text-2xl">🏔️</span>
           <div>
             <p className="text-sm font-medium text-zinc-200">Lumina Fuji Residence</p>
-            <p className="text-xs text-zinc-500">{t('guide.location')}</p>
+            <p className="text-xs text-zinc-300">{t('guide.location')}</p>
           </div>
         </div>
 
@@ -157,7 +157,7 @@ export default function GuidePage() {
         </div>
 
         <div className="mt-4 text-center">
-          <p className="text-xs text-zinc-600">{t('guide.footer')}</p>
+          <p className="text-xs text-zinc-400">{t('guide.footer')}</p>
           <Link href="/dashboard/chat" className="text-xs text-gold-400 hover:text-gold-300 mt-1 inline-block">
             {t('guide.footerLink')}
           </Link>

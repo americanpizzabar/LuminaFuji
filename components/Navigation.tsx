@@ -161,17 +161,17 @@ export default function Navigation() {
                     <Icon
                       size={20}
                       strokeWidth={isActive ? 2 : 1.5}
-                      className={`relative z-10 transition-colors duration-200 ${isActive ? 'text-gold-400' : 'text-zinc-500'}`}
+                      className={`relative z-10 transition-colors duration-200 ${isActive ? 'text-gold-400' : 'text-zinc-300'}`}
                     />
                     {badge ? (
-                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-medium z-20">
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[11px] text-white flex items-center justify-center font-medium z-20">
                         {badge > 9 ? '9+' : badge}
                       </span>
                     ) : null}
                   </motion.div>
                   <span
-                    className={`text-[9px] leading-none font-medium transition-colors duration-200 ${
-                      isActive ? 'text-gold-400' : 'text-zinc-600'
+                    className={`text-[11px] leading-none font-medium transition-colors duration-200 ${
+                      isActive ? 'text-gold-400' : 'text-zinc-400'
                     }`}
                   >
                     {label}
@@ -198,10 +198,10 @@ export default function Navigation() {
                   <MoreHorizontal
                     size={20}
                     strokeWidth={1.5}
-                    className={showMore ? 'text-gold-400' : 'text-zinc-500'}
+                    className={showMore ? 'text-gold-400' : 'text-zinc-300'}
                   />
                 </motion.div>
-                <span className={`text-[9px] leading-none font-medium ${showMore ? 'text-gold-400' : 'text-zinc-600'}`}>
+                <span className={`text-[11px] leading-none font-medium ${showMore ? 'text-gold-400' : 'text-zinc-400'}`}>
                   {t('nav.more')}
                 </span>
               </button>

@@ -103,9 +103,9 @@ function Field({
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-all"
+        className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 transition-all"
       />
-      {hint && <p className="text-[11px] text-zinc-600 mt-1">{hint}</p>}
+      {hint && <p className="text-[11px] text-zinc-400 mt-1">{hint}</p>}
     </div>
   )
 }
@@ -206,10 +206,10 @@ function Step1({
                     </motion.span>
                   )}
                 </div>
-                <p className="text-xs text-zinc-500 mb-2">{sub}</p>
+                <p className="text-xs text-zinc-300 mb-2">{sub}</p>
                 <ul className="space-y-0.5">
                   {pros.map(p => (
-                    <li key={p} className="flex items-center gap-1.5 text-[11px] text-zinc-500">
+                    <li key={p} className="flex items-center gap-1.5 text-[11px] text-zinc-300">
                       <span className="w-1 h-1 rounded-full bg-zinc-600 flex-shrink-0" />
                       {p}
                     </li>
@@ -272,21 +272,21 @@ function Step2({
               hint="通常は zigbee2mqtt のまま変更不要"
             />
             <div className="pt-3 border-t border-zinc-800">
-              <p className="text-xs text-zinc-500 mb-3 flex items-center gap-1.5">
-                <Server size={11} className="text-zinc-600" />
+              <p className="text-xs text-zinc-300 mb-3 flex items-center gap-1.5">
+                <Server size={11} className="text-zinc-400" />
                 ゾーン → Zigbee2MQTT デバイス名 のマッピング
               </p>
               <div className="space-y-2">
                 {zoneRows.map(({ key, label }) => (
                   <div key={key} className="grid grid-cols-5 items-center gap-3">
-                    <label className="col-span-2 text-[11px] text-zinc-500 text-right">{label}</label>
+                    <label className="col-span-2 text-[11px] text-zinc-300 text-right">{label}</label>
                     <div className="col-span-3">
                       <input
                         type="text"
                         value={(zigbee as any)[key]}
                         onChange={e => setZ(key as keyof ZigbeeConfig)(e.target.value)}
                         placeholder={DEFAULT_ZIGBEE[key as keyof ZigbeeConfig]}
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-zinc-500 transition-all font-mono"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 transition-all font-mono"
                       />
                     </div>
                   </div>
@@ -315,30 +315,30 @@ function Step2({
               <Field label="ヘルスチェックパス" value={dali.healthPath} onChange={setD('healthPath')} placeholder="/status" />
             </div>
             <div className="pt-3 border-t border-zinc-800">
-              <p className="text-xs text-zinc-500 mb-3 flex items-center gap-1.5">
-                <Server size={11} className="text-zinc-600" />
+              <p className="text-xs text-zinc-300 mb-3 flex items-center gap-1.5">
+                <Server size={11} className="text-zinc-400" />
                 ゾーン → DALI アドレス のマッピング
               </p>
               <div className="space-y-2">
                 {zoneRows.map(({ key, label }) => (
                   <div key={key} className="grid grid-cols-5 items-center gap-3">
-                    <label className="col-span-2 text-[11px] text-zinc-500 text-right">{label}</label>
+                    <label className="col-span-2 text-[11px] text-zinc-300 text-right">{label}</label>
                     <div className="col-span-3">
                       <input
                         type="text"
                         value={(dali as any)[key]}
                         onChange={e => setD(key as keyof DaliConfig)(e.target.value)}
                         placeholder={DEFAULT_DALI[key as keyof DaliConfig]}
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-zinc-500 transition-all font-mono"
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500 transition-all font-mono"
                       />
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-[11px] text-zinc-600 mt-2">
-                値の例: <code className="text-zinc-500">broadcast</code>（全体）、
-                <code className="text-zinc-500">group:0</code>（グループ0）、
-                <code className="text-zinc-500">short:5</code>（ショートアドレス5）
+              <p className="text-[11px] text-zinc-400 mt-2">
+                値の例: <code className="text-zinc-300">broadcast</code>（全体）、
+                <code className="text-zinc-300">group:0</code>（グループ0）、
+                <code className="text-zinc-300">short:5</code>（ショートアドレス5）
               </p>
             </div>
           </div>
@@ -365,7 +365,7 @@ function Step3({
     <div className="space-y-5">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
         <div className="flex items-start gap-3 mb-4">
-          <AlertCircle size={15} className="text-zinc-500 flex-shrink-0 mt-0.5" />
+          <AlertCircle size={15} className="text-zinc-300 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-zinc-400 leading-relaxed">
             ボタンを押すと、<strong className="text-zinc-300">現在のサーバー設定</strong>を使って
             照明ドライバーへの接続を確認します。<br />
@@ -450,7 +450,7 @@ function Step3({
             </motion.div>
           )}
 
-          <p className="text-xs text-zinc-500 text-center">
+          <p className="text-xs text-zinc-300 text-center">
             {isScanning
               ? 'ネットワーク上のハブを確認中...'
               : scanStatus === 'connected'
@@ -476,10 +476,10 @@ function Step3({
               return (
                 <div key={proto} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {proto === 'zigbee' ? <Wifi size={12} className="text-zinc-500" /> : <Zap size={12} className="text-zinc-500" />}
+                    {proto === 'zigbee' ? <Wifi size={12} className="text-zinc-300" /> : <Zap size={12} className="text-zinc-300" />}
                     <span className="text-xs text-zinc-400 uppercase font-mono">{proto}</span>
                   </div>
-                  <span className={`text-xs font-medium ${driver.connected ? 'text-emerald-400' : 'text-zinc-600'}`}>
+                  <span className={`text-xs font-medium ${driver.connected ? 'text-emerald-400' : 'text-zinc-400'}`}>
                     {driver.connected ? '接続済み' : '未接続'}
                   </span>
                 </div>
@@ -562,7 +562,7 @@ function Step4({
             <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
             <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span className="text-xs text-zinc-500 ml-2">.env.local</span>
+            <span className="text-xs text-zinc-300 ml-2">.env.local</span>
           </div>
           <button
             onClick={onCopy}
@@ -595,7 +595,7 @@ function Step4({
           ].map((step, i) => (
             <div key={i} className="flex items-start gap-3">
               <div
-                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold mt-0.5"
+                className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold mt-0.5"
                 style={{ background: `${accentColor}18`, color: accentColor, border: `1px solid ${accentColor}30` }}
               >
                 {i + 1}
@@ -682,9 +682,9 @@ export default function LightingSetupWizard({
   return (
     <div className="max-w-2xl mx-auto pb-8">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 mb-6 text-xs text-zinc-500">
+      <div className="flex items-center gap-2 mb-6 text-xs text-zinc-300">
         <Link href={backHref} className="hover:text-zinc-300 transition-colors">{portalLabel}</Link>
-        <span className="text-zinc-700">/</span>
+        <span className="text-zinc-400">/</span>
         <span className="text-zinc-400">照明設定ウィザード</span>
       </div>
 
@@ -698,7 +698,7 @@ export default function LightingSetupWizard({
         </div>
         <div>
           <h1 className="text-xl font-semibold text-zinc-100">照明設定ウィザード</h1>
-          <p className="text-xs text-zinc-500 mt-0.5">Zigbee / DALI-2 ドライバーへの接続を設定します</p>
+          <p className="text-xs text-zinc-300 mt-0.5">Zigbee / DALI-2 ドライバーへの接続を設定します</p>
         </div>
       </div>
 
@@ -724,7 +724,7 @@ export default function LightingSetupWizard({
                   {isDone ? <Check size={12} /> : num}
                 </motion.div>
                 <span
-                  className="text-[10px] mt-1.5 whitespace-nowrap font-medium"
+                  className="text-[11px] mt-1.5 whitespace-nowrap font-medium"
                   style={{ color: isActive ? accentColor : isDone ? '#71717a' : '#52525b' }}
                 >
                   {label}

@@ -97,23 +97,23 @@ export default function ConsultsPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-medium text-zinc-100">リード管理 CRM</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">照明コンサル相談・商談管理</p>
+        <p className="text-sm text-zinc-300 mt-0.5">照明コンサル相談・商談管理</p>
       </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-          <p className="text-[10px] text-zinc-500 mb-1 uppercase tracking-wider">合計リード</p>
+          <p className="text-[11px] text-zinc-300 mb-1 uppercase tracking-wider">合計リード</p>
           <p className="text-2xl font-light text-zinc-100">{totalCount}</p>
         </div>
         <div className="bg-zinc-900 border border-red-500/20 rounded-2xl p-4">
-          <p className="text-[10px] text-red-400 mb-1 uppercase tracking-wider">未対応</p>
+          <p className="text-[11px] text-red-400 mb-1 uppercase tracking-wider">未対応</p>
           <p className="text-2xl font-light text-red-400">{newCount}</p>
         </div>
         <div className="bg-zinc-900 border border-emerald-500/20 rounded-2xl p-4">
           <div className="flex items-center gap-1 mb-1">
             <TrendingUp size={10} className="text-emerald-400" />
-            <p className="text-[10px] text-emerald-400 uppercase tracking-wider">受注率</p>
+            <p className="text-[11px] text-emerald-400 uppercase tracking-wider">受注率</p>
           </div>
           <p className="text-2xl font-light text-emerald-400">{conversionRate}%</p>
         </div>
@@ -130,7 +130,7 @@ export default function ConsultsPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
                 filter === key
                   ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
-                  : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                  : 'border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
               {key !== 'all' && (
@@ -138,8 +138,8 @@ export default function ConsultsPage() {
               )}
               {label}
               {count > 0 && (
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                  filter === key ? 'bg-blue-500/20 text-blue-300' : 'bg-zinc-800 text-zinc-500'
+                <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${
+                  filter === key ? 'bg-blue-500/20 text-blue-300' : 'bg-zinc-800 text-zinc-300'
                 }`}>
                   {count}
                 </span>
@@ -173,15 +173,15 @@ export default function ConsultsPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="font-medium text-zinc-100">{selected.name}</h2>
                     {selected.source === 'lumina_fuji_stay' && (
-                      <span className="flex items-center gap-1 text-[10px] text-amber-400 border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                      <span className="flex items-center gap-1 text-[11px] text-amber-400 border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
                         <Star size={8} className="fill-amber-400" /> 宿泊経験者
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-500 mt-0.5">{selected.profession}</p>
+                  <p className="text-xs text-zinc-300 mt-0.5">{selected.profession}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusConfig[selected.status].color}`}>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full border ${statusConfig[selected.status].color}`}>
                     {statusConfig[selected.status].label}
                   </span>
                   <button
@@ -197,23 +197,23 @@ export default function ConsultsPage() {
                 {/* Contact info */}
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <p className="text-zinc-500 mb-1">メール</p>
+                    <p className="text-zinc-300 mb-1">メール</p>
                     <p className="text-zinc-300 break-all">{selected.email}</p>
                   </div>
                   {selected.phone && (
                     <div>
-                      <p className="text-zinc-500 mb-1">電話</p>
+                      <p className="text-zinc-300 mb-1">電話</p>
                       <p className="text-zinc-300">{selected.phone}</p>
                     </div>
                   )}
                   {selected.company && (
                     <div>
-                      <p className="text-zinc-500 mb-1">会社・事務所</p>
+                      <p className="text-zinc-300 mb-1">会社・事務所</p>
                       <p className="text-zinc-300">{selected.company}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-zinc-500 mb-1">希望連絡方法</p>
+                    <p className="text-zinc-300 mb-1">希望連絡方法</p>
                     <div className="flex items-center gap-1 text-zinc-300">
                       {(() => {
                         const cfg = contactMethodConfig[selected.contactMethod]
@@ -223,7 +223,7 @@ export default function ConsultsPage() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-zinc-500 mb-1">提出日時</p>
+                    <p className="text-zinc-300 mb-1">提出日時</p>
                     <p className="text-zinc-300">{selected.submittedAt}</p>
                   </div>
                 </div>
@@ -231,20 +231,20 @@ export default function ConsultsPage() {
                 {/* Project details */}
                 <div className="bg-zinc-800/50 rounded-xl p-4 grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <p className="text-zinc-500 mb-1">プロジェクト種別</p>
+                    <p className="text-zinc-300 mb-1">プロジェクト種別</p>
                     <p className="text-zinc-200 font-medium">{selected.projectType}</p>
                   </div>
                   <div>
-                    <p className="text-zinc-500 mb-1">規模</p>
+                    <p className="text-zinc-300 mb-1">規模</p>
                     <p className="text-zinc-200">{selected.scale}</p>
                   </div>
                   <div>
-                    <p className="text-zinc-500 mb-1">予算感</p>
+                    <p className="text-zinc-300 mb-1">予算感</p>
                     <p className="text-zinc-200">{selected.budget}</p>
                   </div>
                   {selected.timeline && (
                     <div>
-                      <p className="text-zinc-500 mb-1">希望時期</p>
+                      <p className="text-zinc-300 mb-1">希望時期</p>
                       <p className="text-zinc-200">{selected.timeline}</p>
                     </div>
                   )}
@@ -253,7 +253,7 @@ export default function ConsultsPage() {
                 {/* Interested products */}
                 {selected.interestedProducts.length > 0 && (
                   <div>
-                    <p className="text-xs text-zinc-500 mb-2">興味のある製品</p>
+                    <p className="text-xs text-zinc-300 mb-2">興味のある製品</p>
                     <div className="flex flex-wrap gap-2">
                       {selected.interestedProducts.map(pid => (
                         <span key={pid} className="text-xs px-2.5 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300">
@@ -266,7 +266,7 @@ export default function ConsultsPage() {
 
                 {/* Message */}
                 <div>
-                  <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1">
+                  <p className="text-xs text-zinc-300 mb-2 flex items-center gap-1">
                     <FileText size={11} /> ご要望・メッセージ
                   </p>
                   <div className="bg-zinc-800/50 rounded-xl p-3">
@@ -276,13 +276,13 @@ export default function ConsultsPage() {
 
                 {/* Owner notes */}
                 <div>
-                  <p className="text-xs text-zinc-500 mb-2">オーナーメモ</p>
+                  <p className="text-xs text-zinc-300 mb-2">オーナーメモ</p>
                   <textarea
                     value={notesInput}
                     onChange={e => setNotesInput(e.target.value)}
                     placeholder="対応履歴・メモを記入..."
                     rows={3}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/40 transition-all resize-none"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/40 transition-all resize-none"
                   />
                   <button
                     onClick={() => saveNotes(selected.id)}
@@ -299,7 +299,7 @@ export default function ConsultsPage() {
 
                 {/* Status change */}
                 <div>
-                  <p className="text-xs text-zinc-500 mb-2">ステータス変更</p>
+                  <p className="text-xs text-zinc-300 mb-2">ステータス変更</p>
                   <div className="flex flex-wrap gap-2">
                     {STATUS_FLOW.map(s => (
                       <button
@@ -309,7 +309,7 @@ export default function ConsultsPage() {
                         className={`text-xs px-3 py-1.5 rounded-xl border transition-all ${
                           selected.status === s
                             ? `${statusConfig[s].color} cursor-default`
-                            : 'border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-300'
+                            : 'border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:text-zinc-300'
                         }`}
                       >
                         {statusConfig[s].label}
@@ -325,7 +325,7 @@ export default function ConsultsPage() {
 
       {/* Card list */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-zinc-600 text-sm">
+        <div className="text-center py-12 text-zinc-400 text-sm">
           <Building2 size={32} className="mx-auto mb-3 opacity-30" />
           <p>該当するリードはありません</p>
         </div>
@@ -355,41 +355,41 @@ export default function ConsultsPage() {
                           <Star size={11} className="text-amber-400 fill-amber-400 flex-shrink-0" />
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500">{req.profession}</p>
+                      <p className="text-xs text-zinc-300">{req.profession}</p>
                       {req.company && (
-                        <p className="text-xs text-zinc-600">{req.company}</p>
+                        <p className="text-xs text-zinc-400">{req.company}</p>
                       )}
                     </div>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 ${cfg.color}`}>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full border flex-shrink-0 ${cfg.color}`}>
                     {cfg.label}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-zinc-500 flex-wrap">
+                <div className="flex items-center gap-3 text-xs text-zinc-300 flex-wrap">
                   <span>{req.projectType}</span>
-                  <span className="text-zinc-700">·</span>
+                  <span className="text-zinc-400">·</span>
                   <span>{req.scale}</span>
-                  <span className="text-zinc-700">·</span>
+                  <span className="text-zinc-400">·</span>
                   <span>{req.budget}</span>
                 </div>
 
                 <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-1 text-[10px] text-zinc-600">
+                  <div className="flex items-center gap-1 text-[11px] text-zinc-400">
                     <Clock size={9} />
                     {req.submittedAt}
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <ContactIcon size={11} className="text-zinc-600" />
+                    <ContactIcon size={11} className="text-zinc-400" />
                     {req.interestedProducts.length > 0 && (
                       <div className="flex gap-1">
                         {req.interestedProducts.slice(0, 2).map(pid => (
-                          <span key={pid} className="text-[10px] px-1.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400">
+                          <span key={pid} className="text-[11px] px-1.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/5 text-amber-400">
                             {productLabels[pid] ?? pid}
                           </span>
                         ))}
                         {req.interestedProducts.length > 2 && (
-                          <span className="text-[10px] text-zinc-600">+{req.interestedProducts.length - 2}</span>
+                          <span className="text-[11px] text-zinc-400">+{req.interestedProducts.length - 2}</span>
                         )}
                       </div>
                     )}
@@ -398,7 +398,7 @@ export default function ConsultsPage() {
 
                 {req.ownerNotes && (
                   <div className="mt-2.5 p-2 bg-zinc-800/50 rounded-lg">
-                    <p className="text-[10px] text-zinc-500 leading-relaxed line-clamp-1">
+                    <p className="text-[11px] text-zinc-300 leading-relaxed line-clamp-1">
                       メモ: {req.ownerNotes}
                     </p>
                   </div>

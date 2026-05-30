@@ -105,12 +105,12 @@ export default function ManagerDashboardPage() {
           <h1 className="text-xl font-medium text-zinc-100 flex items-center gap-2">
             今日のタスク
             {pendingCount > 0 && (
-              <span className="inline-flex items-center justify-center w-5 h-5 bg-amber-500 rounded-full text-[10px] text-zinc-950 font-bold">
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-amber-500 rounded-full text-[11px] text-zinc-950 font-bold">
                 {pendingCount}
               </span>
             )}
           </h1>
-          <p className="text-sm text-zinc-500 mt-0.5">{today}</p>
+          <p className="text-sm text-zinc-300 mt-0.5">{today}</p>
         </div>
       </div>
 
@@ -118,7 +118,7 @@ export default function ManagerDashboardPage() {
       <div className={`bg-zinc-900 border rounded-2xl p-5 ${activeRequests.length > 0 ? 'border-amber-500/30' : 'border-zinc-800'}`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-zinc-200 flex items-center gap-2">
-            <Bell size={14} className={activeRequests.length > 0 ? 'text-amber-400' : 'text-zinc-500'} />
+            <Bell size={14} className={activeRequests.length > 0 ? 'text-amber-400' : 'text-zinc-300'} />
             ゲストリクエスト
             {activeRequests.length > 0 && (
               <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-medium">
@@ -152,18 +152,18 @@ export default function ManagerDashboardPage() {
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <p className="text-sm font-medium text-zinc-100">{req.label}</p>
                         {req.priority === 'urgent' && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-red-400 bg-red-500/10 border border-red-500/30 px-1.5 py-0.5 rounded-full">
+                          <span className="flex items-center gap-0.5 text-[11px] text-red-400 bg-red-500/10 border border-red-500/30 px-1.5 py-0.5 rounded-full">
                             <AlertTriangle size={9} /> 急ぎ
                           </span>
                         )}
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${isPending
+                        <span className={`text-[11px] px-1.5 py-0.5 rounded-full border ${isPending
                           ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
                           : 'text-blue-400 border-blue-500/30 bg-blue-500/10'}`}>
                           {isPending ? '対応待ち' : '対応中'}
                         </span>
                       </div>
                       <p className="text-xs text-zinc-400 mb-1">{req.description || '詳細なし'}</p>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-zinc-600">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-zinc-400">
                         <span className="flex items-center gap-0.5">
                           <Users size={9} /> {req.guestName || 'ゲスト'}
                         </span>
@@ -211,7 +211,7 @@ export default function ManagerDashboardPage() {
       {/* ─── Current / Next Guest ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className={`bg-zinc-900 border rounded-2xl p-4 ${currentBooking ? 'border-emerald-500/30' : 'border-zinc-800'}`}>
-          <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1.5">
+          <p className="text-xs text-zinc-300 mb-2 flex items-center gap-1.5">
             <span className={`w-2 h-2 rounded-full ${currentBooking ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
             現在のゲスト
           </p>
@@ -221,26 +221,26 @@ export default function ManagerDashboardPage() {
                 <p className="text-sm font-medium text-zinc-100">{currentBooking.flag} {currentBooking.guestName}</p>
                 <PhaseBadge checkIn={currentBooking.checkIn} checkOut={currentBooking.checkOut} settings={store.facilitySettings} />
               </div>
-              <p className="text-xs text-zinc-500">チェックアウト: {currentBooking.checkOut} {store.facilitySettings.checkOutTime}</p>
-              <p className="text-xs text-zinc-600 mt-0.5">{currentBooking.platform} · {currentBooking.adults}名</p>
+              <p className="text-xs text-zinc-300">チェックアウト: {currentBooking.checkOut} {store.facilitySettings.checkOutTime}</p>
+              <p className="text-xs text-zinc-400 mt-0.5">{currentBooking.platform} · {currentBooking.adults}名</p>
             </div>
           ) : (
-            <p className="text-sm text-zinc-500">現在空室</p>
+            <p className="text-sm text-zinc-300">現在空室</p>
           )}
         </div>
         <div className={`bg-zinc-900 border rounded-2xl p-4 ${nextBooking ? 'border-blue-500/20' : 'border-zinc-800'}`}>
-          <p className="text-xs text-zinc-500 mb-2">次のゲスト</p>
+          <p className="text-xs text-zinc-300 mb-2">次のゲスト</p>
           {nextBooking ? (
             <div>
               <div className="flex items-start justify-between gap-2 mb-1">
                 <p className="text-sm font-medium text-zinc-100">{nextBooking.flag} {nextBooking.guestName}</p>
                 <PhaseBadge checkIn={nextBooking.checkIn} checkOut={nextBooking.checkOut} settings={store.facilitySettings} />
               </div>
-              <p className="text-xs text-zinc-500">チェックイン: {nextBooking.checkIn} {store.facilitySettings.checkInTime}</p>
-              <p className="text-xs text-zinc-600 mt-0.5">{nextBooking.platform} · {nextBooking.adults}名</p>
+              <p className="text-xs text-zinc-300">チェックイン: {nextBooking.checkIn} {store.facilitySettings.checkInTime}</p>
+              <p className="text-xs text-zinc-400 mt-0.5">{nextBooking.platform} · {nextBooking.adults}名</p>
             </div>
           ) : (
-            <p className="text-sm text-zinc-500">予約なし</p>
+            <p className="text-sm text-zinc-300">予約なし</p>
           )}
         </div>
       </div>
@@ -252,10 +252,10 @@ export default function ManagerDashboardPage() {
             <h2 className="text-sm font-medium text-zinc-200 flex items-center gap-2">
               <CheckSquare size={15} className="text-teal-400" /> 清掃チェックリスト
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">{doneCount} / {totalCount} 完了</p>
+            <p className="text-xs text-zinc-300 mt-0.5">{doneCount} / {totalCount} 完了</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={resetChecklist} className="text-xs text-zinc-600 hover:text-zinc-400 flex items-center gap-1 transition-all">
+            <button onClick={resetChecklist} className="text-xs text-zinc-400 hover:text-zinc-400 flex items-center gap-1 transition-all">
               <RefreshCw size={11} /> リセット
             </button>
             <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${progress === 100
@@ -275,10 +275,10 @@ export default function ManagerDashboardPage() {
         <div className="space-y-4">
           {Object.entries(groupedChecklist).map(([area, tasks]) => (
             <div key={area}>
-              <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1.5">
+              <p className="text-xs text-zinc-300 mb-2 flex items-center gap-1.5">
                 <span>{AREA_EMOJIS[area]}</span>
                 {AREA_LABELS[area]}
-                <span className="text-zinc-700">({tasks.filter(t => t.done).length}/{tasks.length})</span>
+                <span className="text-zinc-400">({tasks.filter(t => t.done).length}/{tasks.length})</span>
               </p>
               <div className="space-y-1">
                 {tasks.map(task => (
@@ -287,7 +287,7 @@ export default function ManagerDashboardPage() {
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${task.done ? 'border-teal-500 bg-teal-500' : 'border-zinc-600'}`}>
                       {task.done && <span className="text-zinc-950 text-xs">✓</span>}
                     </div>
-                    <span className={`text-sm ${task.done ? 'line-through text-zinc-600' : 'text-zinc-300'}`}>{task.label}</span>
+                    <span className={`text-sm ${task.done ? 'line-through text-zinc-400' : 'text-zinc-300'}`}>{task.label}</span>
                   </button>
                 ))}
               </div>
@@ -305,7 +305,7 @@ export default function ManagerDashboardPage() {
               <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full">{openMaint.length}件</span>
             )}
           </h2>
-          <button onClick={() => setShowAddMaint(!showAddMaint)} className="flex items-center gap-1 text-xs text-zinc-500 hover:text-teal-400 transition-colors">
+          <button onClick={() => setShowAddMaint(!showAddMaint)} className="flex items-center gap-1 text-xs text-zinc-300 hover:text-teal-400 transition-colors">
             <Plus size={13} /> 追加
           </button>
         </div>
@@ -314,7 +314,7 @@ export default function ManagerDashboardPage() {
           <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 mb-4 space-y-3">
             <input value={maintDesc} onChange={e => setMaintDesc(e.target.value)}
               placeholder="不具合・修理内容を入力..."
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-teal-500/40 transition-all" />
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-teal-500/40 transition-all" />
             <div className="flex gap-2">
               <select value={maintArea} onChange={e => setMaintArea(e.target.value)}
                 className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-300 focus:outline-none">
@@ -335,7 +335,7 @@ export default function ManagerDashboardPage() {
         )}
 
         {openMaint.length === 0 ? (
-          <p className="text-zinc-600 text-sm text-center py-4">未対応の案件はありません ✓</p>
+          <p className="text-zinc-400 text-sm text-center py-4">未対応の案件はありません ✓</p>
         ) : (
           <div className="space-y-2">
             {openMaint.map(item => (
@@ -343,7 +343,7 @@ export default function ManagerDashboardPage() {
                 {item.priority === 'urgent' && <AlertTriangle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-zinc-200">{item.description}</p>
-                  <p className="text-xs text-zinc-500 mt-0.5">{AREA_LABELS[item.area] ?? item.area} · {item.reportedBy}</p>
+                  <p className="text-xs text-zinc-300 mt-0.5">{AREA_LABELS[item.area] ?? item.area} · {item.reportedBy}</p>
                 </div>
                 <button onClick={() => resolveMaint(item.id)}
                   className="flex-shrink-0 text-xs px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-all">
@@ -363,9 +363,9 @@ export default function ManagerDashboardPage() {
             <p className="text-sm font-medium text-zinc-200 flex items-center gap-2">
               <Users size={14} className="text-teal-400" /> ゲスト
             </p>
-            <p className="text-xs text-zinc-500 mt-0.5">{store.bookingHistory.length}件の予約</p>
+            <p className="text-xs text-zinc-300 mt-0.5">{store.bookingHistory.length}件の予約</p>
           </div>
-          <ChevronRight size={14} className="text-zinc-600" />
+          <ChevronRight size={14} className="text-zinc-400" />
         </Link>
         <Link href="/manager/tasks"
           className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-zinc-700 transition-all flex items-center justify-between">
@@ -373,9 +373,9 @@ export default function ManagerDashboardPage() {
             <p className="text-sm font-medium text-zinc-200 flex items-center gap-2">
               <CheckSquare size={14} className="text-teal-400" /> タスク
             </p>
-            <p className="text-xs text-zinc-500 mt-0.5">メンテ・清掃管理</p>
+            <p className="text-xs text-zinc-300 mt-0.5">メンテ・清掃管理</p>
           </div>
-          <ChevronRight size={14} className="text-zinc-600" />
+          <ChevronRight size={14} className="text-zinc-400" />
         </Link>
         <Link href="/manager/requests"
           className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-zinc-700 transition-all flex items-center justify-between">
@@ -383,9 +383,9 @@ export default function ManagerDashboardPage() {
             <p className="text-sm font-medium text-zinc-200 flex items-center gap-2">
               <Bell size={14} className="text-amber-400" /> リクエスト履歴
             </p>
-            <p className="text-xs text-zinc-500 mt-0.5">{store.serviceRequests.length}件</p>
+            <p className="text-xs text-zinc-300 mt-0.5">{store.serviceRequests.length}件</p>
           </div>
-          <ChevronRight size={14} className="text-zinc-600" />
+          <ChevronRight size={14} className="text-zinc-400" />
         </Link>
         <Link href="/manager/calendar"
           className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 hover:border-zinc-700 transition-all flex items-center justify-between">
@@ -393,9 +393,9 @@ export default function ManagerDashboardPage() {
             <p className="text-sm font-medium text-zinc-200 flex items-center gap-2">
               <Calendar size={14} className="text-teal-400" /> カレンダー
             </p>
-            <p className="text-xs text-zinc-500 mt-0.5">月別予約状況</p>
+            <p className="text-xs text-zinc-300 mt-0.5">月別予約状況</p>
           </div>
-          <ChevronRight size={14} className="text-zinc-600" />
+          <ChevronRight size={14} className="text-zinc-400" />
         </Link>
       </div>
     </motion.div>

@@ -38,19 +38,19 @@ function ManagerLayoutInner({ children, pathname }: { children: React.ReactNode;
             <span className="text-sm font-medium text-zinc-200">Lumina Fuji</span>
             <span className="text-xs text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20">管理会社</span>
             {(pendingRequests + openMaintenance) > 0 && (
-              <span className="w-5 h-5 bg-amber-500 rounded-full text-[10px] text-zinc-950 flex items-center justify-center font-medium ml-1">
+              <span className="w-5 h-5 bg-amber-500 rounded-full text-[11px] text-zinc-950 flex items-center justify-center font-medium ml-1">
                 {pendingRequests + openMaintenance}
               </span>
             )}
           </div>
           <div className="flex items-center gap-1">
-            <Link href="/manual" className="text-xs text-zinc-500 hover:text-zinc-300 px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-all">
+            <Link href="/manual" className="text-xs text-zinc-300 hover:text-zinc-300 px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-all">
               マニュアル
             </Link>
-            <Link href="/owner" className="text-xs text-zinc-500 hover:text-zinc-300 px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-all">
+            <Link href="/owner" className="text-xs text-zinc-300 hover:text-zinc-300 px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-all">
               オーナー →
             </Link>
-            <button onClick={logout} className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-zinc-800">
+            <button onClick={logout} className="flex items-center gap-1.5 text-xs text-zinc-300 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-zinc-800">
               <LogOut size={13} /> ログアウト
             </button>
           </div>
@@ -66,16 +66,16 @@ function ManagerLayoutInner({ children, pathname }: { children: React.ReactNode;
             const badge = href === '/manager/guests' ? pendingRequests : undefined
             return (
               <Link key={href} href={href}
-                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all relative ${isActive ? 'text-teal-400' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all relative ${isActive ? 'text-teal-400' : 'text-zinc-300 hover:text-zinc-300'}`}>
                 <div className="relative">
                   <Icon size={20} strokeWidth={isActive ? 2 : 1.5} />
                   {badge ? (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 rounded-full text-[9px] text-zinc-950 flex items-center justify-center font-bold">
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 rounded-full text-[11px] text-zinc-950 flex items-center justify-center font-bold">
                       {badge}
                     </span>
                   ) : null}
                 </div>
-                <span className="text-[10px]">{label}</span>
+                <span className="text-[11px]">{label}</span>
               </Link>
             )
           })}

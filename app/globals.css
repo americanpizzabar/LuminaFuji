@@ -22,15 +22,30 @@
   }
 
   body {
-    background: #030306;
+    background: #060609;
     @apply text-zinc-100 antialiased;
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    letter-spacing: 0.005em;
+  }
+
+  /* モバイルでの最低可読サイズを底上げ（極端に小さい文字を防ぐ） */
+  @media (max-width: 480px) {
+    .text-\[9px\], .text-\[10px\] { font-size: 11px !important; line-height: 1.45 !important; }
   }
 
   input, textarea, select {
-    @apply text-zinc-100 border-zinc-700;
-    background: rgba(255, 255, 255, 0.04);
+    @apply text-zinc-50 border-zinc-600;
+    background: rgba(255, 255, 255, 0.06);
+  }
+  input::placeholder, textarea::placeholder {
+    @apply text-zinc-500;
+  }
+  input:focus, textarea:focus, select:focus {
+    @apply border-zinc-500;
   }
 
   ::-webkit-scrollbar {
@@ -48,10 +63,10 @@
 @layer components {
   /* ── Glassmorphism cards ─────────────────────────────────────── */
   .glass {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.055);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
     border-radius: 20px;
   }
 
@@ -77,10 +92,10 @@
   }
 
   .card-elevated {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.075);
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 20px;
   }
 
@@ -99,7 +114,15 @@
 
   /* ── Typography ─────────────────────────────────────────────── */
   .section-title {
-    @apply font-serif text-xs tracking-[0.25em] text-gold-500/80 uppercase mb-3;
+    @apply font-serif text-xs tracking-[0.2em] text-gold-400 uppercase mb-3 font-medium;
+  }
+
+  /* 補助テキストの統一クラス（可読性の高いグレー） */
+  .text-muted {
+    @apply text-zinc-400;
+  }
+  .text-subtle {
+    @apply text-zinc-500;
   }
 
   .luxury-heading {

@@ -47,7 +47,7 @@ export default function LanguageSwitcher() {
                   >
                     <span className="text-base leading-none">{l.flag}</span>
                     <span className="text-xs font-medium">{l.nativeLabel}</span>
-                    {l.code === lang && <span className="ml-auto text-[9px] text-teal-400">✓</span>}
+                    {l.code === lang && <span className="ml-auto text-[11px] text-teal-400">✓</span>}
                   </button>
                 ))}
               </div>

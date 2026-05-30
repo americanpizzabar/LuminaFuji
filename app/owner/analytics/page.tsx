@@ -39,7 +39,7 @@ function BarChartRow({
   const pct = max > 0 ? (value / max) * 100 : 0
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-zinc-500 w-20 flex-shrink-0 text-right truncate">{label}</span>
+      <span className="text-xs text-zinc-300 w-20 flex-shrink-0 text-right truncate">{label}</span>
       <div className="flex-1 h-5 bg-zinc-800 rounded-lg overflow-hidden relative">
         <motion.div
           initial={{ width: 0 }}
@@ -47,7 +47,7 @@ function BarChartRow({
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className={`h-full rounded-lg ${color}`}
         />
-        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-300 font-medium">
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-zinc-300 font-medium">
           {value > 0 ? `${value}${suffix}` : '–'}
         </span>
       </div>
@@ -72,9 +72,9 @@ function MonthlyBarChart({ data }: { data: typeof MOCK_MONTHLY_REVENUE }) {
                 className={`w-full rounded-t-lg ${revenue > 0 ? 'bg-blue-500/60' : 'bg-zinc-800'}`}
               />
             </div>
-            <span className="text-[10px] text-zinc-600">{month}</span>
+            <span className="text-[11px] text-zinc-400">{month}</span>
             {revenue > 0 && (
-              <span className="text-[9px] text-zinc-500">¥{(revenue / 1000).toFixed(0)}k</span>
+              <span className="text-[11px] text-zinc-300">¥{(revenue / 1000).toFixed(0)}k</span>
             )}
           </div>
         )
@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-medium text-zinc-100">分析ダッシュボード</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">売上・照明・予約・リード分析</p>
+        <p className="text-sm text-zinc-300 mt-0.5">売上・照明・予約・リード分析</p>
       </div>
 
       {/* Revenue KPI cards */}
@@ -156,22 +156,22 @@ export default function AnalyticsPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <div className="flex items-center gap-1.5 mb-2">
             <DollarSign size={13} className="text-blue-400" />
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider">総売上</p>
+            <p className="text-[11px] text-zinc-300 uppercase tracking-wider">総売上</p>
           </div>
           <p className="text-2xl font-light text-zinc-100">
-            ¥{(revenueStats.totalRevenue / 10000).toFixed(1)}<span className="text-sm text-zinc-500 ml-1">万</span>
+            ¥{(revenueStats.totalRevenue / 10000).toFixed(1)}<span className="text-sm text-zinc-300 ml-1">万</span>
           </p>
-          <p className="text-[10px] text-zinc-600 mt-1">{revenueStats.bookingCount}件の予約</p>
+          <p className="text-[11px] text-zinc-400 mt-1">{revenueStats.bookingCount}件の予約</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <div className="flex items-center gap-1.5 mb-2">
             <TrendingUp size={13} className="text-emerald-400" />
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider">平均単価/泊</p>
+            <p className="text-[11px] text-zinc-300 uppercase tracking-wider">平均単価/泊</p>
           </div>
           <p className="text-2xl font-light text-zinc-100">
             ¥{revenueStats.avgPerNight.toLocaleString()}
           </p>
-          <p className="text-[10px] text-zinc-600 mt-1">累計{revenueStats.totalNights}泊</p>
+          <p className="text-[11px] text-zinc-400 mt-1">累計{revenueStats.totalNights}泊</p>
         </div>
       </div>
 
@@ -180,7 +180,7 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-2 mb-4">
           <BarChart2 size={14} className="text-blue-400" />
           <h2 className="text-sm font-medium text-zinc-200">月別売上</h2>
-          <span className="text-xs text-zinc-600 ml-auto">2026年</span>
+          <span className="text-xs text-zinc-400 ml-auto">2026年</span>
         </div>
         <MonthlyBarChart data={monthlyData} />
       </div>
@@ -194,24 +194,24 @@ export default function AnalyticsPage() {
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-zinc-800/50 rounded-xl p-3">
-            <p className="text-[10px] text-zinc-500 mb-1">トップシーン</p>
+            <p className="text-[11px] text-zinc-300 mb-1">トップシーン</p>
             <p className="text-sm font-medium text-amber-400">
               {lightingAnalytics.topScene ? lightingAnalytics.topScene.name : '—'}
             </p>
             {lightingAnalytics.topScene && (
-              <p className="text-[10px] text-zinc-600 mt-0.5">{lightingAnalytics.topScene.count}回使用</p>
+              <p className="text-[11px] text-zinc-400 mt-0.5">{lightingAnalytics.topScene.count}回使用</p>
             )}
           </div>
           <div className="bg-zinc-800/50 rounded-xl p-3">
-            <p className="text-[10px] text-zinc-500 mb-1">総イベント数</p>
+            <p className="text-[11px] text-zinc-300 mb-1">総イベント数</p>
             <p className="text-sm font-medium text-zinc-200">{lightingAnalytics.totalEvents}</p>
-            <p className="text-[10px] text-zinc-600 mt-0.5">照明操作ログ</p>
+            <p className="text-[11px] text-zinc-400 mt-0.5">照明操作ログ</p>
           </div>
         </div>
 
         {sceneEntries.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2">シーン頻度</p>
+            <p className="text-[11px] text-zinc-300 uppercase tracking-wider mb-2">シーン頻度</p>
             {sceneEntries.map(([name, count]) => (
               <BarChartRow
                 key={name}
@@ -224,7 +224,7 @@ export default function AnalyticsPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-4 text-zinc-600 text-xs">
+          <div className="text-center py-4 text-zinc-400 text-xs">
             照明履歴データがありません
           </div>
         )}
@@ -235,11 +235,11 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-2 mb-4">
           <Calendar size={14} className="text-purple-400" />
           <h2 className="text-sm font-medium text-zinc-200">予約プラットフォーム</h2>
-          <span className="text-xs text-zinc-600 ml-auto">全{totalBookings}件</span>
+          <span className="text-xs text-zinc-400 ml-auto">全{totalBookings}件</span>
         </div>
 
         {totalBookings === 0 ? (
-          <p className="text-center text-zinc-600 text-xs py-4">予約データがありません</p>
+          <p className="text-center text-zinc-400 text-xs py-4">予約データがありません</p>
         ) : (
           <div className="space-y-2">
             {Object.entries(platformCounts)
@@ -280,7 +280,7 @@ export default function AnalyticsPage() {
         </div>
 
         {Object.keys(productCounts).length === 0 ? (
-          <p className="text-center text-zinc-600 text-xs py-4">コンサルリクエストがありません</p>
+          <p className="text-center text-zinc-400 text-xs py-4">コンサルリクエストがありません</p>
         ) : (
           <div className="space-y-2">
             {Object.entries(productCounts)
@@ -299,7 +299,7 @@ export default function AnalyticsPage() {
         )}
 
         <div className="mt-4 pt-4 border-t border-zinc-800 flex items-center justify-between text-xs">
-          <span className="text-zinc-500">総リクエスト数</span>
+          <span className="text-zinc-300">総リクエスト数</span>
           <span className="text-zinc-300 font-medium">{store.consultRequests.length}件</span>
         </div>
       </div>
@@ -312,13 +312,13 @@ export default function AnalyticsPage() {
         </div>
 
         {nationalities.length === 0 ? (
-          <p className="text-center text-zinc-600 text-xs py-4">予約データがありません</p>
+          <p className="text-center text-zinc-400 text-xs py-4">予約データがありません</p>
         ) : (
           <div className="space-y-2">
             {nationalities.map(([nationality, { count, flag }]) => (
               <div key={nationality} className="flex items-center gap-3">
                 <span className="text-base w-6 flex-shrink-0">{flag}</span>
-                <span className="text-xs text-zinc-500 w-16 flex-shrink-0 truncate">{nationality}</span>
+                <span className="text-xs text-zinc-300 w-16 flex-shrink-0 truncate">{nationality}</span>
                 <div className="flex-1 h-5 bg-zinc-800 rounded-lg overflow-hidden relative">
                   <motion.div
                     initial={{ width: 0 }}
@@ -326,7 +326,7 @@ export default function AnalyticsPage() {
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                     className="h-full bg-teal-500/50 rounded-lg"
                   />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-300 font-medium">
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-zinc-300 font-medium">
                     {count}件
                   </span>
                 </div>

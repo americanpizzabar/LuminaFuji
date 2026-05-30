@@ -105,7 +105,7 @@ export default function ConsultPage() {
         </Link>
         <div>
           <h1 className="text-lg font-medium text-zinc-100">{t('consult.title')}</h1>
-          <p className="text-xs text-zinc-500">{t('consult.subtitle')}</p>
+          <p className="text-xs text-zinc-300">{t('consult.subtitle')}</p>
         </div>
       </div>
 
@@ -113,14 +113,14 @@ export default function ConsultPage() {
       <div className="flex items-center gap-2 mb-2">
         {[1, 2, 3, 4].map(s => (
           <div key={s} className="flex items-center gap-2 flex-1">
-            <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all ${s < step ? 'bg-gold-500 text-zinc-950' : s === step ? 'bg-gold-500/20 border border-gold-500/50 text-gold-400' : 'bg-zinc-800 text-zinc-600'}`}>
+            <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-medium transition-all ${s < step ? 'bg-gold-500 text-zinc-950' : s === step ? 'bg-gold-500/20 border border-gold-500/50 text-gold-400' : 'bg-zinc-800 text-zinc-400'}`}>
               {s < step ? <CheckCircle2 size={14} /> : s}
             </div>
             {s < 4 && <div className={`h-0.5 flex-1 rounded-full transition-all ${s < step ? 'bg-gold-500' : 'bg-zinc-800'}`} />}
           </div>
         ))}
       </div>
-      <p className="text-xs text-zinc-500 mb-5">{t('consult.step', { step: String(step) })}：{stepTitles[step - 1]}</p>
+      <p className="text-xs text-zinc-300 mb-5">{t('consult.step', { step: String(step) })}：{stepTitles[step - 1]}</p>
 
       <AnimatePresence mode="wait">
         {step === 1 && (
@@ -206,27 +206,27 @@ export default function ConsultPage() {
               { key: 'phone',   label: t('consult.phoneLabel'),            type: 'tel',   placeholder: t('consult.phonePlaceholder') },
             ].map(({ key, label, type, placeholder }) => (
               <div key={key}>
-                <label className="text-xs text-zinc-500 mb-1.5 block">{label}</label>
+                <label className="text-xs text-zinc-300 mb-1.5 block">{label}</label>
                 <input type={type} value={(form as any)[key]} onChange={e => set(key, e.target.value)} placeholder={placeholder}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-gold-500/40 transition-all" />
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-gold-500/40 transition-all" />
               </div>
             ))}
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">{t('consult.preferredContact')}</label>
+              <label className="text-xs text-zinc-300 mb-1.5 block">{t('consult.preferredContact')}</label>
               <div className="flex gap-2">
                 {CONTACT_METHOD_KEYS.map((key) => (
                   <button key={key} onClick={() => set('contactMethod', key)}
-                    className={`flex-1 py-2.5 rounded-xl border text-xs transition-all ${form.contactMethod === key ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-700 text-zinc-500'}`}>
+                    className={`flex-1 py-2.5 rounded-xl border text-xs transition-all ${form.contactMethod === key ? 'border-gold-500/40 bg-gold-500/8 text-gold-300' : 'border-zinc-700 text-zinc-300'}`}>
                     {t(`consult.contactMethods.${key}`)}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">{t('consult.requestLabel')}</label>
+              <label className="text-xs text-zinc-300 mb-1.5 block">{t('consult.requestLabel')}</label>
               <textarea value={form.message} onChange={e => set('message', e.target.value)}
                 placeholder={t('consult.requestPlaceholder')} rows={3}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-gold-500/40 transition-all resize-none" />
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-gold-500/40 transition-all resize-none" />
             </div>
             <div className="flex gap-3">
               <button onClick={() => setStep(2)} className="btn-outline px-5">{t('consult.prev')}</button>
@@ -255,7 +255,7 @@ export default function ConsultPage() {
                   : null,
               ].filter(Boolean).map((item: any) => (
                 <div key={item.label} className="flex justify-between items-start gap-2">
-                  <span className="text-xs text-zinc-500 flex-shrink-0">{item.label}</span>
+                  <span className="text-xs text-zinc-300 flex-shrink-0">{item.label}</span>
                   <span className="text-xs text-zinc-300 text-right">{item.value}</span>
                 </div>
               ))}

@@ -19,7 +19,7 @@ export default function PhaseBadge({ checkIn, checkOut, settings, arrivedAt, siz
   if (!checkIn || !checkOut) return null
   const phase = calcPhase(checkIn, checkOut, settings.checkInTime, settings.checkOutTime, arrivedAt)
   const c = PHASE_CONFIG[phase]
-  const textSize = size === 'md' ? 'text-xs' : 'text-[10px]'
+  const textSize = size === 'md' ? 'text-xs' : 'text-[11px]'
   return (
     <span className={`inline-flex items-center gap-1 border rounded-full px-2 py-0.5 font-medium whitespace-nowrap ${textSize} ${c.cls}`}>
       {c.emoji} {c.label}

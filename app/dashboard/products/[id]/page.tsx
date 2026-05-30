@@ -16,7 +16,7 @@ export default function ProductDetailPage() {
     return (
       <div className="page-container flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-zinc-500">{t('products.notFound')}</p>
+          <p className="text-zinc-300">{t('products.notFound')}</p>
           <Link href="/dashboard/products" className="text-gold-400 text-sm mt-2 inline-block">
             {t('products.backToList')}
           </Link>
@@ -33,7 +33,7 @@ export default function ProductDetailPage() {
             <ArrowLeft size={18} className="text-zinc-300" />
           </Link>
           <div>
-            <p className="text-xs text-zinc-500 uppercase tracking-widest">ECUANEST</p>
+            <p className="text-xs text-zinc-300 uppercase tracking-widest">ECUANEST</p>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export default function ProductDetailPage() {
         </div>
 
         <div className="px-4 mb-5">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">{t('products.specs')}</p>
+          <p className="text-xs text-zinc-300 uppercase tracking-widest mb-3">{t('products.specs')}</p>
           <div className="card overflow-hidden">
             <div className="divide-y divide-zinc-800/60">
               {Object.entries(product.specs).map(([key, value], i) => (
@@ -104,7 +104,7 @@ export default function ProductDetailPage() {
                   transition={{ delay: i * 0.04 }}
                   className="flex items-center justify-between px-5 py-3.5"
                 >
-                  <span className="text-xs text-zinc-500">{key}</span>
+                  <span className="text-xs text-zinc-300">{key}</span>
                   <span className="text-xs text-zinc-200 text-right max-w-[55%]">{value}</span>
                 </motion.div>
               ))}
@@ -113,7 +113,7 @@ export default function ProductDetailPage() {
         </div>
 
         <div className="px-4 mb-5">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">{t('products.useCases')}</p>
+          <p className="text-xs text-zinc-300 uppercase tracking-widest mb-3">{t('products.useCases')}</p>
           <div className="flex flex-wrap gap-2">
             {product.roomUsed.map((room) => (
               <span
@@ -129,9 +129,9 @@ export default function ProductDetailPage() {
         <div className="px-4 mb-5">
           <div className="card p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs text-zinc-500 mb-1">{t('products.price')}</p>
+              <p className="text-xs text-zinc-300 mb-1">{t('products.price')}</p>
               <p className="text-xl font-medium text-gold-400">{product.price}</p>
-              <p className="text-xs text-zinc-600 mt-0.5">{t('products.priceNote')}</p>
+              <p className="text-xs text-zinc-400 mt-0.5">{t('products.priceNote')}</p>
             </div>
             <a
               href="https://ecuanest.co.jp/index.html"
@@ -158,7 +158,7 @@ export default function ProductDetailPage() {
             <ExternalLink size={16} />
             {t('products.buyBtn')}
           </a>
-          <Link href="/dashboard/consult" className="w-full flex items-center justify-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition-colors py-2">
+          <Link href="/dashboard/consult" className="w-full flex items-center justify-center gap-2 text-sm text-zinc-300 hover:text-zinc-300 transition-colors py-2">
             <Building2 size={15} />
             {t('products.proBtn')}
           </Link>

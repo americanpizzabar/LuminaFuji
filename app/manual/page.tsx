@@ -21,7 +21,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={copy}
-      className="ml-2 text-zinc-600 hover:text-zinc-300 transition-colors"
+      className="ml-2 text-zinc-400 hover:text-zinc-300 transition-colors"
       title="コピー"
     >
       {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
@@ -47,18 +47,18 @@ function PortalCard({
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-base font-semibold ${color}`}>{title}</p>
-          <p className="text-xs text-zinc-500 mt-0.5 mb-2">{sub}</p>
+          <p className="text-xs text-zinc-300 mt-0.5 mb-2">{sub}</p>
           <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2">
             <code className="text-xs text-zinc-300 truncate flex-1">{url}</code>
             <CopyButton text={url} />
-            <a href={href} target="_blank" rel="noopener noreferrer" className="text-zinc-600 hover:text-zinc-300 transition-colors">
+            <a href={href} target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-zinc-300 transition-colors">
               <ExternalLink size={12} />
             </a>
           </div>
           {pin && (
             <div className="mt-2 flex items-center gap-2">
-              <Key size={12} className="text-zinc-600 flex-shrink-0" />
-              <span className="text-xs text-zinc-500">{pinLabel}:</span>
+              <Key size={12} className="text-zinc-400 flex-shrink-0" />
+              <span className="text-xs text-zinc-300">{pinLabel}:</span>
               <code className="text-xs font-bold text-zinc-200 tracking-widest">{pin}</code>
               <CopyButton text={pin} />
             </div>
@@ -85,7 +85,7 @@ function Section({
         <h2 className="text-lg font-semibold text-zinc-100 flex-1">{title}</h2>
         <ChevronDown
           size={18}
-          className={`text-zinc-500 transition-transform ${open ? '' : '-rotate-90'}`}
+          className={`text-zinc-300 transition-transform ${open ? '' : '-rotate-90'}`}
         />
       </button>
       {open && <div>{children}</div>}
@@ -101,7 +101,7 @@ function FeatureRow({ icon, title, desc }: { icon: React.ReactNode; title: strin
       </div>
       <div>
         <p className="text-sm font-medium text-zinc-200">{title}</p>
-        <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{desc}</p>
+        <p className="text-xs text-zinc-300 mt-0.5 leading-relaxed">{desc}</p>
       </div>
     </div>
   )
@@ -114,9 +114,9 @@ function EnvRow({ name, desc, example }: { name: string; desc: string; example: 
         <code className="text-xs font-bold text-gold-400">{name}</code>
         <CopyButton text={name} />
       </div>
-      <p className="text-xs text-zinc-500 leading-relaxed">{desc}</p>
+      <p className="text-xs text-zinc-300 leading-relaxed">{desc}</p>
       <div className="mt-1.5 flex items-center gap-2 bg-zinc-900 rounded-lg px-2 py-1">
-        <span className="text-[11px] text-zinc-600">例:</span>
+        <span className="text-[11px] text-zinc-400">例:</span>
         <code className="text-[11px] text-zinc-400">{example}</code>
       </div>
     </div>
@@ -135,7 +135,7 @@ export default function ManualPage() {
               <ArrowLeft size={18} className="text-zinc-300" />
             </Link>
             <div>
-              <p className="text-xs text-zinc-500 tracking-widest uppercase">Lumina Fuji Residence</p>
+              <p className="text-xs text-zinc-300 tracking-widest uppercase">Lumina Fuji Residence</p>
               <h1 className="text-xl font-semibold text-zinc-100">ユーザーマニュアル</h1>
             </div>
           </div>
@@ -154,7 +154,7 @@ export default function ManualPage() {
 
           {/* TOC */}
           <div className="card p-4 mb-8">
-            <p className="text-xs text-zinc-500 mb-3 uppercase tracking-widest">目次</p>
+            <p className="text-xs text-zinc-300 mb-3 uppercase tracking-widest">目次</p>
             <div className="space-y-1.5">
               {[
                 { href: '#access', label: 'アクセスリンク一覧', emoji: '🔗' },
@@ -215,7 +215,7 @@ export default function ManualPage() {
             />
           </div>
           <div className="mt-3 p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-zinc-300">
               💡 <strong className="text-zinc-400">ブックマーク推奨:</strong> 各URLをスマートフォンのホーム画面に追加するとPWAとして使用できます。
             </p>
           </div>
@@ -226,7 +226,7 @@ export default function ManualPage() {
           {/* Login */}
           <div className="card p-5 mb-4">
             <p className="text-sm font-semibold text-zinc-200 mb-1">ログイン方法</p>
-            <p className="text-xs text-zinc-500 mb-3">
+            <p className="text-xs text-zinc-300 mb-3">
               <code className="text-gold-400">/login</code> にアクセスし、予約時のメールアドレスまたは電話番号を入力するとマジックリンクが届きます。
             </p>
             <div className="space-y-2">
@@ -234,21 +234,21 @@ export default function ManualPage() {
                 <span className="text-lg">📧</span>
                 <div>
                   <p className="text-xs font-medium text-zinc-300">メールアドレスでログイン</p>
-                  <p className="text-[11px] text-zinc-600">予約時のメールにリンクを送信</p>
+                  <p className="text-[11px] text-zinc-400">予約時のメールにリンクを送信</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 p-2 bg-zinc-900 rounded-lg">
                 <span className="text-lg">📱</span>
                 <div>
                   <p className="text-xs font-medium text-zinc-300">SMS（電話番号）でログイン</p>
-                  <p className="text-[11px] text-zinc-600">登録電話番号にSMSリンクを送信</p>
+                  <p className="text-[11px] text-zinc-400">登録電話番号にSMSリンクを送信</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 p-2 bg-zinc-900 rounded-lg border border-gold-500/20">
                 <span className="text-lg">✨</span>
                 <div>
                   <p className="text-xs font-medium text-gold-400">デモモード（ログイン不要）</p>
-                  <p className="text-[11px] text-zinc-500">「予約済」「滞在中」「滞在後」のいずれかを選択してすぐ体験</p>
+                  <p className="text-[11px] text-zinc-300">「予約済」「滞在中」「滞在後」のいずれかを選択してすぐ体験</p>
                 </div>
               </div>
             </div>
@@ -267,7 +267,7 @@ export default function ManualPage() {
                   <span className="text-xl flex-shrink-0">{emoji}</span>
                   <div>
                     <p className="text-xs font-semibold text-zinc-300">{phase}</p>
-                    <p className="text-[11px] text-zinc-500 leading-relaxed">{desc}</p>
+                    <p className="text-[11px] text-zinc-300 leading-relaxed">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -293,7 +293,7 @@ export default function ManualPage() {
           </div>
 
           <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-zinc-300">
               💡 <strong className="text-zinc-400">PWAとして使用:</strong> Safariの「共有」→「ホーム画面に追加」でアイコンが作成されます。フルスクリーンのネイティブアプリ感覚で使えます。
             </p>
           </div>
@@ -306,7 +306,7 @@ export default function ManualPage() {
               <Wrench size={18} className="text-teal-400 flex-shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-teal-300">アクセス方法</p>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-300 mt-0.5">
                   <code className="text-teal-400">/manager</code> にアクセス → PINコード <code className="text-white font-bold">5678</code> を入力
                 </p>
               </div>
@@ -360,7 +360,7 @@ export default function ManualPage() {
           </div>
 
           <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-zinc-300">
               🔒 PINコードは <code className="text-zinc-400">NEXT_PUBLIC_MANAGER_PIN</code> 環境変数で変更できます（本番環境では必ず変更してください）。
             </p>
           </div>
@@ -373,7 +373,7 @@ export default function ManualPage() {
               <Shield size={18} className="text-blue-400 flex-shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-blue-300">アクセス方法</p>
-                <p className="text-xs text-zinc-500 mt-0.5">
+                <p className="text-xs text-zinc-300 mt-0.5">
                   <code className="text-blue-400">/owner</code> にアクセス → PINコード <code className="text-white font-bold">1234</code> を入力
                 </p>
               </div>
@@ -438,7 +438,7 @@ export default function ManualPage() {
           </div>
 
           <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-zinc-300">
               🔒 PINコードは <code className="text-zinc-400">NEXT_PUBLIC_OWNER_PIN</code> 環境変数で変更できます（本番環境では必ず変更してください）。
             </p>
           </div>
@@ -465,11 +465,11 @@ export default function ManualPage() {
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="card p-4">
               <p className="text-sm font-semibold text-zinc-200 mb-1">① Zigbee</p>
-              <p className="text-[11px] text-zinc-500 leading-relaxed">無線・後付けが手軽。Zigbee2MQTT 経由で MQTT 制御。既存物件向き。</p>
+              <p className="text-[11px] text-zinc-300 leading-relaxed">無線・後付けが手軽。Zigbee2MQTT 経由で MQTT 制御。既存物件向き。</p>
             </div>
             <div className="card p-4">
               <p className="text-sm font-semibold text-zinc-200 mb-1">② DALI-2</p>
-              <p className="text-[11px] text-zinc-500 leading-relaxed">専用2線バス・高精度な対数調光。Brite 3 が標準対応。新築・施工時の組み込み向き。</p>
+              <p className="text-[11px] text-zinc-300 leading-relaxed">専用2線バス・高精度な対数調光。Brite 3 が標準対応。新築・施工時の組み込み向き。</p>
             </div>
           </div>
 
@@ -496,7 +496,7 @@ Next.js API  /api/lighting
           ▼
    OLEDWorks Brite 3`}</pre>
             </div>
-            <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
+            <p className="text-[11px] text-zinc-300 mt-2 leading-relaxed">
               アプリ→サーバーは常に <strong className="text-zinc-400">明るさ%とstate</strong> のみ。サーバーが各プロトコルの値
               （Zigbee=線形0-254 / DALI-2=対数arcレベル）へ変換します。
             </p>
@@ -509,10 +509,10 @@ Next.js API  /api/lighting
             </div>
             <div className="px-5">
               <FeatureRow icon={<span className="text-xs">共</span>} title="常時稼働サーバー" desc="Raspberry Pi 4 (4GB+) またはミニPC。Zigbee2MQTT/Mosquitto、または DALI ゲートウェイのアダプタを稼働。" />
-              <FeatureRow icon={<span className="text-[10px]">Z1</span>} title="[Zigbee] コーディネーター" desc="Sonoff Zigbee 3.0 USB Dongle Plus / ConBee II などのUSBドングル。" />
-              <FeatureRow icon={<span className="text-[10px]">Z2</span>} title="[Zigbee] 調光モジュール＋調光ドライバ" desc="OLEDドライバの調光方式に合わせる（0-10V / 位相制御 / PWM）。" />
-              <FeatureRow icon={<span className="text-[10px]">D1</span>} title="[DALI-2] IP ゲートウェイ" desc="Lunatone DALI-2 IoT Gateway 等。DALIバスをIP/Ethernetに橋渡し。" />
-              <FeatureRow icon={<span className="text-[10px]">D2</span>} title="[DALI-2] 調光ドライバ" desc="Brite 3 用の DALI-2 対応 定電流ドライバ。バス直結で制御（調光器不要）。" />
+              <FeatureRow icon={<span className="text-[11px]">Z1</span>} title="[Zigbee] コーディネーター" desc="Sonoff Zigbee 3.0 USB Dongle Plus / ConBee II などのUSBドングル。" />
+              <FeatureRow icon={<span className="text-[11px]">Z2</span>} title="[Zigbee] 調光モジュール＋調光ドライバ" desc="OLEDドライバの調光方式に合わせる（0-10V / 位相制御 / PWM）。" />
+              <FeatureRow icon={<span className="text-[11px]">D1</span>} title="[DALI-2] IP ゲートウェイ" desc="Lunatone DALI-2 IoT Gateway 等。DALIバスをIP/Ethernetに橋渡し。" />
+              <FeatureRow icon={<span className="text-[11px]">D2</span>} title="[DALI-2] 調光ドライバ" desc="Brite 3 用の DALI-2 対応 定電流ドライバ。バス直結で制御（調光器不要）。" />
             </div>
             <div className="px-5 pb-4">
               <div className="mt-2 p-3 bg-amber-950/20 border border-amber-500/20 rounded-xl">
@@ -603,7 +603,7 @@ Next.js API  /api/lighting
                   <span className="text-red-400/80 text-xs mt-0.5 flex-shrink-0">●</span>
                   <div>
                     <p className="text-xs font-medium text-zinc-300">{s}</p>
-                    <p className="text-[11px] text-zinc-500 leading-relaxed mt-0.5">{a}</p>
+                    <p className="text-[11px] text-zinc-300 leading-relaxed mt-0.5">{a}</p>
                   </div>
                 </div>
               ))}
@@ -611,7 +611,7 @@ Next.js API  /api/lighting
           </div>
 
           <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
-            <p className="text-xs text-zinc-500 leading-relaxed">
+            <p className="text-xs text-zinc-300 leading-relaxed">
               📘 詳細な手順は <code className="text-gold-400">docs/LIGHTING_SETUP.md</code> を参照してください。
               Zigbee/DALI-2 双方の機材・導入・DALIゲートウェイのアダプタ実装例・ネットワーク構成・セキュリティを記載しています。
             </p>
@@ -622,7 +622,7 @@ Next.js API  /api/lighting
         <Section id="env" title="環境変数・設定" emoji="⚙️">
           <div className="card p-4 mb-4 border-amber-500/20 bg-amber-950/10">
             <p className="text-xs text-amber-300 font-semibold mb-1">⚠️ セキュリティ注意</p>
-            <p className="text-xs text-zinc-500 leading-relaxed">
+            <p className="text-xs text-zinc-300 leading-relaxed">
               環境変数は <code className="text-amber-400">.env.local</code> ファイルに記述し、<strong className="text-zinc-400">絶対にGitHubにコミットしない</strong>でください。
               本番環境はVercelダッシュボード → Settings → Environment Variables から設定します。
             </p>
@@ -727,11 +727,11 @@ Next.js API  /api/lighting
 
         {/* Footer */}
         <div className="mt-10 pt-6 border-t border-zinc-800 text-center">
-          <p className="text-xs text-zinc-600">Lumina Fuji Residence · Powered by ECUANEST</p>
+          <p className="text-xs text-zinc-400">Lumina Fuji Residence · Powered by ECUANEST</p>
           <div className="flex items-center justify-center gap-4 mt-3">
-            <Link href="/dashboard" className="text-xs text-zinc-500 hover:text-gold-400 transition-colors">ゲスト画面</Link>
-            <Link href="/manager" className="text-xs text-zinc-500 hover:text-teal-400 transition-colors">管理会社</Link>
-            <Link href="/owner" className="text-xs text-zinc-500 hover:text-blue-400 transition-colors">オーナー</Link>
+            <Link href="/dashboard" className="text-xs text-zinc-300 hover:text-gold-400 transition-colors">ゲスト画面</Link>
+            <Link href="/manager" className="text-xs text-zinc-300 hover:text-teal-400 transition-colors">管理会社</Link>
+            <Link href="/owner" className="text-xs text-zinc-300 hover:text-blue-400 transition-colors">オーナー</Link>
           </div>
         </div>
       </div>
@@ -751,7 +751,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         <p className="text-sm text-zinc-200 flex-1">{question}</p>
         <ChevronDown
           size={15}
-          className={`text-zinc-500 flex-shrink-0 mt-0.5 transition-transform ${open ? '' : '-rotate-90'}`}
+          className={`text-zinc-300 flex-shrink-0 mt-0.5 transition-transform ${open ? '' : '-rotate-90'}`}
         />
       </button>
       {open && (

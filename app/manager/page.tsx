@@ -36,13 +36,13 @@ export default function ManagerLoginPage() {
             <Wrench size={28} className="text-teal-400" />
           </div>
           <h1 className="font-serif text-2xl text-zinc-100">管理会社ログイン</h1>
-          <p className="text-zinc-500 text-sm mt-1">Property Manager Access</p>
+          <p className="text-zinc-300 text-sm mt-1">Property Manager Access</p>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-xs text-zinc-500 mb-1.5 block">管理者PINコード</label>
+              <label className="text-xs text-zinc-300 mb-1.5 block">管理者PINコード</label>
               <div className="relative">
                 <input
                   type={show ? 'text' : 'password'}
@@ -50,9 +50,9 @@ export default function ManagerLoginPage() {
                   onChange={e => setPin(e.target.value)}
                   placeholder="••••"
                   maxLength={8}
-                  className={`w-full bg-zinc-800 border rounded-xl px-4 py-3 text-zinc-100 text-center text-xl tracking-widest placeholder:text-zinc-700 focus:outline-none transition-all pr-12 ${error ? 'border-red-500/60' : 'border-zinc-700 focus:border-teal-500/50'}`}
+                  className={`w-full bg-zinc-800 border rounded-xl px-4 py-3 text-zinc-100 text-center text-xl tracking-widest placeholder:text-zinc-500 focus:outline-none transition-all pr-12 ${error ? 'border-red-500/60' : 'border-zinc-700 focus:border-teal-500/50'}`}
                 />
-                <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-400">
+                <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-400">
                   {show ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
@@ -66,13 +66,13 @@ export default function ManagerLoginPage() {
         </div>
 
         <div className="mt-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 text-center">
-          <p className="text-xs text-zinc-600">デモ用PINコード: <span className="text-zinc-400 font-mono">5678</span></p>
-          <p className="text-xs text-zinc-700 mt-0.5">本番では <code className="text-zinc-600">NEXT_PUBLIC_MANAGER_PIN</code> で変更</p>
+          <p className="text-xs text-zinc-400">デモ用PINコード: <span className="text-zinc-400 font-mono">5678</span></p>
+          <p className="text-xs text-zinc-400 mt-0.5">本番では <code className="text-zinc-400">NEXT_PUBLIC_MANAGER_PIN</code> で変更</p>
         </div>
 
         <div className="mt-6 text-center space-y-2">
-          <a href="/owner" className="block text-xs text-zinc-600 hover:text-zinc-400 transition-colors">オーナーログイン →</a>
-          <a href="/dashboard" className="block text-xs text-zinc-600 hover:text-zinc-400 transition-colors">ゲスト画面 →</a>
+          <a href="/owner" className="block text-xs text-zinc-400 hover:text-zinc-400 transition-colors">オーナーログイン →</a>
+          <a href="/dashboard" className="block text-xs text-zinc-400 hover:text-zinc-400 transition-colors">ゲスト画面 →</a>
         </div>
       </motion.div>
     </div>

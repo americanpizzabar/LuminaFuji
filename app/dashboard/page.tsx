@@ -6,6 +6,7 @@ import { usePhase } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
 import { useLanguage } from '@/lib/useLanguage'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
+import CompanionInvite from '@/components/CompanionInvite'
 import {
   Lightbulb, BookOpen, Map, MessageCircle,
   Camera, Star, ExternalLink,
@@ -142,9 +143,9 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
               ].map(({ label, date, time }) => (
                 <div key={label} className="rounded-2xl p-3"
                      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p className="text-[11px] text-zinc-500 mb-1">{label}</p>
+                  <p className="text-[11px] text-zinc-300 mb-1">{label}</p>
                   <p className="text-sm text-zinc-100 font-medium">{date}</p>
-                  <p className="text-xs text-zinc-500">{time}</p>
+                  <p className="text-xs text-zinc-300">{time}</p>
                 </div>
               ))}
             </div>
@@ -172,7 +173,7 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
                   <span className="text-xs text-emerald-400">{t('home.booked.arrivedStatus')}</span>
                 </div>
                 <button onClick={handleCancelArrival}
-                        className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+                        className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-400 transition-colors">
                   <X size={11} />
                   {t('home.booked.cancelArrival')}
                 </button>
@@ -201,7 +202,7 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
               </div>
               <div>
                 <p className="text-sm font-semibold text-zinc-100">{t('home.booked.accessMap')}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">Local Map</p>
+                <p className="text-xs text-zinc-300 mt-0.5">Local Map</p>
               </div>
             </motion.div>
           </Link>
@@ -220,7 +221,7 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
             >
               <BookOpen size={18} className="text-gold-400 mb-2" />
               <p className="text-sm font-semibold text-zinc-100">{t('home.booked.facilityGuide')}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Facility Guide</p>
+              <p className="text-xs text-zinc-300 mt-0.5">Facility Guide</p>
             </motion.div>
           </Link>
 
@@ -238,7 +239,7 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
             >
               <MessageCircle size={18} className="text-blue-400 mb-2" />
               <p className="text-sm font-semibold text-zinc-100">{t('home.booked.askHost')}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Ask Host</p>
+              <p className="text-xs text-zinc-300 mt-0.5">Ask Host</p>
             </motion.div>
           </Link>
         </motion.div>
@@ -249,16 +250,16 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
                style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <Wifi size={15} className="text-gold-400 flex-shrink-0 mt-0.5" />
             <div className="min-w-0">
-              <p className="text-xs text-zinc-500 mb-0.5">Wi-Fi</p>
+              <p className="text-xs text-zinc-300 mb-0.5">Wi-Fi</p>
               <p className="text-xs text-zinc-200 font-medium truncate">{settings.wifiName}</p>
-              <p className="text-xs text-zinc-500 truncate">{settings.wifiPassword}</p>
+              <p className="text-xs text-zinc-300 truncate">{settings.wifiPassword}</p>
             </div>
           </div>
           <div className="rounded-2xl p-4 flex items-start gap-2.5"
                style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <Phone size={15} className="text-gold-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs text-zinc-500 mb-0.5">{t('home.booked.hostContact')}</p>
+              <p className="text-xs text-zinc-300 mb-0.5">{t('home.booked.hostContact')}</p>
               <p className="text-xs text-zinc-200 font-medium">{settings.ownerPhone}</p>
             </div>
           </div>
@@ -270,7 +271,7 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
                style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)' }}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm">💬</span>
-              <span className="text-xs text-zinc-500">{t('home.booked.hostMessage')}</span>
+              <span className="text-xs text-zinc-300">{t('home.booked.hostMessage')}</span>
             </div>
             <p className="text-sm text-zinc-300 leading-relaxed">{settings.hostWelcomeMessage}</p>
           </motion.div>
@@ -310,7 +311,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
             <h1 className="font-serif text-3xl text-zinc-50 leading-tight">
               {t(`home.greetings.${greetKey}`)}
             </h1>
-            <p className="text-zinc-500 text-sm mt-1 font-light">
+            <p className="text-zinc-300 text-sm mt-1 font-light">
               {guestInfo?.name?.split(' ')[0]} · {guestInfo?.reservationId}
             </p>
           </div>
@@ -324,7 +325,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 <Bell size={18} className="text-red-400" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[11px] text-white flex items-center justify-center font-bold">
                   {Math.min(unreadMsgs + pendingReqs, 9)}
                 </span>
               </motion.div>
@@ -364,7 +365,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                       <span className="text-xs text-gold-400 font-medium tracking-wide">OLEDWorks Brite 3 · LIVE</span>
                     </div>
                     <h2 className="text-2xl font-serif text-zinc-50">{t('home.staying.lightingControl')}</h2>
-                    <p className="text-xs text-zinc-500 mt-0.5">{t('home.staying.tapToOperate')}</p>
+                    <p className="text-xs text-zinc-300 mt-0.5">{t('home.staying.tapToOperate')}</p>
                   </div>
                   <motion.div
                     className="w-14 h-14 rounded-2xl flex items-center justify-center"
@@ -396,7 +397,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                   <span className="text-xs text-zinc-400 whitespace-nowrap">
                     {analytics.topScene ? analytics.topScene.name : 'くつろぎ · 70%'}
                   </span>
-                  <ArrowRight size={14} className="text-zinc-500" />
+                  <ArrowRight size={14} className="text-zinc-300" />
                 </div>
               </div>
             </motion.div>
@@ -429,18 +430,23 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
           </div>
         </motion.div>
 
+        {/* Companion invite (representative only) */}
+        <motion.div variants={fadeUp} className="mb-5">
+          <CompanionInvite />
+        </motion.div>
+
         {/* Status strip */}
         <motion.div variants={fadeUp} className="grid grid-cols-3 gap-2 mb-5">
           <div className="rounded-2xl p-3 flex flex-col items-center gap-1.5"
                style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <Wifi size={14} className="text-gold-400" />
-            <p className="text-[10px] text-zinc-500">Wi-Fi</p>
+            <p className="text-[11px] text-zinc-300">Wi-Fi</p>
             <p className="text-xs text-zinc-300 text-center leading-tight truncate w-full text-center">{settings.wifiName}</p>
           </div>
           <div className="rounded-2xl p-3 flex flex-col items-center gap-1.5"
                style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <Moon size={14} className="text-zinc-400" />
-            <p className="text-[10px] text-zinc-500">滞在</p>
+            <p className="text-[11px] text-zinc-300">滞在</p>
             <p className="text-xs font-medium text-zinc-200">
               {daysLeft > 0 ? t('home.staying.stayRemaining', { n: String(daysLeft) }) : t('home.staying.stayToday')}
             </p>
@@ -448,7 +454,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
           <Link href="/dashboard/requests" className="relative rounded-2xl p-3 flex flex-col items-center gap-1.5"
                 style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <Bell size={14} className={pendingReqs > 0 ? 'text-gold-400' : 'text-zinc-400'} />
-            <p className="text-[10px] text-zinc-500">{t('home.staying.request')}</p>
+            <p className="text-[11px] text-zinc-300">{t('home.staying.request')}</p>
             <p className="text-xs font-medium text-zinc-200">{pendingReqs > 0 ? `${pendingReqs}件` : t('home.staying.sendRequest')}</p>
             {pendingReqs > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-gold-400 rounded-full animate-pulse" />}
           </Link>
@@ -479,7 +485,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                   <span className="text-2xl">{emoji}</span>
                   <div>
                     <p className="text-sm font-semibold text-zinc-100">{label}</p>
-                    <p className="text-xs text-zinc-500 mt-0.5 leading-snug">{sub}</p>
+                    <p className="text-xs text-zinc-300 mt-0.5 leading-snug">{sub}</p>
                   </div>
                 </motion.div>
               </Link>
@@ -507,7 +513,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                   <p className="text-sm text-zinc-300 line-clamp-2">
                     {store.messages.filter(m => m.from === 'owner').slice(-1)[0]?.content}
                   </p>
-                  <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1">{t('home.staying.tapToCheck')} <ArrowRight size={11} /></p>
+                  <p className="text-xs text-zinc-300 mt-1 flex items-center gap-1">{t('home.staying.tapToCheck')} <ArrowRight size={11} /></p>
                 </div>
               </Link>
             </motion.div>
@@ -535,7 +541,7 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
         <motion.div variants={fadeUp} className="mb-7 pt-2">
           <p className="section-title">{t('home.post.status')}</p>
           <h1 className="font-serif text-3xl text-zinc-50 leading-tight">{t('home.post.thanks')}</h1>
-          <p className="text-zinc-500 text-sm mt-1 font-light">Thank you, {guestInfo?.name?.split(' ')[0]}</p>
+          <p className="text-zinc-300 text-sm mt-1 font-light">Thank you, {guestInfo?.name?.split(' ')[0]}</p>
         </motion.div>
 
         {/* Personalized light journey card */}
@@ -575,7 +581,7 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
                   ].map(({ label, value }) => (
                     <div key={label} className="flex-1 rounded-2xl p-3 text-center"
                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="text-xs text-zinc-500">{label}</p>
+                      <p className="text-xs text-zinc-300">{label}</p>
                       <p className="text-sm font-medium text-zinc-200 mt-0.5">{value}</p>
                     </div>
                   ))}
@@ -604,9 +610,9 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-zinc-100">{t('home.post.guestbookCTA')}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">{t('home.post.guestbookSub')}</p>
+                <p className="text-xs text-zinc-300 mt-0.5">{t('home.post.guestbookSub')}</p>
               </div>
-              <ChevronRight size={16} className="text-zinc-600" />
+              <ChevronRight size={16} className="text-zinc-400" />
             </motion.div>
           </Link>
         </motion.div>

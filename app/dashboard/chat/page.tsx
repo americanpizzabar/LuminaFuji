@@ -146,7 +146,7 @@ export default function ChatPage() {
                 msg.role === 'user' ? 'bg-gold-500/15 border border-gold-500/20 text-zinc-100 rounded-tr-sm' : 'bg-zinc-800/80 text-zinc-300 rounded-tl-sm'
               }`}>
                 {msg.content}
-                <p className="text-[10px] text-zinc-600 mt-1.5">{msg.timestamp.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="text-[11px] text-zinc-400 mt-1.5">{msg.timestamp.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
             </motion.div>
           ))}
@@ -182,7 +182,7 @@ export default function ChatPage() {
           <input
             type="text" value={input} onChange={e => setInput(e.target.value)}
             placeholder={t('chat.placeholder')} disabled={loading}
-            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-gold-500/40 transition-all disabled:opacity-50"
+            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-gold-500/40 transition-all disabled:opacity-50"
           />
           <button type="submit" disabled={!input.trim() || loading}
             className="w-11 h-11 rounded-xl bg-gold-500 hover:bg-gold-400 flex items-center justify-center transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0">

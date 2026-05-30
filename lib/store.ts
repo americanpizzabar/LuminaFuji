@@ -27,6 +27,8 @@ export interface GuestInfo {
   isDemo?: boolean
   /** 到着マーク日時 (ISO string) — ゲストが「到着しました」を押した時刻 */
   arrivedAt?: string
+  /** 同伴者フラグ — 代表者の招待リンク経由で参加したゲスト (メール登録不要) */
+  isCompanion?: boolean
 }
 
 export interface FacilitySettings {
@@ -154,6 +156,28 @@ export interface BookingRecord {
   arrivedAt?: string
 }
 
+export type PlaceCategory = 'food' | 'nature' | 'activity' | 'shop' | 'onsen'
+
+export interface RecommendedPlace {
+  id: string
+  name: string
+  sub: string
+  category: PlaceCategory
+  emoji: string
+  /** 距離表記 (例: "0.5km") */
+  distance: string
+  /** 所要時間表記 (例: "徒歩 7分") */
+  duration: string
+  rating: number
+  description: string
+  tags: string[]
+  /** 公式サイト等の Web リンク (任意) */
+  url?: string
+  /** Google Maps リンク (任意) */
+  mapUrl?: string
+  visible: boolean
+}
+
 export interface CleaningTask {
   id: string
   label: string
@@ -189,6 +213,7 @@ export interface AppStore {
   bookingHistory: BookingRecord[]
   cleaningChecklist: CleaningTask[]
   maintenanceItems: MaintenanceItem[]
+  places: RecommendedPlace[]
 }
 
 // ─── Default data ────────────────────────────────────────────────────────────
@@ -275,6 +300,46 @@ export const DEFAULT_GUEST_INFO: GuestInfo = {
   children: 0,
 }
 
+// おすすめスポット初期データ（オーナー/管理会社が編集可能・Webリンク付き）
+const DEFAULT_PLACES: RecommendedPlace[] = [
+  { id: 'pl-lake', name: '山中湖', sub: 'Lake Yamanakako', category: 'nature', emoji: '🏞️', distance: '0.5km', duration: '徒歩 7分', rating: 5,
+    description: '富士五湖で最も標高が高い湖。逆さ富士やSUP、サイクリングが楽しめる絶景スポット。', tags: ['絶景', 'サイクリング', 'SUP'],
+    url: 'https://lake-yamanakako.com/', mapUrl: 'https://maps.google.com/?q=山中湖', visible: true },
+  { id: 'pl-hoto', name: 'ほうとう不動 東恋路店', sub: 'Hoto Fudo', category: 'food', emoji: '🍲', distance: '2km', duration: '車 5分', rating: 5,
+    description: '雲のような独創的な建築が話題。山梨名物ほうとうの名店で夕食に最適。', tags: ['山梨名物', 'ほうとう', '夕食'],
+    url: 'https://www.houtou-fudo.jp/', mapUrl: 'https://maps.google.com/?q=ほうとう不動+東恋路店', visible: true },
+  { id: 'pl-farm', name: '忠ちゃん牧場', sub: 'Chuuchan Farm', category: 'food', emoji: '🍦', distance: '3km', duration: '車 7分', rating: 4,
+    description: '富士山を望む牧場。濃厚なソフトクリームと動物とのふれあいが人気。', tags: ['ソフトクリーム', '牧場', 'フォト映え'],
+    url: 'https://www.chuchan.com/', mapUrl: 'https://maps.google.com/?q=忠ちゃん牧場', visible: true },
+  { id: 'pl-fujiq', name: '富士急ハイランド', sub: 'Fuji-Q Highland', category: 'activity', emoji: '🎢', distance: '20km', duration: '車 35分', rating: 4,
+    description: '世界記録級の絶叫マシンが揃うテーマパーク。家族でもカップルでも一日中楽しめる。', tags: ['テーマパーク', 'アトラクション', '家族'],
+    url: 'https://www.fujiq.jp/', mapUrl: 'https://maps.google.com/?q=富士急ハイランド', visible: true },
+  { id: 'pl-bike', name: '山中湖 サイクリングロード', sub: 'Cycling Road', category: 'activity', emoji: '🚴', distance: '1km', duration: '徒歩 12分', rating: 4,
+    description: '湖を一周する約13kmのサイクリングロード。レンタル自転車で富士山を眺めながら快走。', tags: ['サイクリング', 'レンタル', '湖畔'],
+    url: 'https://lake-yamanakako.com/play/3776', mapUrl: 'https://maps.google.com/?q=山中湖+サイクリングロード', visible: true },
+  { id: 'pl-kawaguchi', name: '河口湖', sub: 'Lake Kawaguchiko', category: 'nature', emoji: '⛵', distance: '15km', duration: '車 25分', rating: 5,
+    description: '逆さ富士の名所。湖畔にカフェや美術館が点在し、ロープウェイからの眺望も格別。', tags: ['逆さ富士', '観光', 'カフェ'],
+    url: 'https://www.fujisan.ne.jp/', mapUrl: 'https://maps.google.com/?q=河口湖', visible: true },
+  { id: 'pl-outlet', name: '御殿場プレミアム・アウトレット', sub: 'Gotemba Premium Outlets', category: 'shop', emoji: '🛍️', distance: '30km', duration: '車 40分', rating: 4,
+    description: '富士山を望む国内最大級のアウトレット。約290の人気ブランドが集結。', tags: ['アウトレット', 'ショッピング', 'ブランド'],
+    url: 'https://www.premiumoutlets.co.jp/gotemba/', mapUrl: 'https://maps.google.com/?q=御殿場プレミアムアウトレット', visible: true },
+  { id: 'pl-cafe', name: 'PAPER MOON', sub: 'Lakeside Cafe', category: 'food', emoji: '☕', distance: '2.5km', duration: '車 6分', rating: 4,
+    description: '森の中の隠れ家ケーキカフェ。手作りケーキと静かな時間を楽しめる。', tags: ['カフェ', 'ケーキ', '隠れ家'],
+    url: 'https://www.papermoon1986.com/', mapUrl: 'https://maps.google.com/?q=PAPER+MOON+山中湖', visible: true },
+  { id: 'pl-onsen', name: '紅富士の湯', sub: 'Beni-Fuji Onsen', category: 'onsen', emoji: '♨️', distance: '3.5km', duration: '車 8分', rating: 5,
+    description: '露天風呂から雄大な富士山を一望できる日帰り温泉。旅の疲れを癒すのに最適。', tags: ['日帰り温泉', '露天風呂', '絶景'],
+    url: 'https://www.benifuji.co.jp/', mapUrl: 'https://maps.google.com/?q=紅富士の湯', visible: true },
+  { id: 'pl-panorama', name: '山中湖パノラマ台', sub: 'Panorama Viewpoint', category: 'nature', emoji: '🌄', distance: '5km', duration: '車 12分', rating: 5,
+    description: '富士山と山中湖を一望する絶景展望スポット。夕暮れと星空が特に美しい。', tags: ['展望台', '夕焼け', '星空'],
+    url: 'https://lake-yamanakako.com/see/3779', mapUrl: 'https://maps.google.com/?q=山中湖パノラマ台', visible: true },
+  { id: 'pl-oshino', name: '忍野八海', sub: 'Oshino Hakkai', category: 'nature', emoji: '⛲', distance: '8km', duration: '車 15分', rating: 4,
+    description: '富士の湧水が育む8つの澄んだ泉。世界遺産の構成資産で散策にぴったり。', tags: ['世界遺産', '湧水', '散策'],
+    url: 'https://oshino.jp/', mapUrl: 'https://maps.google.com/?q=忍野八海', visible: true },
+  { id: 'pl-kirari', name: 'KIRARA 花の都公園', sub: 'Hana-no-Miyako Park', category: 'activity', emoji: '🌷', distance: '4km', duration: '車 9分', rating: 4,
+    description: '富士山を背景に季節の花々が咲き誇る広大な公園。写真撮影の人気スポット。', tags: ['花畑', '公園', 'フォト映え'],
+    url: 'https://www.hananomiyakokouen.jp/', mapUrl: 'https://maps.google.com/?q=山中湖花の都公園', visible: true },
+]
+
 const DEFAULT_STORE: AppStore = {
   phase: 'booked',
   guestInfo: null,
@@ -289,6 +354,7 @@ const DEFAULT_STORE: AppStore = {
   bookingHistory: DEFAULT_BOOKINGS,
   cleaningChecklist: DEFAULT_CLEANING_CHECKLIST,
   maintenanceItems: [],
+  places: DEFAULT_PLACES,
 }
 
 // ─── Storage operations ───────────────────────────────────────────────────────
@@ -353,11 +419,58 @@ export function resetStoreForGuest(guestInfo: GuestInfo, _guestBooking?: Booking
     cleaningChecklist: DEFAULT_CLEANING_CHECKLIST.map(t => ({ ...t, done: false, doneAt: undefined, doneBy: undefined })),
     maintenanceItems: [],
     consultRequests: [],                      // オーナー側のリード情報を除去
+    // places はオーナー/管理会社が管理する施設データのため維持する
   })
 }
 
 export function clearGuestInfo(): void {
   updateStore({ guestInfo: null })
+}
+
+/**
+ * 同伴者（代表者の招待リンク経由で参加するゲスト）のセッションを確立する。
+ * メール/OTP は不要。施設データ（設定・スポット等）は保持したまま guestInfo のみ設定する。
+ */
+export function setCompanionGuestInfo(info: GuestInfo): void {
+  const current = getStore()
+  saveStore({
+    ...current,
+    guestInfo: { ...info, isCompanion: true },
+    phase: 'booked', // 自動計算に任せる
+  })
+}
+
+// ─── Recommended places (おすすめスポット) ──────────────────────────────────────
+export function addPlace(place: Omit<RecommendedPlace, 'id' | 'visible'>): RecommendedPlace {
+  const newPlace: RecommendedPlace = { ...place, id: `pl-${Date.now()}`, visible: true }
+  const store = getStore()
+  updateStore({ places: [...store.places, newPlace] })
+  return newPlace
+}
+
+export function updatePlace(id: string, updates: Partial<RecommendedPlace>): void {
+  const store = getStore()
+  updateStore({ places: store.places.map(p => p.id === id ? { ...p, ...updates } : p) })
+}
+
+export function deletePlace(id: string): void {
+  const store = getStore()
+  updateStore({ places: store.places.filter(p => p.id !== id) })
+}
+
+export function movePlace(id: string, dir: 'up' | 'down'): void {
+  const store = getStore()
+  const places = [...store.places]
+  const idx = places.findIndex(p => p.id === id)
+  if (idx < 0) return
+  const swap = dir === 'up' ? idx - 1 : idx + 1
+  if (swap < 0 || swap >= places.length) return
+  ;[places[idx], places[swap]] = [places[swap], places[idx]]
+  updateStore({ places })
+}
+
+export function resetPlaces(): void {
+  updateStore({ places: DEFAULT_PLACES })
 }
 
 export function setFacilitySettings(settings: FacilitySettings): void {

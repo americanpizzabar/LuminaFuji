@@ -141,7 +141,7 @@ function DriverStatusPanel({ status }: { status: BackendStatus }) {
             </div>
 
             <div>
-              <p className="text-[10px] text-zinc-600 uppercase tracking-[0.18em] font-medium">LIGHTING DRIVER STATUS</p>
+              <p className="text-[11px] text-zinc-400 uppercase tracking-[0.18em] font-medium">LIGHTING DRIVER STATUS</p>
               <motion.p
                 key={status}
                 initial={{ opacity: 0, y: 4 }}
@@ -200,11 +200,11 @@ function DriverStatusPanel({ status }: { status: BackendStatus }) {
                   transition={{ duration: 2.4, delay, repeat: Infinity, ease: 'easeOut' }}
                 />
               ))}
-              <Wifi size={16} className={hasZigbee ? 'text-emerald-400' : 'text-zinc-600'} />
+              <Wifi size={16} className={hasZigbee ? 'text-emerald-400' : 'text-zinc-400'} />
             </div>
             <div>
               <p className="text-xs font-bold tracking-wide" style={{ color: hasZigbee ? '#22c55e' : '#52525b' }}>ZIGBEE</p>
-              <p className="text-[10px] text-zinc-600">
+              <p className="text-[11px] text-zinc-400">
                 {hasZigbee ? '接続済み' : isConnecting ? 'スキャン中...' : '未接続'}
               </p>
             </div>
@@ -234,11 +234,11 @@ function DriverStatusPanel({ status }: { status: BackendStatus }) {
                   transition={{ duration: 2.4, delay, repeat: Infinity, ease: 'easeOut' }}
                 />
               ))}
-              <Zap size={16} className={hasDali ? 'text-emerald-400' : 'text-zinc-600'} />
+              <Zap size={16} className={hasDali ? 'text-emerald-400' : 'text-zinc-400'} />
             </div>
             <div>
               <p className="text-xs font-bold tracking-wide" style={{ color: hasDali ? '#22c55e' : '#52525b' }}>DALI-2</p>
-              <p className="text-[10px] text-zinc-600">
+              <p className="text-[11px] text-zinc-400">
                 {hasDali ? '接続済み' : isConnecting ? 'スキャン中...' : '未接続'}
               </p>
             </div>
@@ -275,7 +275,7 @@ function DriverStatusPanel({ status }: { status: BackendStatus }) {
                 />
               </div>
             </div>
-            <p className="absolute bottom-0 text-[10px] text-zinc-600 text-center w-full">
+            <p className="absolute bottom-0 text-[11px] text-zinc-400 text-center w-full">
               ハブへの接続を確認中
             </p>
           </div>
@@ -298,7 +298,7 @@ function DriverStatusPanel({ status }: { status: BackendStatus }) {
         )}
 
         {!isLive && !isConnecting && (
-          <p className="text-[11px] text-zinc-600 text-center">
+          <p className="text-[11px] text-zinc-400 text-center">
             {isOffline
               ? '照明ドライバーに接続できませんでした。ネットワークを確認してください。'
               : '管理者ポータルで照明ハードウェアを設定すると、実際の照明を制御できます'}
@@ -415,7 +415,7 @@ export default function LightingPage() {
           </Link>
           <div className="flex-1">
             <h1 className="text-lg font-serif text-zinc-100">{t('lighting.title')}</h1>
-            <p className="text-xs text-zinc-500">OLEDWorks Brite 3 · {FIXED_CCT_LABEL}</p>
+            <p className="text-xs text-zinc-300">OLEDWorks Brite 3 · {FIXED_CCT_LABEL}</p>
           </div>
 
           {/* 照明バックエンド接続ステータス (Zigbee / DALI-2) */}
@@ -452,7 +452,7 @@ export default function LightingPage() {
                 ) : backendStatus === 'offline' ? (
                   <><WifiOff size={11} className="text-red-400" /><span className="text-red-400">{label}</span></>
                 ) : (
-                  <><Zap size={11} className="text-zinc-500" /><span className="text-zinc-500">{label}</span></>
+                  <><Zap size={11} className="text-zinc-300" /><span className="text-zinc-300">{label}</span></>
                 )}
               </div>
             )
@@ -544,7 +544,7 @@ export default function LightingPage() {
               >
                 {activeScene.nameJa}
               </motion.p>
-              <p className="text-xs text-zinc-500 mt-1">
+              <p className="text-xs text-zinc-300 mt-1">
                 {activeScene.nameEn} · {brightness}% · {FIXED_CCT_LABEL}
               </p>
 
@@ -568,7 +568,7 @@ export default function LightingPage() {
 
         {/* ── シーンプリセット ───────────────────────────── */}
         <div className="px-4 mb-6">
-          <p className="text-xs text-zinc-500 uppercase tracking-[0.2em] mb-3">{t('lighting.scenePresets')}</p>
+          <p className="text-xs text-zinc-300 uppercase tracking-[0.2em] mb-3">{t('lighting.scenePresets')}</p>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {SCENES.map((scene) => {
               const sceneRgb = brightnessToWarmRgb(scene.brightness)
@@ -636,7 +636,7 @@ export default function LightingPage() {
               className="range-gold w-full"
               style={{ background: `linear-gradient(to right, ${lightColor} ${brightness}%, rgba(255,255,255,0.08) ${brightness}%)` }}
             />
-            <div className="flex justify-between text-xs text-zinc-600 mt-2">
+            <div className="flex justify-between text-xs text-zinc-400 mt-2">
               <span>{t('lighting.off')}</span>
               <span>{t('lighting.max')}</span>
             </div>
@@ -653,7 +653,7 @@ export default function LightingPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-zinc-200">{t('lighting.cctTitle')}</p>
-              <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{t('lighting.cctNote')}</p>
+              <p className="text-xs text-zinc-300 mt-0.5 leading-relaxed">{t('lighting.cctNote')}</p>
             </div>
           </div>
         </div>
@@ -661,7 +661,7 @@ export default function LightingPage() {
         {/* ── エリア別コントロール ───────────────────────── */}
         <div className="px-4 mb-6">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-zinc-500 uppercase tracking-[0.2em]">{t('lighting.zones')}</p>
+            <p className="text-xs text-zinc-300 uppercase tracking-[0.2em]">{t('lighting.zones')}</p>
             <button onClick={toggleAll} className="text-xs transition-colors"
                     style={{ color: isAllOn ? `rgb(${lr},${lg},${lb})` : '#52525b' }}>
               {isAllOn ? t('lighting.allOff') : t('lighting.allOn')}
@@ -694,9 +694,9 @@ export default function LightingPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-zinc-200">OLEDWorks Brite 3</p>
-                <p className="text-xs text-zinc-500">{t('lighting.productLink')}</p>
+                <p className="text-xs text-zinc-300">{t('lighting.productLink')}</p>
               </div>
-              <ArrowLeft size={16} className="text-zinc-600 rotate-180" />
+              <ArrowLeft size={16} className="text-zinc-400 rotate-180" />
             </motion.div>
           </Link>
         </div>
@@ -736,7 +736,7 @@ function ZoneCard({
       <div className="flex items-center justify-between mb-3">
         <div>
           <p className="text-sm font-semibold text-zinc-200">{zone.nameJa}</p>
-          <p className="text-xs text-zinc-600">{zone.nameEn}</p>
+          <p className="text-xs text-zinc-400">{zone.nameEn}</p>
         </div>
         <motion.button
           onClick={onToggle}
@@ -757,7 +757,7 @@ function ZoneCard({
       <AnimatePresence>
         {zone.isOn && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-            <div className="flex justify-between text-xs text-zinc-500 mb-1.5">
+            <div className="flex justify-between text-xs text-zinc-300 mb-1.5">
               <span>{brightnessLabel}</span>
               <span style={{ color: zoneColor }}>{zone.brightness}%</span>
             </div>

@@ -44,7 +44,7 @@ export default function OwnerGuestbookPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-medium text-zinc-100">寄せ書き管理</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">ゲストブック・モデレーション</p>
+        <p className="text-sm text-zinc-300 mt-0.5">ゲストブック・モデレーション</p>
       </div>
 
       {/* Stats */}
@@ -52,21 +52,21 @@ export default function OwnerGuestbookPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <div className="flex items-center gap-1.5 mb-1">
             <BookOpen size={12} className="text-zinc-400" />
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider">合計</p>
+            <p className="text-[11px] text-zinc-300 uppercase tracking-wider">合計</p>
           </div>
           <p className="text-2xl font-light text-zinc-100">{posts.length}</p>
         </div>
         <div className="bg-zinc-900 border border-emerald-500/20 rounded-2xl p-4">
           <div className="flex items-center gap-1.5 mb-1">
             <Eye size={12} className="text-emerald-400" />
-            <p className="text-[10px] text-emerald-400 uppercase tracking-wider">公開中</p>
+            <p className="text-[11px] text-emerald-400 uppercase tracking-wider">公開中</p>
           </div>
           <p className="text-2xl font-light text-emerald-400">{visibleCount}</p>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
           <div className="flex items-center gap-1.5 mb-1">
             <Heart size={12} className="text-rose-400" />
-            <p className="text-[10px] text-rose-400 uppercase tracking-wider">いいね</p>
+            <p className="text-[11px] text-rose-400 uppercase tracking-wider">いいね</p>
           </div>
           <p className="text-2xl font-light text-rose-400">{totalLikes}</p>
         </div>
@@ -102,7 +102,7 @@ export default function OwnerGuestbookPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-zinc-100">投稿を削除しますか？</p>
-                  <p className="text-xs text-zinc-500 mt-0.5">この操作は元に戻せません</p>
+                  <p className="text-xs text-zinc-300 mt-0.5">この操作は元に戻せません</p>
                 </div>
               </div>
               <div className="flex gap-3">
@@ -126,7 +126,7 @@ export default function OwnerGuestbookPage() {
 
       {/* Post list */}
       {posts.length === 0 ? (
-        <div className="text-center py-12 text-zinc-600 text-sm">
+        <div className="text-center py-12 text-zinc-400 text-sm">
           <BookOpen size={32} className="mx-auto mb-3 opacity-30" />
           <p>寄せ書きの投稿はありません</p>
         </div>
@@ -155,13 +155,13 @@ export default function OwnerGuestbookPage() {
                   {/* Author row */}
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="text-sm font-medium text-zinc-200">{post.author}</span>
-                    <span className="text-xs text-zinc-600">{post.flag} {post.country}</span>
+                    <span className="text-xs text-zinc-400">{post.flag} {post.country}</span>
                     {!post.visible && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-zinc-700 bg-zinc-800 text-zinc-500">
+                      <span className="text-[11px] px-1.5 py-0.5 rounded-full border border-zinc-700 bg-zinc-800 text-zinc-300">
                         非表示
                       </span>
                     )}
-                    <span className="text-xs text-zinc-700 ml-auto">{post.date}</span>
+                    <span className="text-xs text-zinc-400 ml-auto">{post.date}</span>
                   </div>
 
                   {/* Message */}
@@ -169,7 +169,7 @@ export default function OwnerGuestbookPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-3 mt-3">
-                    <span className="flex items-center gap-1 text-xs text-zinc-600">
+                    <span className="flex items-center gap-1 text-xs text-zinc-400">
                       <Heart size={11} className="text-rose-500/50" /> {post.likes}
                     </span>
                     <div className="flex gap-2 ml-auto">
@@ -177,7 +177,7 @@ export default function OwnerGuestbookPage() {
                         onClick={() => toggleVisibility(post.id, post.visible)}
                         className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl border transition-all ${
                           post.visible
-                            ? 'border-zinc-700 text-zinc-500 hover:border-amber-500/30 hover:text-amber-400 hover:bg-amber-500/5'
+                            ? 'border-zinc-700 text-zinc-300 hover:border-amber-500/30 hover:text-amber-400 hover:bg-amber-500/5'
                             : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
                         }`}
                       >
@@ -189,7 +189,7 @@ export default function OwnerGuestbookPage() {
                       </button>
                       <button
                         onClick={() => confirmDelete(post.id)}
-                        className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl border border-zinc-700 text-zinc-600 hover:border-red-500/30 hover:text-red-400 hover:bg-red-500/5 transition-all"
+                        className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl border border-zinc-700 text-zinc-400 hover:border-red-500/30 hover:text-red-400 hover:bg-red-500/5 transition-all"
                       >
                         <Trash2 size={11} /> 削除
                       </button>

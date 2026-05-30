@@ -59,7 +59,7 @@ export default function RequestsPage() {
         </Link>
         <div>
           <h1 className="text-lg font-medium text-zinc-100">{t('requests.title')}</h1>
-          <p className="text-xs text-zinc-500">{t('requests.subtitle')}</p>
+          <p className="text-xs text-zinc-300">{t('requests.subtitle')}</p>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ export default function RequestsPage() {
                 <span className="text-xl flex-shrink-0">{REQUEST_EMOJIS[type]}</span>
                 <div>
                   <p className="text-xs font-medium leading-tight">{t(`requests.types.${type}`)}</p>
-                  <p className="text-[10px] text-zinc-600 mt-0.5">{t(`requests.types.${type}Sub`)}</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">{t(`requests.types.${type}Sub`)}</p>
                 </div>
               </button>
             ))}
@@ -98,13 +98,13 @@ export default function RequestsPage() {
               >
                 <div className="border-t border-zinc-800 pt-4 space-y-3">
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1.5 block">{t('requests.detail')}</label>
+                    <label className="text-xs text-zinc-300 mb-1.5 block">{t('requests.detail')}</label>
                     <textarea
                       value={description}
                       onChange={e => setDescription(e.target.value)}
                       placeholder={t('requests.detailPlaceholder')}
                       rows={2}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-gold-500/40 transition-all resize-none"
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-gold-500/40 transition-all resize-none"
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -114,7 +114,7 @@ export default function RequestsPage() {
                       className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs transition-all ${
                         urgent
                           ? 'border-red-500/40 bg-red-500/10 text-red-400'
-                          : 'border-zinc-700 text-zinc-500'
+                          : 'border-zinc-700 text-zinc-300'
                       }`}
                     >
                       <AlertTriangle size={13} />
@@ -174,12 +174,12 @@ export default function RequestsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
                         <p className="text-sm font-medium text-zinc-200">{req.label}</p>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 ${statusColor}`}>
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full border flex-shrink-0 ${statusColor}`}>
                           {t(`requests.status.${req.status}`)}
                         </span>
                       </div>
                       {req.description && (
-                        <p className="text-xs text-zinc-500 mt-0.5">{req.description}</p>
+                        <p className="text-xs text-zinc-300 mt-0.5">{req.description}</p>
                       )}
                       {req.ownerNote && (
                         <p className="text-xs text-blue-400 mt-1 flex items-center gap-1">
@@ -188,11 +188,11 @@ export default function RequestsPage() {
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-1">
-                        <p className="text-[10px] text-zinc-600">
+                        <p className="text-[11px] text-zinc-400">
                           {new Date(req.createdAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </p>
                         {req.priority === 'urgent' && (
-                          <span className="text-[10px] text-red-400 flex items-center gap-0.5">
+                          <span className="text-[11px] text-red-400 flex items-center gap-0.5">
                             <AlertTriangle size={9} /> {t('common.urgent')}
                           </span>
                         )}
@@ -207,8 +207,8 @@ export default function RequestsPage() {
 
         {myRequests.length === 0 && !selectedType && (
           <div className="text-center py-8">
-            <p className="text-zinc-600 text-sm">{t('requests.noRequests')}</p>
-            <p className="text-zinc-700 text-xs mt-1">{t('requests.noRequestsHint')}</p>
+            <p className="text-zinc-400 text-sm">{t('requests.noRequests')}</p>
+            <p className="text-zinc-400 text-xs mt-1">{t('requests.noRequestsHint')}</p>
           </div>
         )}
       </motion.div>

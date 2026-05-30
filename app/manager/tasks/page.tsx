@@ -78,14 +78,14 @@ export default function ManagerTasksPage() {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       <div>
         <h1 className="text-xl font-medium text-zinc-100">タスク管理</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">清掃・メンテナンス全管理</p>
+        <p className="text-sm text-zinc-300 mt-0.5">清掃・メンテナンス全管理</p>
       </div>
 
       {/* Tab switcher */}
       <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl p-1 gap-1">
         {(['cleaning', 'maintenance'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${tab === t ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>
+            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${tab === t ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-300 hover:text-zinc-300'}`}>
             {t === 'cleaning' ? `🧹 清掃チェックリスト` : `🔧 メンテナンス`}
             {t === 'cleaning' && doneCount < totalCount && (
               <span className="ml-1.5 text-amber-400">{totalCount - doneCount}件</span>
@@ -102,10 +102,10 @@ export default function ManagerTasksPage() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-sm text-zinc-200 font-medium">{doneCount} / {totalCount} 完了</p>
-              <p className="text-xs text-zinc-500">清掃チェックリスト</p>
+              <p className="text-xs text-zinc-300">清掃チェックリスト</p>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={resetChecklist} className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-400 transition-all">
+              <button onClick={resetChecklist} className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-400 transition-all">
                 <RefreshCw size={11} /> リセット
               </button>
               <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${progress === 100 ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : progress > 50 ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : 'text-zinc-400 border-zinc-700 bg-zinc-800'}`}>
@@ -120,20 +120,20 @@ export default function ManagerTasksPage() {
           <div className="space-y-5">
             {Object.entries(groupedChecklist).map(([areaKey, tasks]) => (
               <div key={areaKey}>
-                <p className="text-xs text-zinc-500 mb-2 flex items-center gap-1.5">
+                <p className="text-xs text-zinc-300 mb-2 flex items-center gap-1.5">
                   {AREA_EMOJIS[areaKey]} {AREA_LABELS[areaKey]}
-                  <span className="text-zinc-700 ml-0.5">({tasks.filter(t => t.done).length}/{tasks.length})</span>
+                  <span className="text-zinc-400 ml-0.5">({tasks.filter(t => t.done).length}/{tasks.length})</span>
                 </p>
                 <div className="space-y-1">
                   {tasks.map(task => (
                     <button key={task.id} onClick={() => toggleTask(task.id, task.done)}
                       className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${task.done ? 'opacity-40' : 'hover:bg-zinc-800'}`}>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${task.done ? 'border-teal-500 bg-teal-500' : 'border-zinc-600'}`}>
-                        {task.done && <span className="text-zinc-950 text-[10px] font-bold">✓</span>}
+                        {task.done && <span className="text-zinc-950 text-[11px] font-bold">✓</span>}
                       </div>
-                      <span className={`text-sm ${task.done ? 'line-through text-zinc-600' : 'text-zinc-300'}`}>{task.label}</span>
+                      <span className={`text-sm ${task.done ? 'line-through text-zinc-400' : 'text-zinc-300'}`}>{task.label}</span>
                       {task.doneAt && (
-                        <span className="ml-auto text-[10px] text-zinc-700 flex items-center gap-0.5">
+                        <span className="ml-auto text-[11px] text-zinc-400 flex items-center gap-0.5">
                           <Clock size={9} />
                           {new Date(task.doneAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
                         </span>
@@ -156,7 +156,7 @@ export default function ManagerTasksPage() {
                 <Wrench size={14} className="text-amber-400" /> メンテナンス案件
               </h2>
               <button onClick={() => setShowAdd(!showAdd)}
-                className="flex items-center gap-1 text-xs text-zinc-500 hover:text-teal-400 transition-colors">
+                className="flex items-center gap-1 text-xs text-zinc-300 hover:text-teal-400 transition-colors">
                 <Plus size={13} /> 追加
               </button>
             </div>
@@ -165,7 +165,7 @@ export default function ManagerTasksPage() {
               <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 mb-4 space-y-3">
                 <input value={desc} onChange={e => setDesc(e.target.value)}
                   placeholder="不具合・修理内容を入力..."
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-teal-500/40 transition-all" />
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-teal-500/40 transition-all" />
                 <div className="flex gap-2">
                   <select value={area} onChange={e => setArea(e.target.value)}
                     className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-300 focus:outline-none">
@@ -186,7 +186,7 @@ export default function ManagerTasksPage() {
             )}
 
             {openMaint.length === 0 ? (
-              <p className="text-zinc-600 text-sm text-center py-4">未対応の案件はありません ✓</p>
+              <p className="text-zinc-400 text-sm text-center py-4">未対応の案件はありません ✓</p>
             ) : (
               <div className="space-y-2">
                 {openMaint.map(item => {
@@ -197,17 +197,17 @@ export default function ManagerTasksPage() {
                         {item.priority === 'urgent' && <AlertTriangle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-zinc-200">{item.description}</p>
-                          <p className="text-xs text-zinc-500 mt-0.5">
+                          <p className="text-xs text-zinc-300 mt-0.5">
                             {AREA_LABELS[item.area] ?? item.area} · {item.reportedBy} ·
                             {new Date(item.reportedAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
                           </p>
                         </div>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded border ${pcfg.color}`}>{pcfg.label}優先</span>
+                        <span className={`text-[11px] px-1.5 py-0.5 rounded border ${pcfg.color}`}>{pcfg.label}優先</span>
                       </div>
                       <div className="flex gap-1.5">
                         {(['open', 'scheduled', 'done'] as const).map(s => (
                           <button key={s} onClick={() => changeMaintStatus(item.id, s)}
-                            className={`flex-1 text-[10px] py-1 rounded-lg border transition-all ${item.status === s ? 'bg-zinc-700 border-zinc-500 text-zinc-200' : 'border-zinc-700 text-zinc-600 hover:text-zinc-400'}`}>
+                            className={`flex-1 text-[11px] py-1 rounded-lg border transition-all ${item.status === s ? 'bg-zinc-700 border-zinc-500 text-zinc-200' : 'border-zinc-700 text-zinc-400 hover:text-zinc-400'}`}>
                             {STATUS_CONFIG[s].label}
                           </button>
                         ))}
@@ -223,7 +223,7 @@ export default function ManagerTasksPage() {
           {doneMaint.length > 0 && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
               <button onClick={() => setShowDone(!showDone)}
-                className="w-full flex items-center justify-between text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+                className="w-full flex items-center justify-between text-sm text-zinc-300 hover:text-zinc-300 transition-colors">
                 <span>完了済み ({doneMaint.length}件)</span>
                 <span>{showDone ? '▲' : '▼'}</span>
               </button>
@@ -234,10 +234,10 @@ export default function ManagerTasksPage() {
                       <span className="text-emerald-400 text-xs">✓</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-zinc-400 line-through truncate">{item.description}</p>
-                        <p className="text-[10px] text-zinc-600">{AREA_LABELS[item.area] ?? item.area}</p>
+                        <p className="text-[11px] text-zinc-400">{AREA_LABELS[item.area] ?? item.area}</p>
                       </div>
                       {item.doneAt && (
-                        <span className="text-[10px] text-zinc-700">
+                        <span className="text-[11px] text-zinc-400">
                           {new Date(item.doneAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
                         </span>
                       )}

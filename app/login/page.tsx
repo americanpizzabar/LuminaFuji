@@ -201,7 +201,7 @@ export default function LoginPage() {
             <span className="text-2xl">✦</span>
           </div>
           <h1 className="font-serif text-2xl font-light text-zinc-100 tracking-wide">Lumina Fuji</h1>
-          <p className="text-zinc-500 text-sm mt-1 tracking-wider">RESIDENCE YAMANAKAKO</p>
+          <p className="text-zinc-300 text-sm mt-1 tracking-wider">RESIDENCE YAMANAKAKO</p>
         </div>
 
         {/* Language switcher */}
@@ -213,7 +213,7 @@ export default function LoginPage() {
               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] transition-all ${
                 lang === l
                   ? 'bg-zinc-700 text-zinc-100 font-medium'
-                  : 'text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/60'
+                  : 'text-zinc-400 hover:text-zinc-400 hover:bg-zinc-800/60'
               }`}
             >
               <span>{LANGS[l].flag}</span>
@@ -244,7 +244,7 @@ export default function LoginPage() {
                       onChange={e => { setEmail(e.target.value); setError(null) }}
                       placeholder={t.emailPlaceholder}
                       autoComplete="email"
-                      className={`w-full bg-zinc-800/80 border rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-600 text-sm focus:outline-none focus:ring-1 transition-all mb-3 ${
+                      className={`w-full bg-zinc-800/80 border rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-500 text-sm focus:outline-none focus:ring-1 transition-all mb-3 ${
                         error
                           ? 'border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20'
                           : 'border-zinc-700 focus:border-gold-500/50 focus:ring-gold-500/20'
@@ -289,7 +289,7 @@ export default function LoginPage() {
                 <div className="card p-6 mb-4">
                   <button
                     onClick={() => { setStep('input'); setOtp(''); setError(null) }}
-                    className="flex items-center gap-1 text-zinc-500 hover:text-zinc-300 text-xs mb-4 transition-colors"
+                    className="flex items-center gap-1 text-zinc-300 hover:text-zinc-300 text-xs mb-4 transition-colors"
                   >
                     <ChevronLeft size={14} />{t.back}
                   </button>
@@ -299,8 +299,8 @@ export default function LoginPage() {
                       <Mail size={18} className="text-gold-400" />
                     </div>
                     <p className="text-zinc-300 text-sm font-medium">{t.codeSent}</p>
-                    <p className="text-zinc-500 text-xs mt-1">{maskedEmail}</p>
-                    <p className="text-zinc-600 text-xs mt-1">{t.codeHint}</p>
+                    <p className="text-zinc-300 text-xs mt-1">{maskedEmail}</p>
+                    <p className="text-zinc-400 text-xs mt-1">{t.codeHint}</p>
                   </div>
 
                   <form onSubmit={handleVerify}>
@@ -316,7 +316,7 @@ export default function LoginPage() {
                         setError(null)
                       }}
                       placeholder={t.codePlaceholder}
-                      className={`w-full bg-zinc-800/80 border rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-600 text-sm text-center tracking-[0.3em] focus:outline-none focus:ring-1 transition-all mb-3 ${
+                      className={`w-full bg-zinc-800/80 border rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-500 text-sm text-center tracking-[0.3em] focus:outline-none focus:ring-1 transition-all mb-3 ${
                         error
                           ? 'border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20'
                           : 'border-zinc-700 focus:border-gold-500/50 focus:ring-gold-500/20'
@@ -353,7 +353,7 @@ export default function LoginPage() {
                     <button
                       onClick={handleResend}
                       disabled={cooldown > 0 || loading}
-                      className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 disabled:text-zinc-700 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-1.5 text-xs text-zinc-300 hover:text-zinc-300 disabled:text-zinc-400 disabled:cursor-not-allowed transition-colors"
                     >
                       <RotateCcw size={12} />
                       {cooldown > 0 ? t.resendIn(cooldown) : t.resend}
@@ -373,7 +373,7 @@ export default function LoginPage() {
                   {t.demoMode}
                 </span>
               </div>
-              <p className="text-zinc-500 text-xs mb-3">{t.demoSub}</p>
+              <p className="text-zinc-300 text-xs mb-3">{t.demoSub}</p>
               <div className="grid grid-cols-3 gap-2">
                 {([
                   { key: 'booked',  label: t.demoBooked,  emoji: '📅' },
@@ -394,7 +394,7 @@ export default function LoginPage() {
           )}
         </motion.div>
 
-        <p className="text-center text-zinc-700 text-xs mt-6">{t.poweredBy}</p>
+        <p className="text-center text-zinc-400 text-xs mt-6">{t.poweredBy}</p>
       </motion.div>
     </div>
   )

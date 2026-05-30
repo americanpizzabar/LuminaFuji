@@ -26,8 +26,8 @@ const FLAG_OPTIONS = ['🇯🇵', '🇺🇸', '🇨🇳', '🇰🇷', '🇩🇪'
 const PLATFORMS = ['Airbnb', 'Booking.com', 'direct', 'other']
 
 const INPUT_CLASS =
-  'w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/40 transition-all'
-const LABEL_CLASS = 'text-xs text-zinc-500 mb-1 block'
+  'w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/40 transition-all'
+const LABEL_CLASS = 'text-xs text-zinc-300 mb-1 block'
 
 const bookingStatusConfig: Record<BookingRecord['status'], { label: string; color: string }> = {
   staying:   { label: '滞在中',     color: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' },
@@ -262,7 +262,7 @@ function BookingModal({
               </button>
               {!isNew && (
                 <button onClick={() => setConfirmDelete(true)} className="w-10 flex items-center justify-center bg-zinc-800 hover:bg-red-500/20 border border-zinc-700 hover:border-red-500/30 rounded-xl transition-all">
-                  <Trash2 size={14} className="text-zinc-500" />
+                  <Trash2 size={14} className="text-zinc-300" />
                 </button>
               )}
             </>
@@ -489,7 +489,7 @@ export default function GuestsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-medium text-zinc-100">ゲスト管理</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">予約・リクエスト・メッセージ・メンテナンス</p>
+          <p className="text-sm text-zinc-300 mt-0.5">予約・リクエスト・メッセージ・メンテナンス</p>
         </div>
         <button
           onClick={openNew}
@@ -506,11 +506,11 @@ export default function GuestsPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap transition-all flex-shrink-0 ${
               activeSection === key
                 ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
-                : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
+                : 'border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:text-zinc-300'
             }`}>
             {label}
             {typeof count === 'number' && count > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeSection === key ? 'bg-blue-500/20 text-blue-300' : 'bg-zinc-800 text-zinc-500'}`}>
+              <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${activeSection === key ? 'bg-blue-500/20 text-blue-300' : 'bg-zinc-800 text-zinc-300'}`}>
                 {count}
               </span>
             )}
@@ -524,13 +524,13 @@ export default function GuestsPage() {
         {activeSection === 'bookings' && (
           <motion.div key="bookings" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="space-y-4">
             <div className="flex items-center gap-2">
-              <Filter size={12} className="text-zinc-500" />
+              <Filter size={12} className="text-zinc-300" />
               <div className="flex gap-2 flex-wrap">
                 {bookingFilterTabs.map(({ key, label }) => {
                   const count = key === 'all' ? store.bookingHistory.length : store.bookingHistory.filter(b => b.status === key).length
                   return (
                     <button key={key} onClick={() => setBookingFilter(key)}
-                      className={`px-3 py-1 rounded-xl border text-xs transition-all ${bookingFilter === key ? 'border-blue-500/40 bg-blue-500/10 text-blue-300' : 'border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}>
+                      className={`px-3 py-1 rounded-xl border text-xs transition-all ${bookingFilter === key ? 'border-blue-500/40 bg-blue-500/10 text-blue-300' : 'border-zinc-800 text-zinc-300 hover:border-zinc-700'}`}>
                       {label} <span className="ml-1.5 opacity-60">{count}</span>
                     </button>
                   )
@@ -539,7 +539,7 @@ export default function GuestsPage() {
             </div>
 
             {filteredBookings.length === 0 ? (
-              <div className="text-center py-12 text-zinc-600 text-sm">
+              <div className="text-center py-12 text-zinc-400 text-sm">
                 <Users size={32} className="mx-auto mb-3 opacity-30" />
                 該当する予約はありません
               </div>
@@ -559,17 +559,17 @@ export default function GuestsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-medium text-zinc-100">{booking.guestName}</span>
-                              <span className="text-xs text-zinc-500">{booking.nationality}</span>
+                              <span className="text-xs text-zinc-300">{booking.nationality}</span>
                               {/* ゲスト体験フェーズ（自動計算） */}
                               <PhaseBadge checkIn={booking.checkIn} checkOut={booking.checkOut} settings={store.facilitySettings} arrivedAt={booking.arrivedAt} />
-                              <span className={`text-[10px] px-2 py-0.5 rounded-full border ml-auto ${statusCfg.color}`}>{statusCfg.label}</span>
+                              <span className={`text-[11px] px-2 py-0.5 rounded-full border ml-auto ${statusCfg.color}`}>{statusCfg.label}</span>
                             </div>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-zinc-500 flex-wrap">
+                            <div className="flex items-center gap-3 mt-1 text-xs text-zinc-300 flex-wrap">
                               <span className="flex items-center gap-1"><Calendar size={10} />{booking.checkIn} → {booking.checkOut}</span>
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded border ${platCfg.color}`}>{platCfg.label}</span>
+                              <span className={`text-[11px] px-1.5 py-0.5 rounded border ${platCfg.color}`}>{platCfg.label}</span>
                             </div>
                           </div>
-                          {isExpanded ? <ChevronUp size={14} className="text-zinc-500 flex-shrink-0" /> : <ChevronDown size={14} className="text-zinc-500 flex-shrink-0" />}
+                          {isExpanded ? <ChevronUp size={14} className="text-zinc-300 flex-shrink-0" /> : <ChevronDown size={14} className="text-zinc-300 flex-shrink-0" />}
                         </div>
                       </button>
 
@@ -578,16 +578,16 @@ export default function GuestsPage() {
                           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                             <div className="border-t border-zinc-800 px-4 py-4">
                               <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs mb-4">
-                                <div><p className="text-zinc-500">チェックイン</p><p className="text-zinc-200 mt-0.5 font-medium">{booking.checkIn}</p></div>
-                                <div><p className="text-zinc-500">チェックアウト</p><p className="text-zinc-200 mt-0.5 font-medium">{booking.checkOut}</p></div>
-                                <div><p className="text-zinc-500 flex items-center gap-1"><Users size={10} /> 大人 / 子供</p><p className="text-zinc-200 mt-0.5">{booking.adults}名 / {booking.children}名</p></div>
-                                <div><p className="text-zinc-500 flex items-center gap-1"><Bed size={10} /> 宿泊数</p><p className="text-zinc-200 mt-0.5">{booking.nights}泊</p></div>
-                                <div><p className="text-zinc-500 flex items-center gap-1"><DollarSign size={10} /> 売上</p><p className="text-zinc-200 mt-0.5 font-medium">¥{booking.revenue.toLocaleString()}</p></div>
-                                <div><p className="text-zinc-500">予約ID</p><p className="text-zinc-400 mt-0.5 font-mono text-[10px]">{booking.id}</p></div>
+                                <div><p className="text-zinc-300">チェックイン</p><p className="text-zinc-200 mt-0.5 font-medium">{booking.checkIn}</p></div>
+                                <div><p className="text-zinc-300">チェックアウト</p><p className="text-zinc-200 mt-0.5 font-medium">{booking.checkOut}</p></div>
+                                <div><p className="text-zinc-300 flex items-center gap-1"><Users size={10} /> 大人 / 子供</p><p className="text-zinc-200 mt-0.5">{booking.adults}名 / {booking.children}名</p></div>
+                                <div><p className="text-zinc-300 flex items-center gap-1"><Bed size={10} /> 宿泊数</p><p className="text-zinc-200 mt-0.5">{booking.nights}泊</p></div>
+                                <div><p className="text-zinc-300 flex items-center gap-1"><DollarSign size={10} /> 売上</p><p className="text-zinc-200 mt-0.5 font-medium">¥{booking.revenue.toLocaleString()}</p></div>
+                                <div><p className="text-zinc-300">予約ID</p><p className="text-zinc-400 mt-0.5 font-mono text-[11px]">{booking.id}</p></div>
                               </div>
                               {booking.notes && (
                                 <div className="mb-3 p-3 bg-zinc-800/50 rounded-xl">
-                                  <p className="text-xs text-zinc-500 mb-1">メモ</p>
+                                  <p className="text-xs text-zinc-300 mb-1">メモ</p>
                                   <p className="text-xs text-zinc-300">{booking.notes}</p>
                                 </div>
                               )}
@@ -657,7 +657,7 @@ export default function GuestsPage() {
         {activeSection === 'requests' && (
           <motion.div key="requests" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="space-y-3">
             {store.serviceRequests.length === 0 ? (
-              <div className="text-center py-12 text-zinc-600 text-sm"><CheckCircle2 size={32} className="mx-auto mb-3 opacity-30" /><p>サービスリクエストはありません</p></div>
+              <div className="text-center py-12 text-zinc-400 text-sm"><CheckCircle2 size={32} className="mx-auto mb-3 opacity-30" /><p>サービスリクエストはありません</p></div>
             ) : (
               store.serviceRequests.map((req, i) => {
                 const sCfg = serviceStatusConfig[req.status]
@@ -670,12 +670,12 @@ export default function GuestsPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-medium text-zinc-100">{req.label}</span>
                           {req.priority === 'urgent' && (
-                            <span className="flex items-center gap-1 text-[10px] text-red-400 border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 rounded-full"><AlertTriangle size={9} /> 急ぎ</span>
+                            <span className="flex items-center gap-1 text-[11px] text-red-400 border border-red-500/30 bg-red-500/10 px-1.5 py-0.5 rounded-full"><AlertTriangle size={9} /> 急ぎ</span>
                           )}
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full border ml-auto ${sCfg.color}`}>{sCfg.label}</span>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full border ml-auto ${sCfg.color}`}>{sCfg.label}</span>
                         </div>
-                        {req.description && req.description !== req.label && <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{req.description}</p>}
-                        <div className="flex items-center gap-1 mt-1"><Clock size={9} className="text-zinc-600" /><span className="text-[10px] text-zinc-600">{new Date(req.createdAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span></div>
+                        {req.description && req.description !== req.label && <p className="text-xs text-zinc-300 mt-0.5 leading-relaxed">{req.description}</p>}
+                        <div className="flex items-center gap-1 mt-1"><Clock size={9} className="text-zinc-400" /><span className="text-[11px] text-zinc-400">{new Date(req.createdAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span></div>
                         {req.status !== 'done' && (
                           <div className="flex gap-2 mt-3">
                             {req.status === 'pending' && (
@@ -684,7 +684,7 @@ export default function GuestsPage() {
                             <button onClick={() => resolveServiceRequest(req.id)} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"><CheckCircle2 size={11} /> 解決済み</button>
                           </div>
                         )}
-                        {req.status === 'done' && req.resolvedAt && <p className="text-[10px] text-zinc-600 mt-2">解決: {new Date(req.resolvedAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>}
+                        {req.status === 'done' && req.resolvedAt && <p className="text-[11px] text-zinc-400 mt-2">解決: {new Date(req.resolvedAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>}
                       </div>
                     </div>
                   </motion.div>
@@ -701,19 +701,19 @@ export default function GuestsPage() {
               <div className="px-4 py-3 border-b border-zinc-800 flex items-center gap-2">
                 <MessageSquare size={14} className="text-blue-400" />
                 <span className="text-sm font-medium text-zinc-200">ゲストとのメッセージ</span>
-                {unreadMsgCount > 0 && <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400">未読 {unreadMsgCount}件</span>}
+                {unreadMsgCount > 0 && <span className="ml-auto text-[11px] px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400">未読 {unreadMsgCount}件</span>}
               </div>
               <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
                 {store.messages.length === 0 ? (
-                  <p className="text-center text-zinc-600 text-sm py-8">メッセージはありません</p>
+                  <p className="text-center text-zinc-400 text-sm py-8">メッセージはありません</p>
                 ) : (
                   store.messages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.from === 'owner' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${msg.from === 'owner' ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-200'}`}>
                         <p className="text-xs leading-relaxed">{msg.content}</p>
                         <div className={`flex items-center gap-1.5 mt-1 ${msg.from === 'owner' ? 'justify-end' : 'justify-start'}`}>
-                          <span className={`text-[10px] ${msg.from === 'owner' ? 'text-blue-200' : 'text-zinc-500'}`}>{msg.from === 'owner' ? 'オーナー' : 'ゲスト'} · {msg.createdAt}</span>
-                          {msg.from === 'owner' && <span className={`text-[9px] ${msg.readByGuest ? 'text-blue-200' : 'text-blue-400/50'}`}>{msg.readByGuest ? '既読' : '未読'}</span>}
+                          <span className={`text-[11px] ${msg.from === 'owner' ? 'text-blue-200' : 'text-zinc-300'}`}>{msg.from === 'owner' ? 'オーナー' : 'ゲスト'} · {msg.createdAt}</span>
+                          {msg.from === 'owner' && <span className={`text-[11px] ${msg.readByGuest ? 'text-blue-200' : 'text-blue-400/50'}`}>{msg.readByGuest ? '既読' : '未読'}</span>}
                         </div>
                       </div>
                     </div>
@@ -724,7 +724,7 @@ export default function GuestsPage() {
                 <div className="flex gap-2">
                   <input value={msgInput} onChange={e => setMsgInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendOwnerMessage()}
                     placeholder="ゲストへメッセージを送信..."
-                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/40 transition-all" />
+                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/40 transition-all" />
                   <button onClick={sendOwnerMessage} disabled={!msgInput.trim() || sending}
                     className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 flex items-center justify-center transition-all disabled:opacity-40 flex-shrink-0">
                     <Send size={14} className="text-white" />
@@ -739,7 +739,7 @@ export default function GuestsPage() {
         {activeSection === 'maintenance' && (
           <motion.div key="maintenance" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="space-y-3">
             {store.maintenanceItems.length === 0 ? (
-              <div className="text-center py-12 text-zinc-600 text-sm"><Wrench size={32} className="mx-auto mb-3 opacity-30" /><p>メンテナンス案件はありません</p></div>
+              <div className="text-center py-12 text-zinc-400 text-sm"><Wrench size={32} className="mx-auto mb-3 opacity-30" /><p>メンテナンス案件はありません</p></div>
             ) : (
               store.maintenanceItems.map((item, i) => {
                 const priCfg = maintenancePriorityConfig[item.priority]
@@ -752,10 +752,10 @@ export default function GuestsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-medium text-zinc-100">{item.description}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${priCfg.color}`}>{priCfg.label}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ml-auto ${staCfg.color}`}>{staCfg.label}</span>
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full border ${priCfg.color}`}>{priCfg.label}</span>
+                          <span className={`text-[11px] px-1.5 py-0.5 rounded-full border ml-auto ${staCfg.color}`}>{staCfg.label}</span>
                         </div>
-                        <div className="flex items-center gap-3 mt-1 text-[10px] text-zinc-500">
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-zinc-300">
                           <span>{item.area}</span>
                           <span>報告者: {item.reportedBy === 'guest' ? 'ゲスト' : item.reportedBy === 'owner' ? 'オーナー' : '管理会社'}</span>
                           <span>{new Date(item.reportedAt).toLocaleDateString('ja-JP')}</span>
@@ -768,7 +768,7 @@ export default function GuestsPage() {
                             <button onClick={() => resolveMaintenanceItem(item.id)} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all"><CheckCircle2 size={11} /> 完了</button>
                           </div>
                         )}
-                        {item.status === 'done' && item.doneAt && <p className="text-[10px] text-zinc-600 mt-2">完了: {new Date(item.doneAt).toLocaleDateString('ja-JP')}</p>}
+                        {item.status === 'done' && item.doneAt && <p className="text-[11px] text-zinc-400 mt-2">完了: {new Date(item.doneAt).toLocaleDateString('ja-JP')}</p>}
                       </div>
                     </div>
                   </motion.div>

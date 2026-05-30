@@ -85,11 +85,11 @@ function RequestCard({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium text-zinc-100">{req.label}</span>
             {req.priority === 'urgent' && (
-              <span className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-400">
+              <span className="flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-400">
                 <AlertTriangle size={9} /> 急ぎ
               </span>
             )}
-            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${statusCfg.color}`}>
+            <span className={`text-[11px] px-2 py-0.5 rounded-full border font-medium ${statusCfg.color}`}>
               {statusCfg.label}
             </span>
           </div>
@@ -99,7 +99,7 @@ function RequestCard({
       </div>
 
       {/* Time info */}
-      <div className="flex flex-wrap gap-3 text-[11px] text-zinc-500">
+      <div className="flex flex-wrap gap-3 text-[11px] text-zinc-300">
         <span className="flex items-center gap-1">
           <Clock size={10} />
           {formatDateTime(req.createdAt)}
@@ -145,7 +145,7 @@ function RequestCard({
           className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border font-medium transition-all ${
             showNote
               ? 'bg-teal-600/20 border-teal-500/40 text-teal-300'
-              : 'border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+              : 'border-zinc-700 text-zinc-300 hover:text-zinc-300 hover:border-zinc-600'
           }`}
         >
           <MessageSquare size={11} /> メモ
@@ -166,7 +166,7 @@ function RequestCard({
               value={noteText}
               onChange={e => setNoteText(e.target.value)}
               placeholder="スタッフメモを入力..."
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-teal-500/40 transition-all resize-none mt-1"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-teal-500/40 transition-all resize-none mt-1"
             />
             <button
               onClick={() => {
@@ -235,7 +235,7 @@ export default function ManagerRequestsPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-medium text-zinc-100">リクエスト管理</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">ゲストからのサービスリクエスト・対応履歴</p>
+        <p className="text-sm text-zinc-300 mt-0.5">ゲストからのサービスリクエスト・対応履歴</p>
       </div>
 
       {/* Summary stats */}
@@ -254,7 +254,7 @@ export default function ManagerRequestsPage() {
             value: String(pendingCount),
             sub: '件',
             icon: AlertTriangle,
-            color: pendingCount > 0 ? 'text-amber-400' : 'text-zinc-500',
+            color: pendingCount > 0 ? 'text-amber-400' : 'text-zinc-300',
             bg: pendingCount > 0 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-zinc-800/50 border-zinc-700',
           },
           {
@@ -279,9 +279,9 @@ export default function ManagerRequestsPage() {
               <Icon size={15} className={color} />
             </div>
             <p className="text-lg font-light text-zinc-100">
-              {value}<span className="text-sm text-zinc-500 ml-0.5">{sub}</span>
+              {value}<span className="text-sm text-zinc-300 ml-0.5">{sub}</span>
             </p>
-            <p className="text-xs text-zinc-600 mt-0.5">{label}</p>
+            <p className="text-xs text-zinc-400 mt-0.5">{label}</p>
           </div>
         ))}
       </div>
@@ -293,12 +293,12 @@ export default function ManagerRequestsPage() {
             key={id}
             onClick={() => setTab(id)}
             className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${
-              tab === id ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+              tab === id ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-300 hover:text-zinc-300'
             }`}
           >
             {label}
             {counts[id] > 0 && (
-              <span className={`ml-1 ${id === 'pending' ? 'text-amber-400' : id === 'inProgress' ? 'text-blue-400' : 'text-zinc-500'}`}>
+              <span className={`ml-1 ${id === 'pending' ? 'text-amber-400' : id === 'inProgress' ? 'text-blue-400' : 'text-zinc-300'}`}>
                 {counts[id]}
               </span>
             )}
@@ -308,7 +308,7 @@ export default function ManagerRequestsPage() {
 
       {/* Request list */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-zinc-600 text-sm">
+        <div className="text-center py-12 text-zinc-400 text-sm">
           {tab === 'pending' ? '未対応のリクエストはありません ✓' : 'リクエストはありません'}
         </div>
       ) : (

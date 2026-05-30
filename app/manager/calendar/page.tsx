@@ -8,7 +8,7 @@ import { useState } from 'react'
 const STATUS_CONFIG = {
   confirmed: { label: '予約済', color: 'bg-blue-500/80', text: 'text-blue-400', border: 'border-blue-500/30' },
   staying: { label: '滞在中', color: 'bg-emerald-500/80', text: 'text-emerald-400', border: 'border-emerald-500/30' },
-  completed: { label: '完了', color: 'bg-zinc-600/80', text: 'text-zinc-500', border: 'border-zinc-700' },
+  completed: { label: '完了', color: 'bg-zinc-600/80', text: 'text-zinc-300', border: 'border-zinc-700' },
   cancelled: { label: 'キャンセル', color: 'bg-red-500/80', text: 'text-red-400', border: 'border-red-500/30' },
 }
 
@@ -64,7 +64,7 @@ export default function ManagerCalendarPage() {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       <div>
         <h1 className="text-xl font-medium text-zinc-100">予約カレンダー</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">月別の予約・稼働状況</p>
+        <p className="text-sm text-zinc-300 mt-0.5">月別の予約・稼働状況</p>
       </div>
 
       {/* Calendar header */}
@@ -84,7 +84,7 @@ export default function ManagerCalendarPage() {
         {/* Day of week headers */}
         <div className="grid grid-cols-7 mb-1">
           {['日', '月', '火', '水', '木', '金', '土'].map((d, i) => (
-            <div key={d} className={`text-center text-[10px] py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-zinc-500'}`}>{d}</div>
+            <div key={d} className={`text-center text-[11px] py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-zinc-300'}`}>{d}</div>
           ))}
         </div>
 
@@ -105,7 +105,7 @@ export default function ManagerCalendarPage() {
                   {day}
                 </span>
                 {booking && (
-                  <span className="text-[9px] leading-none mt-0.5 truncate w-full text-center px-0.5">{booking.flag}</span>
+                  <span className="text-[11px] leading-none mt-0.5 truncate w-full text-center px-0.5">{booking.flag}</span>
                 )}
               </div>
             )
@@ -116,11 +116,11 @@ export default function ManagerCalendarPage() {
         <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-teal-500/20 border border-teal-500/30" />
-            <span className="text-[10px] text-zinc-500">予約あり</span>
+            <span className="text-[11px] text-zinc-300">予約あり</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full bg-teal-500" />
-            <span className="text-[10px] text-zinc-500">今日</span>
+            <span className="text-[11px] text-zinc-300">今日</span>
           </div>
         </div>
       </div>
@@ -134,7 +134,7 @@ export default function ManagerCalendarPage() {
           )}
         </h2>
         {monthBookings.length === 0 ? (
-          <p className="text-zinc-600 text-sm text-center py-6">この月の予約はありません</p>
+          <p className="text-zinc-400 text-sm text-center py-6">この月の予約はありません</p>
         ) : (
           <div className="space-y-3">
             {monthBookings.map(b => {
@@ -145,17 +145,17 @@ export default function ManagerCalendarPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-sm font-medium text-zinc-200">{b.guestName}</p>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${cfg.text} ${cfg.border}`}>{cfg.label}</span>
+                      <span className={`text-[11px] px-1.5 py-0.5 rounded-full border ${cfg.text} ${cfg.border}`}>{cfg.label}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-zinc-500">
+                    <div className="flex items-center gap-3 text-xs text-zinc-300">
                       <span className="flex items-center gap-1"><Clock size={10} /> {b.checkIn} 〜 {b.checkOut}</span>
                       <span className="flex items-center gap-1"><Users size={10} /> {b.adults + b.children}名</span>
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs">
-                      <span className="text-zinc-500">{b.platform}</span>
+                      <span className="text-zinc-300">{b.platform}</span>
                       <span className="text-zinc-400">{b.nights}泊 · ¥{b.revenue.toLocaleString()}</span>
                     </div>
-                    {b.notes && <p className="text-xs text-zinc-600 mt-1">{b.notes}</p>}
+                    {b.notes && <p className="text-xs text-zinc-400 mt-1">{b.notes}</p>}
                   </div>
                 </div>
               )
@@ -173,7 +173,7 @@ export default function ManagerCalendarPage() {
         ].map(({ label, value }) => (
           <div key={label} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-center">
             <p className="text-lg font-light text-zinc-100">{value}</p>
-            <p className="text-xs text-zinc-600 mt-0.5">{label}</p>
+            <p className="text-xs text-zinc-400 mt-0.5">{label}</p>
           </div>
         ))}
       </div>

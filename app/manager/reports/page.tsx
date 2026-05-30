@@ -56,7 +56,7 @@ export default function ManagerReportsPage() {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       <div>
         <h1 className="text-xl font-medium text-zinc-100">レポート</h1>
-        <p className="text-sm text-zinc-500 mt-0.5">稼働率・清掃・メンテナンス集計</p>
+        <p className="text-sm text-zinc-300 mt-0.5">稼働率・清掃・メンテナンス集計</p>
       </div>
 
       {/* KPI overview */}
@@ -72,8 +72,8 @@ export default function ManagerReportsPage() {
               <Icon size={15} className={color} />
             </div>
             <p className="text-lg font-light text-zinc-100">{value}</p>
-            <p className="text-xs text-zinc-600">{label}</p>
-            <p className="text-xs text-zinc-500">{sub}</p>
+            <p className="text-xs text-zinc-400">{label}</p>
+            <p className="text-xs text-zinc-300">{sub}</p>
           </div>
         ))}
       </div>
@@ -87,11 +87,11 @@ export default function ManagerReportsPage() {
           <div className="flex items-end gap-2 h-24">
             {months.map(([month, stats]) => (
               <div key={month} className="flex-1 flex flex-col items-center gap-1">
-                <p className="text-[9px] text-zinc-500">{stats.nights}泊</p>
+                <p className="text-[11px] text-zinc-300">{stats.nights}泊</p>
                 <div className="w-full bg-teal-500/10 border border-teal-500/20 rounded-t" style={{ height: `${Math.max(4, Math.round((stats.nights / maxNights) * 64))}px` }}>
                   <div className="w-full h-full bg-teal-500/40 rounded-t" />
                 </div>
-                <p className="text-[9px] text-zinc-600">{month.slice(5)}月</p>
+                <p className="text-[11px] text-zinc-400">{month.slice(5)}月</p>
               </div>
             ))}
           </div>
@@ -110,7 +110,7 @@ export default function ManagerReportsPage() {
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-zinc-300">{platform}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-500">{count}件</span>
+                    <span className="text-xs text-zinc-300">{count}件</span>
                     <span className="text-xs text-zinc-400 font-medium">{pct}%</span>
                   </div>
                 </div>
@@ -137,7 +137,7 @@ export default function ManagerReportsPage() {
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-zinc-400">{AREA_LABELS[areaKey] ?? areaKey}</span>
-                    <span className={`text-xs ${pct === 100 ? 'text-emerald-400' : 'text-zinc-500'}`}>{stats.done}/{stats.total}</span>
+                    <span className={`text-xs ${pct === 100 ? 'text-emerald-400' : 'text-zinc-300'}`}>{stats.done}/{stats.total}</span>
                   </div>
                   <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                     <div className={`h-full rounded-full transition-all ${pct === 100 ? 'bg-emerald-500' : 'bg-teal-500/50'}`} style={{ width: `${pct}%` }} />
@@ -155,7 +155,7 @@ export default function ManagerReportsPage() {
           <Wrench size={14} className="text-amber-400" /> メンテナンスサマリー
         </h2>
         {allMaint.length === 0 ? (
-          <p className="text-zinc-600 text-sm text-center py-4">案件なし</p>
+          <p className="text-zinc-400 text-sm text-center py-4">案件なし</p>
         ) : (
           <div className="grid grid-cols-3 gap-3 text-center">
             {[
@@ -165,7 +165,7 @@ export default function ManagerReportsPage() {
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-zinc-800/50 rounded-xl p-3">
                 <p className={`text-xl font-light ${color}`}>{value}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">{label}</p>
+                <p className="text-xs text-zinc-300 mt-0.5">{label}</p>
               </div>
             ))}
           </div>

@@ -61,7 +61,7 @@ export default function GuestbookPage() {
           </Link>
           <div>
             <h1 className="text-lg font-medium text-zinc-100">{t('guestbook.title')}</h1>
-            <p className="text-xs text-zinc-500">{t('guestbook.subtitle')} · {visiblePosts.length} messages</p>
+            <p className="text-xs text-zinc-300">{t('guestbook.subtitle')} · {visiblePosts.length} messages</p>
           </div>
         </div>
         <button
@@ -97,7 +97,7 @@ export default function GuestbookPage() {
               </div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1.5 block">{t('guestbook.chooseEmoji')}</label>
+                  <label className="text-xs text-zinc-300 mb-1.5 block">{t('guestbook.chooseEmoji')}</label>
                   <div className="flex gap-2 flex-wrap">
                     {EMOJI_OPTIONS.map(e => (
                       <button key={e} type="button" onClick={() => setEmoji(e)}
@@ -107,16 +107,16 @@ export default function GuestbookPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1.5 block">{t('guestbook.messageLabel')} *</label>
+                  <label className="text-xs text-zinc-300 mb-1.5 block">{t('guestbook.messageLabel')} *</label>
                   <textarea
                     value={message}
                     onChange={e => setMessage(e.target.value)}
                     placeholder={t('guestbook.messagePlaceholder')}
                     required rows={3}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-gold-500/40 transition-all resize-none"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-gold-500/40 transition-all resize-none"
                   />
                 </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-500 bg-zinc-800 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-zinc-300 bg-zinc-800 rounded-xl px-3 py-2">
                   <span>{guestInfo?.flag ?? '🌏'}</span>
                   <span>{guestInfo?.name ?? 'Guest'} · {guestInfo?.nationality ?? 'Japan'}</span>
                 </div>
@@ -146,14 +146,14 @@ export default function GuestbookPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-medium text-zinc-100">{post.author}</p>
-                    <p className="text-xs text-zinc-500">{post.flag} {post.country}</p>
+                    <p className="text-xs text-zinc-300">{post.flag} {post.country}</p>
                   </div>
-                  <span className="text-xs text-zinc-600 flex-shrink-0">{post.date}</span>
+                  <span className="text-xs text-zinc-400 flex-shrink-0">{post.date}</span>
                 </div>
                 <p className="text-sm text-zinc-400 leading-relaxed mt-2">{post.message}</p>
                 <button
                   onClick={() => handleLike(post.id)}
-                  className={`mt-3 flex items-center gap-1.5 text-xs transition-all ${liked.has(post.id) ? 'text-red-400' : 'text-zinc-600 hover:text-zinc-400'}`}
+                  className={`mt-3 flex items-center gap-1.5 text-xs transition-all ${liked.has(post.id) ? 'text-red-400' : 'text-zinc-400 hover:text-zinc-400'}`}
                 >
                   <Heart size={12} className={liked.has(post.id) ? 'fill-red-400' : ''} />
                   {post.likes + (liked.has(post.id) ? 1 : 0)}

@@ -64,11 +64,11 @@ export default function AnnouncementBanner() {
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={() => setLang(l => l === 'ja' ? 'en' : 'ja')}
-            className="text-[10px] text-zinc-600 hover:text-zinc-400 px-1.5 py-0.5 rounded-md border border-zinc-700 hover:border-zinc-600 transition-all"
+            className="text-[11px] text-zinc-400 hover:text-zinc-400 px-1.5 py-0.5 rounded-md border border-zinc-700 hover:border-zinc-600 transition-all"
           >
             {lang === 'ja' ? 'EN' : 'JA'}
           </button>
-          <button onClick={dismiss} className="text-zinc-600 hover:text-zinc-400 transition-colors">
+          <button onClick={dismiss} className="text-zinc-400 hover:text-zinc-400 transition-colors">
             <X size={14} />
           </button>
         </div>
