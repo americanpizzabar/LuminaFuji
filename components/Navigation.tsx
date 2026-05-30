@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Lightbulb, Map, MessageCircle, MoreHorizontal, BookOpen, ShoppingBag, Bell, Camera, Phone } from 'lucide-react'
+import { Home, Lightbulb, Map, MessageCircle, MoreHorizontal, BookOpen, Bell, Camera } from 'lucide-react'
 import { usePhase } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
 import { useLanguage } from '@/lib/useLanguage'
@@ -35,15 +35,12 @@ function useNavItems() {
     { href: '/dashboard', label: t('nav.home'), icon: Home },
     { href: '/dashboard/guide', label: t('nav.guide'), icon: BookOpen },
     { href: '/dashboard/map', label: t('nav.map'), icon: Map },
-    { href: '/dashboard/products', label: t('nav.products'), icon: ShoppingBag },
     { href: '/dashboard/chat', label: t('nav.chat'), icon: MessageCircle },
   ]
 
   const post: NavItem[] = [
     { href: '/dashboard', label: t('nav.home'), icon: Home },
     { href: '/dashboard/guestbook', label: t('nav.guestbook'), icon: Camera },
-    { href: '/dashboard/products', label: t('nav.products'), icon: ShoppingBag },
-    { href: '/dashboard/consult', label: t('nav.consult'), icon: Phone },
     { href: '/dashboard/chat', label: t('nav.chat'), icon: MessageCircle },
   ]
 
@@ -60,8 +57,6 @@ export default function Navigation() {
   const moreItems: NavItem[] = [
     { href: '/dashboard/guide', label: t('nav.guide'), icon: BookOpen },
     { href: '/dashboard/guestbook', label: t('nav.guestbook'), icon: Camera },
-    { href: '/dashboard/products', label: t('nav.products'), icon: ShoppingBag },
-    { href: '/dashboard/consult', label: t('nav.consult'), icon: Phone },
   ]
 
   return (

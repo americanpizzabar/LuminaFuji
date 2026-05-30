@@ -7,13 +7,12 @@ import { useStore } from '@/lib/useStore'
 import { useLanguage } from '@/lib/useLanguage'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import {
-  Lightbulb, BookOpen, Map, MessageCircle, ShoppingBag,
+  Lightbulb, BookOpen, Map, MessageCircle,
   Camera, Star, ExternalLink,
-  Sparkles, Building2, Bell, ChevronRight, Wifi,
+  Bell, ChevronRight, Wifi,
   Phone, Sun, Moon, Sunset, MapPin, X, ArrowRight,
   Navigation2
 } from 'lucide-react'
-import { getFeaturedProducts } from '@/lib/products'
 import { getLightingAnalytics, markGuestArrived, unmarkGuestArrived } from '@/lib/store'
 import { SCENES } from '@/lib/lighting'
 
@@ -277,32 +276,6 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
           </motion.div>
         )}
 
-        {/* Showroom teaser */}
-        <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl p-5"
-          style={{
-            background: 'linear-gradient(135deg, rgba(251,191,36,0.07) 0%, rgba(10,10,20,0.8) 100%)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(251,191,36,0.12)',
-          }}
-        >
-          <div className="absolute top-0 right-0 w-36 h-36 pointer-events-none"
-               style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%)', filter: 'blur(20px)' }} />
-          <div className="relative">
-            <p className="section-title">{t('home.booked.showroomTitle')}</p>
-            <p className="text-zinc-300 text-sm leading-relaxed mb-4">{t('home.booked.showroomDesc')}</p>
-            <Link href="/dashboard/products"
-              className="inline-flex items-center gap-2 py-2.5 px-5 rounded-2xl text-sm font-semibold transition-all"
-              style={{
-                background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-                color: '#09090b',
-                boxShadow: '0 4px 16px rgba(251,191,36,0.3)',
-              }}
-            >
-              {t('home.booked.viewProducts')} <Sparkles size={13} />
-            </Link>
-          </div>
-        </motion.div>
-
       </motion.div>
     </div>
   )
@@ -541,36 +514,6 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
           )}
         </AnimatePresence>
 
-        {/* Showroom CTA */}
-        <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl p-5"
-          style={{
-            background: 'linear-gradient(135deg, rgba(251,191,36,0.07) 0%, rgba(10,10,18,0.8) 100%)',
-            backdropFilter: 'blur(24px)',
-            border: '1px solid rgba(251,191,36,0.1)',
-          }}
-        >
-          <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none"
-               style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.07) 0%, transparent 70%)', filter: 'blur(20px)' }} />
-          <div className="relative">
-            <p className="section-title">{t('home.staying.showcaseTitle')}</p>
-            <p className="text-zinc-300 text-sm leading-relaxed mb-4">{t('home.staying.showcaseDesc')}</p>
-            <div className="flex gap-2">
-              <Link href="/dashboard/products"
-                className="flex-1 text-center py-2.5 rounded-2xl text-sm font-semibold transition-all"
-                style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)', color: '#09090b', boxShadow: '0 4px 16px rgba(251,191,36,0.25)' }}
-              >
-                {t('home.staying.viewProducts')}
-              </Link>
-              <Link href="/dashboard/consult"
-                className="flex-1 text-center py-2.5 rounded-2xl text-sm font-medium text-zinc-300 transition-all"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-              >
-                {t('home.staying.consult')}
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-
       </motion.div>
     </div>
   )
@@ -581,7 +524,6 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
   const [store] = useStore()
   const { t } = useLanguage()
   const analytics = getLightingAnalytics(store)
-  const featured = getFeaturedProducts()
 
   const totalEvents = store.lightingHistory?.length ?? 0
 
@@ -639,17 +581,6 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
                   ))}
                 </div>
               )}
-              <Link
-                href="/dashboard/products/brite-3"
-                className="inline-flex items-center gap-2 py-2.5 px-5 rounded-2xl text-sm font-semibold transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-                  color: '#09090b',
-                  boxShadow: '0 4px 16px rgba(251,191,36,0.3)',
-                }}
-              >
-                {t('home.post.viewBrite3')} <Sparkles size={13} />
-              </Link>
             </div>
           </motion.div>
         )}
@@ -678,59 +609,6 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
               <ChevronRight size={16} className="text-zinc-600" />
             </motion.div>
           </Link>
-        </motion.div>
-
-        {/* Featured products */}
-        <motion.div variants={fadeUp}>
-          <p className="section-title mb-3">{t('home.post.productsSection')}</p>
-          <div className="space-y-2 mb-5">
-            {featured.map(p => (
-              <Link key={p.id} href={`/dashboard/products/${p.id}`}>
-                <motion.div
-                  className="rounded-2xl p-4 flex items-center gap-3 cursor-pointer mb-2"
-                  style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: `radial-gradient(circle, ${p.accentColor}20, ${p.accentColor}05)`, border: `1px solid ${p.accentColor}25` }}>
-                    <Lightbulb size={20} style={{ color: p.accentColor }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-zinc-100">{p.name}</p>
-                    <p className="text-xs text-zinc-500 truncate">{p.tagline}</p>
-                    <p className="text-xs text-gold-400 mt-0.5">{p.price}</p>
-                  </div>
-                  <ExternalLink size={13} className="text-zinc-600 flex-shrink-0" />
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Action grid */}
-        <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 mb-5">
-          {[
-            { href: '/dashboard/consult', icon: Building2, label: t('home.post.lightingConsult'), sub: t('home.post.lightingConsultSub') },
-            { href: '/dashboard/products', icon: ShoppingBag, label: t('home.post.allProducts'), sub: t('home.post.allProductsSub') },
-          ].map(({ href, icon: Icon, label, sub }) => (
-            <Link key={href} href={href}>
-              <motion.div
-                className="rounded-2xl p-4 text-center cursor-pointer"
-                style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
-              >
-                <Icon size={22} className="text-gold-400 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-zinc-200">{label}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">{sub}</p>
-              </motion.div>
-            </Link>
-          ))}
         </motion.div>
 
         {/* Repeater offer */}

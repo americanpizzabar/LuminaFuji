@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bell, Mail, Shield, Wifi, Phone, Clock, Lightbulb,
-  CheckCircle2, Eye, EyeOff, Save, ExternalLink,
+  CheckCircle2, Eye, EyeOff, Save, ExternalLink, Zap, ArrowRight,
 } from 'lucide-react'
+import Link from 'next/link'
 import { useStore } from '@/lib/useStore'
 import {
   setNotificationSettings, setFacilitySettings,
@@ -468,6 +469,37 @@ export default function ManagerSettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* ── LIGHTING HARDWARE SETUP ──────────────────────────────────────── */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+          <h2 className="text-sm font-medium text-zinc-200 mb-1 flex items-center gap-2">
+            <Zap size={14} className="text-amber-400" />
+            照明ハードウェア設定
+          </h2>
+          <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
+            Zigbee2MQTT または DALI-2 ゲートウェイへの接続設定と動作確認ができます。
+            ハブのスキャン・デバイスの選択・環境変数のコピーをガイドに従って行えます。
+          </p>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[
+              { icon: '📡', label: 'Zigbee2MQTT', sub: '無線接続' },
+              { icon: '⚡', label: 'DALI-2', sub: '有線制御' },
+              { icon: '🔗', label: '接続テスト', sub: 'リアルタイム' },
+            ].map(({ icon, label, sub }) => (
+              <div key={label} className="bg-zinc-800/60 border border-zinc-700/50 rounded-xl p-3 text-center">
+                <div className="text-xl mb-1">{icon}</div>
+                <p className="text-[11px] font-medium text-zinc-300">{label}</p>
+                <p className="text-[10px] text-zinc-600">{sub}</p>
+              </div>
+            ))}
+          </div>
+          <Link href="/manager/lighting-setup">
+            <button className="w-full flex items-center justify-center gap-2 bg-amber-500/10 border border-amber-500/25 hover:bg-amber-500/18 text-amber-400 rounded-xl py-3 text-sm font-semibold transition-all active:scale-[0.98]">
+              照明設定ウィザードを開く <ArrowRight size={14} />
+            </button>
+          </Link>
+        </div>
+
       </motion.div>
     </>
   )

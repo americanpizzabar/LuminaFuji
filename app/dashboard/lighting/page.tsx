@@ -66,6 +66,249 @@ function useLightingControl(isStaying: boolean) {
   return { status, sendCommand, lastSent }
 }
 
+// ─── Dramatic driver connection indicator ───────────────────────────────────
+
+function DriverStatusPanel({ status }: { status: BackendStatus }) {
+  const isLive = status === 'zigbee' || status === 'dali' || status === 'both'
+  const isConnecting = status === 'connecting'
+  const isOffline = status === 'offline'
+  const hasZigbee = status === 'zigbee' || status === 'both'
+  const hasDali = status === 'dali' || status === 'both'
+
+  const primaryColor = isLive ? '#22c55e' : isConnecting ? '#fbbf24' : isOffline ? '#ef4444' : '#3f3f46'
+
+  const statusLabel =
+    status === 'connecting' ? 'ネットワークスキャン中...' :
+    status === 'zigbee'     ? 'Zigbee ドライバー接続済み' :
+    status === 'dali'       ? 'DALI-2 ゲートウェイ接続済み' :
+    status === 'both'       ? 'Zigbee + DALI-2 接続済み' :
+    status === 'offline'    ? 'ドライバーに接続できません' :
+                              'シミュレーションモード動作中'
+
+  return (
+    <div className="mx-4 mb-5">
+      <div
+        className="relative rounded-3xl overflow-hidden p-5"
+        style={{
+          background: isLive
+            ? 'linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(0,0,0,0.55) 100%)'
+            : isConnecting
+            ? 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(0,0,0,0.55) 100%)'
+            : isOffline
+            ? 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(0,0,0,0.55) 100%)'
+            : 'rgba(255,255,255,0.02)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: `1px solid ${
+            isLive ? 'rgba(34,197,94,0.22)' :
+            isConnecting ? 'rgba(251,191,36,0.22)' :
+            isOffline ? 'rgba(239,68,68,0.22)' :
+            'rgba(255,255,255,0.06)'
+          }`,
+        }}
+      >
+        {/* Ambient glow */}
+        <div
+          className="absolute -top-6 left-1/2 -translate-x-1/2 w-48 h-32 pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse, ${primaryColor}18 0%, transparent 70%)`,
+            filter: 'blur(16px)',
+          }}
+        />
+
+        {/* ── Header row ── */}
+        <div className="relative flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            {/* Animated status indicator */}
+            <div className="relative flex items-center justify-center w-5 h-5">
+              <motion.div
+                className="w-3 h-3 rounded-full"
+                style={{ background: primaryColor }}
+                animate={
+                  isLive ? { scale: [1, 1.25, 1], opacity: [1, 0.75, 1] } :
+                  isConnecting ? { opacity: [1, 0.25, 1] } : {}
+                }
+                transition={{ duration: 1.4, repeat: Infinity }}
+              />
+              {isLive && (
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{ border: `2px solid rgba(34,197,94,0.5)`, inset: '-6px' }}
+                  animate={{ opacity: [0.6, 0, 0.6], scale: [0.85, 1.6, 0.85] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: 'easeOut' }}
+                />
+              )}
+            </div>
+
+            <div>
+              <p className="text-[10px] text-zinc-600 uppercase tracking-[0.18em] font-medium">LIGHTING DRIVER STATUS</p>
+              <motion.p
+                key={status}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm font-semibold mt-0.5"
+                style={{ color: primaryColor }}
+              >
+                {statusLabel}
+              </motion.p>
+            </div>
+          </div>
+
+          {/* Signal-strength bars */}
+          <div className="flex items-end gap-[3px] h-5">
+            {[1, 2, 3, 4].map((_, i) => {
+              const lit = isLive ? 4 : isConnecting ? 2 : isOffline ? 0 : 1
+              return (
+                <motion.div
+                  key={i}
+                  className="w-1.5 rounded-sm"
+                  style={{
+                    height: `${28 + i * 18}%`,
+                    background: i < lit ? primaryColor : 'rgba(255,255,255,0.08)',
+                  }}
+                  animate={isConnecting && i < 2 ? { opacity: [0.4, 1, 0.4] } : {}}
+                  transition={{ duration: 0.7, delay: i * 0.12, repeat: Infinity }}
+                />
+              )
+            })}
+          </div>
+        </div>
+
+        {/* ── Protocol indicator cards ── */}
+        <div className="relative grid grid-cols-2 gap-3 mb-4">
+          {/* Zigbee card */}
+          <div
+            className="rounded-2xl p-3.5 flex items-center gap-3"
+            style={{
+              background: hasZigbee ? 'rgba(34,197,94,0.07)' : 'rgba(255,255,255,0.02)',
+              border: hasZigbee ? '1px solid rgba(34,197,94,0.2)' : '1px solid rgba(255,255,255,0.05)',
+            }}
+          >
+            <div
+              className="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background: hasZigbee ? 'rgba(34,197,94,0.14)' : 'rgba(255,255,255,0.04)',
+                border: hasZigbee ? '1px solid rgba(34,197,94,0.28)' : '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              {hasZigbee && [0, 0.65].map((delay, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute rounded-xl pointer-events-none"
+                  style={{ inset: `${-(i + 1) * 5}px`, border: `1px solid rgba(34,197,94,${0.28 - i * 0.1})` }}
+                  animate={{ opacity: [0.7, 0, 0.7], scale: [0.88, 1.25, 0.88] }}
+                  transition={{ duration: 2.4, delay, repeat: Infinity, ease: 'easeOut' }}
+                />
+              ))}
+              <Wifi size={16} className={hasZigbee ? 'text-emerald-400' : 'text-zinc-600'} />
+            </div>
+            <div>
+              <p className="text-xs font-bold tracking-wide" style={{ color: hasZigbee ? '#22c55e' : '#52525b' }}>ZIGBEE</p>
+              <p className="text-[10px] text-zinc-600">
+                {hasZigbee ? '接続済み' : isConnecting ? 'スキャン中...' : '未接続'}
+              </p>
+            </div>
+          </div>
+
+          {/* DALI-2 card */}
+          <div
+            className="rounded-2xl p-3.5 flex items-center gap-3"
+            style={{
+              background: hasDali ? 'rgba(34,197,94,0.07)' : 'rgba(255,255,255,0.02)',
+              border: hasDali ? '1px solid rgba(34,197,94,0.2)' : '1px solid rgba(255,255,255,0.05)',
+            }}
+          >
+            <div
+              className="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{
+                background: hasDali ? 'rgba(34,197,94,0.14)' : 'rgba(255,255,255,0.04)',
+                border: hasDali ? '1px solid rgba(34,197,94,0.28)' : '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              {hasDali && [0, 0.65].map((delay, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute rounded-xl pointer-events-none"
+                  style={{ inset: `${-(i + 1) * 5}px`, border: `1px solid rgba(34,197,94,${0.28 - i * 0.1})` }}
+                  animate={{ opacity: [0.7, 0, 0.7], scale: [0.88, 1.25, 0.88] }}
+                  transition={{ duration: 2.4, delay, repeat: Infinity, ease: 'easeOut' }}
+                />
+              ))}
+              <Zap size={16} className={hasDali ? 'text-emerald-400' : 'text-zinc-600'} />
+            </div>
+            <div>
+              <p className="text-xs font-bold tracking-wide" style={{ color: hasDali ? '#22c55e' : '#52525b' }}>DALI-2</p>
+              <p className="text-[10px] text-zinc-600">
+                {hasDali ? '接続済み' : isConnecting ? 'スキャン中...' : '未接続'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Radar sweep (connecting) / Heartbeat line (live) ── */}
+        {isConnecting && (
+          <div className="relative flex items-center justify-center py-2">
+            <div className="relative w-20 h-20">
+              {[28, 20, 12].map((inset, i) => (
+                <div
+                  key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    inset: `${inset}px`,
+                    border: '1px solid rgba(251,191,36,0.15)',
+                  }}
+                />
+              ))}
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'conic-gradient(from 0deg, rgba(251,191,36,0.45) 0deg, rgba(251,191,36,0.05) 50deg, transparent 80deg)',
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <motion.div
+                  className="w-2 h-2 rounded-full bg-yellow-400"
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 0.9, repeat: Infinity }}
+                />
+              </div>
+            </div>
+            <p className="absolute bottom-0 text-[10px] text-zinc-600 text-center w-full">
+              ハブへの接続を確認中
+            </p>
+          </div>
+        )}
+
+        {isLive && (
+          <div className="relative overflow-hidden rounded-xl px-3 py-2.5"
+               style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.12)' }}>
+            <div className="flex items-center gap-2">
+              <motion.div
+                className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0"
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+              <p className="text-[11px] text-emerald-400 font-medium">
+                照明ドライバーに接続済み — 操作はリアルタイムで照明に反映されます
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!isLive && !isConnecting && (
+          <p className="text-[11px] text-zinc-600 text-center">
+            {isOffline
+              ? '照明ドライバーに接続できませんでした。ネットワークを確認してください。'
+              : '管理者ポータルで照明ハードウェアを設定すると、実際の照明を制御できます'}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function LightingPage() {
   const { t } = useLanguage()
   const { phase } = usePhase()
@@ -228,6 +471,9 @@ export default function LightingPage() {
             <Power size={18} style={{ color: isAllOn ? lightColor : '#71717a' }} />
           </motion.button>
         </div>
+
+        {/* ── 照明ドライバー接続インジケーター ─────────────── */}
+        {isStaying && <DriverStatusPanel status={backendStatus} />}
 
         {/* 滞在中以外は操作ロック */}
         {!isStaying && (
