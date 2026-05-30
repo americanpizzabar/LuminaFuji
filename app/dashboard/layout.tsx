@@ -7,6 +7,7 @@ import { LanguageProvider } from '@/lib/useLanguage'
 import Navigation from '@/components/Navigation'
 import PhaseSelector from '@/components/PhaseSelector'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import DynamicBackground from '@/components/DynamicBackground'
 import Link from 'next/link'
 import { BookOpen, LogOut } from 'lucide-react'
 import { getStore, clearGuestInfo } from '@/lib/store'
@@ -46,7 +47,12 @@ function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="w-9 h-9 rounded-xl bg-zinc-800/80 backdrop-blur border border-zinc-700/50 flex items-center justify-center hover:bg-zinc-700 transition-all"
+      className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:border-zinc-600/80"
+      style={{
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.07)',
+      }}
       title="ログアウト"
     >
       <LogOut size={15} className="text-zinc-400" />
@@ -59,12 +65,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <PhaseProvider>
       <LanguageProvider>
         <AuthGuard>
-          <div className="dark min-h-screen bg-zinc-950">
+          <div className="dark min-h-screen">
+            <DynamicBackground />
             <PhaseSelector />
             {/* Fixed top-right controls */}
             <div className="fixed top-3 right-4 z-50 flex items-center gap-2">
-              <Link href="/manual"
-                className="w-9 h-9 rounded-xl bg-zinc-800/80 backdrop-blur border border-zinc-700/50 flex items-center justify-center hover:bg-zinc-700 transition-all"
+              <Link
+                href="/manual"
+                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:border-zinc-600/80"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.07)',
+                }}
                 title="マニュアル"
               >
                 <BookOpen size={15} className="text-zinc-400" />

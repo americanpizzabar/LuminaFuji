@@ -1,5 +1,3 @@
-'use client'
-
 export interface LightingScene {
   id: string
   nameJa: string
@@ -92,10 +90,11 @@ export const DEFAULT_ZONES: Zone[] = [
 ]
 
 export function colorTempToRgb(kelvin: number): string {
-  const t = (kelvin - 2700) / (6500 - 2700)
-  const r = Math.round(255)
-  const g = Math.round(200 + 55 * t)
-  const b = Math.round(100 + 155 * t)
+  const t = Math.max(0, Math.min(1, (kelvin - 2700) / (6500 - 2700)))
+  // 2700K → deep amber (255,140,50)  6500K → cool blue-white (210,230,255)
+  const r = Math.round(255 - 45 * t)
+  const g = Math.round(140 + 90 * t)
+  const b = Math.round(50 + 205 * t)
   return `rgb(${r}, ${g}, ${b})`
 }
 

@@ -74,25 +74,40 @@ export default function Navigation() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-zinc-950/60 backdrop-blur-sm"
+              className="fixed inset-0 z-40"
+              style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
               onClick={() => setShowMore(false)}
             />
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className="fixed bottom-20 left-4 right-4 max-w-[430px] mx-auto z-50 bg-zinc-900 border border-zinc-700 rounded-2xl p-3 grid grid-cols-2 gap-2"
+              initial={{ y: 16, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 16, opacity: 0, scale: 0.96 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+              className="fixed bottom-28 left-4 right-4 max-w-[390px] mx-auto z-50 p-3 grid grid-cols-2 gap-2"
+              style={{
+                background: 'rgba(10, 10, 18, 0.92)',
+                backdropFilter: 'blur(32px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '24px',
+                boxShadow: '0 12px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+              }}
             >
               {moreItems.map(({ href, label, icon: Icon }) => (
                 <Link
                   key={href}
                   href={href}
                   onClick={() => setShowMore(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-zinc-800 transition-all"
+                  className="flex items-center gap-3 p-3 rounded-2xl transition-all"
+                  style={{ background: 'rgba(255,255,255,0.03)' }}
                 >
-                  <Icon size={18} className="text-gold-400 flex-shrink-0" />
-                  <span className="text-sm text-zinc-300">{label}</span>
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)' }}
+                  >
+                    <Icon size={15} className="text-gold-400" />
+                  </div>
+                  <span className="text-sm text-zinc-300 font-medium">{label}</span>
                 </Link>
               ))}
             </motion.div>
@@ -100,56 +115,103 @@ export default function Navigation() {
         )}
       </AnimatePresence>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 pb-safe">
-        <div className="max-w-[430px] mx-auto">
-          <div className="bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 px-1 pt-2 pb-3">
-            <div className="flex items-center justify-around">
-              {navItems.map(({ href, label, icon: Icon, badge }) => {
-                const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 min-w-[52px] ${
-                      isActive ? 'text-gold-400' : 'text-zinc-500 hover:text-zinc-300'
+      {/* Floating Island Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-30" style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}>
+        <div className="max-w-[390px] mx-auto px-5 pb-2">
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, type: 'spring', damping: 25 }}
+            className="flex items-center justify-around px-2 py-1.5"
+            style={{
+              background: 'rgba(8, 8, 16, 0.88)',
+              backdropFilter: 'blur(40px) saturate(200%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: '28px',
+              boxShadow:
+                '0 12px 48px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06)',
+            }}
+          >
+            {navItems.map(({ href, label, icon: Icon, badge }) => {
+              const isActive =
+                pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="relative flex flex-col items-center gap-0.5 py-1.5 px-3 min-w-[52px]"
+                >
+                  <motion.div
+                    className="relative w-10 h-10 flex items-center justify-center rounded-2xl transition-colors duration-200"
+                    style={
+                      isActive
+                        ? {
+                            background: 'rgba(251,191,36,0.12)',
+                            boxShadow: '0 0 16px rgba(251,191,36,0.15)',
+                          }
+                        : {}
+                    }
+                    whileTap={{ scale: 0.88 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 400 }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-active-bg"
+                        className="absolute inset-0 rounded-2xl"
+                        style={{ background: 'rgba(251,191,36,0.1)' }}
+                        transition={{ type: 'spring', damping: 22, stiffness: 300 }}
+                      />
+                    )}
+                    <Icon
+                      size={20}
+                      strokeWidth={isActive ? 2 : 1.5}
+                      className={`relative z-10 transition-colors duration-200 ${isActive ? 'text-gold-400' : 'text-zinc-500'}`}
+                    />
+                    {badge ? (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-medium z-20">
+                        {badge > 9 ? '9+' : badge}
+                      </span>
+                    ) : null}
+                  </motion.div>
+                  <span
+                    className={`text-[9px] leading-none font-medium transition-colors duration-200 ${
+                      isActive ? 'text-gold-400' : 'text-zinc-600'
                     }`}
                   >
-                    <div className="relative">
-                      <Icon
-                        size={22}
-                        strokeWidth={isActive ? 2 : 1.5}
-                        className={isActive ? 'drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]' : ''}
-                      />
-                      {badge ? (
-                        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 rounded-full text-[9px] text-white flex items-center justify-center font-medium">
-                          {badge > 9 ? '9+' : badge}
-                        </span>
-                      ) : null}
-                      {isActive && (
-                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-gold-400 rounded-full" />
-                      )}
-                    </div>
-                    <span className={`text-[9px] leading-none font-medium ${isActive ? 'text-gold-400' : 'text-zinc-600'}`}>
-                      {label}
-                    </span>
-                  </Link>
-                )
-              })}
+                    {label}
+                  </span>
+                </Link>
+              )
+            })}
 
-              {/* More button (staying phase only) */}
-              {phase === 'staying' && (
-                <button
-                  onClick={() => setShowMore(!showMore)}
-                  className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-[52px] ${
-                    showMore ? 'text-gold-400' : 'text-zinc-500 hover:text-zinc-300'
-                  }`}
+            {/* More button — staying phase only */}
+            {phase === 'staying' && (
+              <button
+                onClick={() => setShowMore(!showMore)}
+                className="relative flex flex-col items-center gap-0.5 py-1.5 px-3 min-w-[52px]"
+              >
+                <motion.div
+                  className="relative w-10 h-10 flex items-center justify-center rounded-2xl transition-colors duration-200"
+                  style={
+                    showMore
+                      ? { background: 'rgba(251,191,36,0.12)', boxShadow: '0 0 16px rgba(251,191,36,0.15)' }
+                      : {}
+                  }
+                  whileTap={{ scale: 0.88 }}
                 >
-                  <MoreHorizontal size={22} strokeWidth={1.5} />
-                  <span className="text-[9px] leading-none font-medium text-zinc-600">{t('nav.more')}</span>
-                </button>
-              )}
-            </div>
-          </div>
+                  <MoreHorizontal
+                    size={20}
+                    strokeWidth={1.5}
+                    className={showMore ? 'text-gold-400' : 'text-zinc-500'}
+                  />
+                </motion.div>
+                <span className={`text-[9px] leading-none font-medium ${showMore ? 'text-gold-400' : 'text-zinc-600'}`}>
+                  {t('nav.more')}
+                </span>
+              </button>
+            )}
+          </motion.div>
         </div>
       </nav>
     </>
