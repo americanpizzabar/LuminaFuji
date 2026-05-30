@@ -161,7 +161,7 @@ export default function ManualPage() {
                 { href: '#guest', label: 'ゲスト用アプリ', emoji: '🏠' },
                 { href: '#manager', label: '管理会社用アプリ', emoji: '🔧' },
                 { href: '#owner', label: 'オーナー用アプリ', emoji: '🛡️' },
-                { href: '#lighting', label: '照明（Zigbee）設定', emoji: '💡' },
+                { href: '#lighting', label: '照明（Zigbee / DALI-2）設定', emoji: '💡' },
                 { href: '#env', label: '環境変数・設定', emoji: '⚙️' },
                 { href: '#faq', label: 'よくある質問', emoji: '❓' },
               ].map(({ href, label, emoji }) => (
@@ -444,20 +444,33 @@ export default function ManualPage() {
           </div>
         </Section>
 
-        {/* ── LIGHTING / ZIGBEE ── */}
-        <Section id="lighting" title="照明（Zigbee）設定" emoji="💡">
+        {/* ── LIGHTING / ZIGBEE + DALI-2 ── */}
+        <Section id="lighting" title="照明（Zigbee / DALI-2）設定" emoji="💡">
           {/* Intro */}
           <div className="card p-5 mb-4 border-gold-500/20 bg-gradient-to-br from-amber-950/20 to-zinc-900">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb size={16} className="text-gold-400" />
-              <span className="text-sm font-semibold text-gold-300">OLEDWorks Brite 3 ＋ Zigbee2MQTT</span>
+              <span className="text-sm font-semibold text-gold-300">OLEDWorks Brite 3 ＋ Zigbee / DALI-2</span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed">
               照明は <strong className="text-zinc-200">OLEDWorks Brite 3（電球色 3000K 固定）</strong> を使用します。色温度は変わらないため、
               アプリが制御するのは <strong className="text-zinc-200">点灯/消灯</strong> と <strong className="text-zinc-200">明るさ</strong> のみです。
               OLED は光を絞るほど自然に暖かみが増します（dim-to-warm）。
-              ゲストには接続作業をさせず、<strong className="text-gold-400">ご滞在中のみ自動でZigbee連携</strong>し操作できる状態にします。
+              制御プロトコルは <strong className="text-zinc-200">Zigbee</strong> と <strong className="text-zinc-200">DALI-2</strong> の両対応で、どちらか一方または両方を使用できます。
+              ゲストには接続作業をさせず、<strong className="text-gold-400">ご滞在中のみ自動で連携</strong>し操作できる状態にします。
             </p>
+          </div>
+
+          {/* Protocol comparison */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="card p-4">
+              <p className="text-sm font-semibold text-zinc-200 mb-1">① Zigbee</p>
+              <p className="text-[11px] text-zinc-500 leading-relaxed">無線・後付けが手軽。Zigbee2MQTT 経由で MQTT 制御。既存物件向き。</p>
+            </div>
+            <div className="card p-4">
+              <p className="text-sm font-semibold text-zinc-200 mb-1">② DALI-2</p>
+              <p className="text-[11px] text-zinc-500 leading-relaxed">専用2線バス・高精度な対数調光。Brite 3 が標準対応。新築・施工時の組み込み向き。</p>
+            </div>
           </div>
 
           {/* Architecture */}
@@ -465,22 +478,27 @@ export default function ManualPage() {
             <p className="text-sm font-semibold text-zinc-200 mb-3">仕組み（データの流れ）</p>
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 overflow-x-auto">
               <pre className="text-[11px] text-zinc-400 leading-relaxed whitespace-pre">{`アプリ (滞在中のみ)
-   │ HTTPS
+   │ HTTPS  明るさ%(0-100)+state
    ▼
-Next.js API  /api/lighting/zigbee
-   │ MQTT publish
-   │ zigbee2mqtt/<名前>/set
-   │ {"state":"ON","brightness":178}
-   ▼
-MQTTブローカー (Mosquitto)
-   ▼
-Zigbee2MQTT  ──Zigbee──▶  調光モジュール
-   ▼
-OLEDWorks Brite 3 パネル`}</pre>
+Next.js API  /api/lighting
+   │  LIGHTING_BACKEND で分岐
+   ├──────────────┬───────────────┐
+   ▼              ▼
+ ① Zigbee       ② DALI-2
+ MQTT publish   HTTP POST
+ zigbee2mqtt/   {gw}/command
+ <名前>/set     {target,level}
+   ▼              ▼
+ Zigbee2MQTT    DALI-2 IPゲートウェイ
+   ▼              ▼
+ Zigbee調光器   DALI-2調光ドライバ
+   └──────┬───────┘
+          ▼
+   OLEDWorks Brite 3`}</pre>
             </div>
             <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
-              Zigbee2MQTT に汎用RESTは無いため、制御は <strong className="text-zinc-400">MQTT</strong> で行います。
-              アプリは <code className="text-gold-400">zigbee2mqtt/&lt;friendly_name&gt;/set</code> に publish します。
+              アプリ→サーバーは常に <strong className="text-zinc-400">明るさ%とstate</strong> のみ。サーバーが各プロトコルの値
+              （Zigbee=線形0-254 / DALI-2=対数arcレベル）へ変換します。
             </p>
           </div>
 
@@ -490,10 +508,11 @@ OLEDWorks Brite 3 パネル`}</pre>
               <p className="text-sm font-semibold text-zinc-200">必要な機材</p>
             </div>
             <div className="px-5">
-              <FeatureRow icon={<span className="text-xs">1</span>} title="常時稼働サーバー" desc="Raspberry Pi 4 (4GB+) またはミニPC。Zigbee2MQTT と Mosquitto を常時稼働させます。" />
-              <FeatureRow icon={<span className="text-xs">2</span>} title="Zigbeeコーディネーター" desc="Sonoff Zigbee 3.0 USB Dongle Plus / ConBee II などのUSBドングル。" />
-              <FeatureRow icon={<span className="text-xs">3</span>} title="Zigbee調光モジュール" desc="OLEDドライバの調光方式に合わせる（0-10V / 位相制御 / PWM）。Brite 3 を調光できる信号を出力します。" />
-              <FeatureRow icon={<span className="text-xs">4</span>} title="調光対応ドライバ" desc="Brite 3 の定格に合う調光対応の定電流/定電圧ドライバ。" />
+              <FeatureRow icon={<span className="text-xs">共</span>} title="常時稼働サーバー" desc="Raspberry Pi 4 (4GB+) またはミニPC。Zigbee2MQTT/Mosquitto、または DALI ゲートウェイのアダプタを稼働。" />
+              <FeatureRow icon={<span className="text-[10px]">Z1</span>} title="[Zigbee] コーディネーター" desc="Sonoff Zigbee 3.0 USB Dongle Plus / ConBee II などのUSBドングル。" />
+              <FeatureRow icon={<span className="text-[10px]">Z2</span>} title="[Zigbee] 調光モジュール＋調光ドライバ" desc="OLEDドライバの調光方式に合わせる（0-10V / 位相制御 / PWM）。" />
+              <FeatureRow icon={<span className="text-[10px]">D1</span>} title="[DALI-2] IP ゲートウェイ" desc="Lunatone DALI-2 IoT Gateway 等。DALIバスをIP/Ethernetに橋渡し。" />
+              <FeatureRow icon={<span className="text-[10px]">D2</span>} title="[DALI-2] 調光ドライバ" desc="Brite 3 用の DALI-2 対応 定電流ドライバ。バス直結で制御（調光器不要）。" />
             </div>
             <div className="px-5 pb-4">
               <div className="mt-2 p-3 bg-amber-950/20 border border-amber-500/20 rounded-xl">
@@ -504,9 +523,9 @@ OLEDWorks Brite 3 パネル`}</pre>
             </div>
           </div>
 
-          {/* Steps */}
+          {/* Steps — Zigbee */}
           <div className="card p-5 mb-4">
-            <p className="text-sm font-semibold text-zinc-200 mb-3">設定手順</p>
+            <p className="text-sm font-semibold text-zinc-200 mb-3">① Zigbee の設定手順</p>
             <ol className="space-y-2.5">
               {[
                 'サーバーに Mosquitto（MQTTブローカー）を導入し、ユーザー名/パスワード認証を有効化',
@@ -516,7 +535,6 @@ OLEDWorks Brite 3 パネル`}</pre>
                 '各デバイスの friendly_name を lumina_living / lumina_bedroom などに命名',
                 '全灯グループ lumina_all を作成し4ゾーンを追加（反応が速くなる・推奨）',
                 'mosquitto_pub で直接 publish し、照明が点灯/調光することをテスト',
-                'アプリの環境変数（下記）を設定して Redeploy',
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="w-5 h-5 rounded-full bg-gold-500/20 border border-gold-500/30 text-gold-400 text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
@@ -524,29 +542,49 @@ OLEDWorks Brite 3 パネル`}</pre>
                 </li>
               ))}
             </ol>
-          </div>
-
-          {/* Test command */}
-          <div className="card p-5 mb-4">
-            <p className="text-sm font-semibold text-zinc-200 mb-2">動作テスト（MQTT直叩き）</p>
-            <p className="text-xs text-zinc-500 mb-3">サーバー上で実行し、照明が反応すればZigbee側は完了です。</p>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-start gap-2">
+            <div className="mt-3 bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-start gap-2">
               <code className="text-[11px] text-zinc-300 leading-relaxed flex-1 break-all">{`mosquitto_pub -h localhost -u lumina -P *** -t 'zigbee2mqtt/lumina_all/set' -m '{"state":"ON","brightness":178,"transition":1}'`}</code>
               <CopyButton text={`mosquitto_pub -h localhost -u lumina -P *** -t 'zigbee2mqtt/lumina_all/set' -m '{"state":"ON","brightness":178,"transition":1}'`} />
             </div>
           </div>
 
-          {/* Env vars for zigbee */}
+          {/* Steps — DALI-2 */}
+          <div className="card p-5 mb-4">
+            <p className="text-sm font-semibold text-zinc-200 mb-3">② DALI-2 の設定手順</p>
+            <ol className="space-y-2.5">
+              {[
+                'DALI-2 IP ゲートウェイに Brite 3 用 DALI-2 調光ドライバ（control gear）を接続',
+                'ゲートウェイの設定ツールでアドレッシング（各ドライバへ short address を割当）',
+                '部屋ごとに DALI グループを割当（例：リビング=Group0、寝室=Group1 …）',
+                'ゲートウェイのIPを固定（DHCP予約 or 静的IP）',
+                'ゲートウェイのAPIがアプリの汎用コントラクトと異なる場合は小さなアダプタを挟む（docs参照）',
+                'curl でコマンド送信し、照明が点灯/調光することをテスト',
+              ].map((step, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{step}</p>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-3 bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-start gap-2">
+              <code className="text-[11px] text-zinc-300 leading-relaxed flex-1 break-all">{`curl -X POST http://server:8090/command -H 'Content-Type: application/json' -d '{"target":"broadcast","command":"ARC","level":178,"state":"ON","fadeTime":1}'`}</code>
+              <CopyButton text={`curl -X POST http://server:8090/command -H 'Content-Type: application/json' -d '{"target":"broadcast","command":"ARC","level":178,"state":"ON","fadeTime":1}'`} />
+            </div>
+          </div>
+
+          {/* Env vars */}
           <div className="card overflow-hidden mb-4">
             <div className="px-5 py-4 border-b border-zinc-800">
               <p className="text-sm font-semibold text-zinc-200">照明用の環境変数</p>
             </div>
             <div className="px-5">
-              <EnvRow name="ZIGBEE_MQTT_URL" desc="MQTTブローカーのURL。未設定の場合はシミュレーションモード（UIは反応するが実機には送信しない）で動作します。" example="mqtt://192.168.1.50:1883" />
-              <EnvRow name="ZIGBEE_MQTT_USERNAME" desc="MQTTブローカーの認証ユーザー名。" example="lumina" />
-              <EnvRow name="ZIGBEE_MQTT_PASSWORD" desc="MQTTブローカーの認証パスワード。" example="********" />
-              <EnvRow name="ZIGBEE_BASE_TOPIC" desc="Zigbee2MQTTのベーストピック。既定は zigbee2mqtt。" example="zigbee2mqtt" />
-              <EnvRow name="ZIGBEE_DEVICES" desc="ゾーン→friendly_nameのJSONマップ。allは全灯グループ名を指定。" example={`{"all":"lumina_all","living":"lumina_living",...}`} />
+              <EnvRow name="LIGHTING_BACKEND" desc="使用バックエンド: auto / zigbee / dali / both / simulation。auto は設定済みのものを自動採用（両方なら both）。未設定/未到達ならシミュレーション。" example="auto" />
+              <EnvRow name="ZIGBEE_MQTT_URL" desc="[Zigbee] MQTTブローカーのURL。" example="mqtt://192.168.1.50:1883" />
+              <EnvRow name="ZIGBEE_MQTT_USERNAME / PASSWORD" desc="[Zigbee] ブローカーの認証情報。" example="lumina / ********" />
+              <EnvRow name="ZIGBEE_DEVICES" desc="[Zigbee] ゾーン→friendly_nameのJSONマップ。allは全灯グループ名。" example={`{"all":"lumina_all","living":"lumina_living",...}`} />
+              <EnvRow name="DALI_GATEWAY_URL" desc="[DALI-2] IPゲートウェイ（またはアダプタ）のURL。" example="http://192.168.1.60" />
+              <EnvRow name="DALI_GATEWAY_TOKEN" desc="[DALI-2] 任意の Bearer 認証トークン。" example="（任意）" />
+              <EnvRow name="DALI_DEVICES" desc="[DALI-2] ゾーン→DALIアドレスのJSONマップ。broadcast / group:N / short:N。" example={`{"all":"broadcast","living":"group:0",...}`} />
             </div>
           </div>
 
@@ -555,10 +593,11 @@ OLEDWorks Brite 3 パネル`}</pre>
             <p className="text-sm font-semibold text-zinc-200 mb-3">トラブルシューティング</p>
             <div className="space-y-2.5">
               {[
-                { s: 'バッジが「シミュレーション」のまま', a: 'ZIGBEE_MQTT_URL未設定、またはブローカー未到達。mosquitto_sub で疎通確認。' },
-                { s: '「接続中」から進まない', a: 'ファイアウォール / 認証情報 / URLのスキーム（mqtt://）を確認。' },
-                { s: '操作しても照明が反応しない', a: 'friendly_name と ZIGBEE_DEVICES の綴りが一致しているか。直叩きで切り分け。' },
-                { s: '明るさが粗い・ちらつく', a: 'OLEDドライバの調光方式とZigbee調光器の出力方式（0-10V/PWM/位相）が一致しているか確認。' },
+                { s: 'バッジが「シミュレーション」のまま', a: 'LIGHTING_BACKEND と各URLを確認。auto は設定済みのものを採用します。' },
+                { s: '「接続中」から進まない', a: 'ファイアウォール / 認証情報 / URLスキーム（mqtt:// または http://）を確認。' },
+                { s: '[Zigbee] 反応しない', a: 'friendly_name と ZIGBEE_DEVICES の綴り一致。mosquitto_pub で直叩き切り分け。' },
+                { s: '[DALI-2] 反応しない', a: 'ゲートウェイIP到達性、DALI_DEVICES のアドレス、コミッショニング（group割当）を確認。' },
+                { s: '明るさが粗い・ちらつく', a: 'Zigbee：調光方式の一致。DALI：ドライバが DALI-2 調光対応か確認。' },
               ].map(({ s, a }) => (
                 <div key={s} className="flex items-start gap-3 py-1">
                   <span className="text-red-400/80 text-xs mt-0.5 flex-shrink-0">●</span>
@@ -573,8 +612,8 @@ OLEDWorks Brite 3 パネル`}</pre>
 
           <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl">
             <p className="text-xs text-zinc-500 leading-relaxed">
-              📘 詳細な手順は <code className="text-gold-400">docs/ZIGBEE_SETUP.md</code> を参照してください。
-              ネットワーク構成（クラウド配信時のトンネル方式）やセキュリティの注意点も記載しています。
+              📘 詳細な手順は <code className="text-gold-400">docs/LIGHTING_SETUP.md</code> を参照してください。
+              Zigbee/DALI-2 双方の機材・導入・DALIゲートウェイのアダプタ実装例・ネットワーク構成・セキュリティを記載しています。
             </p>
           </div>
         </Section>
@@ -670,7 +709,7 @@ OLEDWorks Brite 3 パネル`}</pre>
               },
               {
                 q: '照明が動かない / 「シミュレーション」と表示される',
-                a: 'ZIGBEE_MQTT_URL が未設定か、MQTTブローカーに到達できていません。照明（Zigbee）設定セクションの手順に従い、サーバーで mosquitto_pub の直叩きテストが通るか確認してから、アプリの環境変数を設定してRedeployしてください。なお実際の操作は「滞在中」フェーズのみ有効です。',
+                a: 'LIGHTING_BACKEND と各バックエンドのURL（ZIGBEE_MQTT_URL / DALI_GATEWAY_URL）を確認してください。照明（Zigbee / DALI-2）設定セクションの手順に従い、サーバーで直叩きテスト（mosquitto_pub または curl）が通るか確認してから環境変数を設定し、Redeployしてください。なお実際の操作は「滞在中」フェーズのみ有効です。',
               },
               {
                 q: '照明の色（色温度）を変えられないのはなぜ？',

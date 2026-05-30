@@ -12,41 +12,46 @@ import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
 import { recordLightingEvent } from '@/lib/store'
 
-type ZigbeeStatus = 'connecting' | 'connected' | 'offline' | 'simulated'
+type BackendStatus = 'connecting' | 'zigbee' | 'dali' | 'both' | 'simulated' | 'offline'
 
-function pct254(v: number) {
-  return Math.round((v / 100) * 254)
-}
-
-function useZigbeeControl(isStaying: boolean) {
-  const [status, setStatus] = useState<ZigbeeStatus>('simulated')
+function useLightingControl(isStaying: boolean) {
+  const [status, setStatus] = useState<BackendStatus>('simulated')
   const [lastSent, setLastSent] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const resolve = (data: { connected?: boolean; live?: boolean; backend?: string }): BackendStatus => {
+    const ok = data.connected ?? data.live ?? false
+    if (!ok) return 'simulated'
+    if (data.backend === 'both') return 'both'
+    if (data.backend === 'dali') return 'dali'
+    if (data.backend === 'zigbee') return 'zigbee'
+    return 'simulated'
+  }
 
   // 滞在中フェーズに入ると自動接続（ゲストの操作は不要）
   useEffect(() => {
     if (!isStaying) return
     setStatus('connecting')
-    fetch('/api/lighting/zigbee', { method: 'GET' })
+    fetch('/api/lighting', { method: 'GET' })
       .then(r => r.json())
-      .then(data => setStatus(data.connected ? 'connected' : 'simulated'))
+      .then(data => setStatus(resolve(data)))
       .catch(() => setStatus('simulated'))
   }, [isStaying])
 
   const sendCommand = useCallback(
-    (zone: string, command: { state: 'ON' | 'OFF'; brightness: number }) => {
+    (zone: string, command: { state: 'ON' | 'OFF'; percent: number }) => {
       if (!isStaying) return
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(async () => {
         try {
-          const res = await fetch('/api/lighting/zigbee', {
+          const res = await fetch('/api/lighting', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ zone, command }),
           })
           const data = await res.json()
           if (data.success) {
-            setStatus(data.zigbee ? 'connected' : 'simulated')
+            setStatus(resolve(data))
             setLastSent(zone)
             setTimeout(() => setLastSent(null), 2000)
           }
@@ -71,7 +76,7 @@ export default function LightingPage() {
   const [zones, setZones] = useState<Zone[]>(DEFAULT_ZONES)
   const [isAllOn, setIsAllOn] = useState(true)
 
-  const { status: zigbeeStatus, sendCommand, lastSent } = useZigbeeControl(isStaying)
+  const { status: backendStatus, sendCommand, lastSent } = useLightingControl(isStaying)
 
   const applyScene = useCallback((scene: LightingScene) => {
     setActiveScene(scene)
@@ -79,7 +84,7 @@ export default function LightingPage() {
     setIsAllOn(scene.brightness > 0)
     if (isStaying) {
       recordLightingEvent({ sceneId: scene.id, sceneName: scene.nameEn })
-      sendCommand('all', { state: scene.brightness > 0 ? 'ON' : 'OFF', brightness: pct254(scene.brightness) })
+      sendCommand('all', { state: scene.brightness > 0 ? 'ON' : 'OFF', percent: scene.brightness })
     }
   }, [isStaying, sendCommand])
 
@@ -88,7 +93,7 @@ export default function LightingPage() {
     setIsAllOn(next)
     setZones(prev => prev.map(z => ({ ...z, isOn: next })))
     if (isStaying) {
-      sendCommand('all', { state: next ? 'ON' : 'OFF', brightness: pct254(brightness) })
+      sendCommand('all', { state: next ? 'ON' : 'OFF', percent: brightness })
     }
   }
 
@@ -96,14 +101,14 @@ export default function LightingPage() {
     const zone = zones.find(z => z.id === id)
     setZones(prev => prev.map(z => z.id === id ? { ...z, isOn: !z.isOn } : z))
     if (isStaying && zone) {
-      sendCommand(id, { state: zone.isOn ? 'OFF' : 'ON', brightness: pct254(zone.brightness) })
+      sendCommand(id, { state: zone.isOn ? 'OFF' : 'ON', percent: zone.brightness })
     }
   }
 
   const setZoneBrightness = (id: string, val: number) => {
     setZones(prev => prev.map(z => z.id === id ? { ...z, brightness: val } : z))
     if (isStaying) {
-      sendCommand(id, { state: val > 0 ? 'ON' : 'OFF', brightness: pct254(val) })
+      sendCommand(id, { state: val > 0 ? 'ON' : 'OFF', percent: val })
     }
   }
 
@@ -111,7 +116,7 @@ export default function LightingPage() {
     setBrightness(val)
     setIsAllOn(val > 0)
     if (isStaying) {
-      sendCommand('all', { state: val > 0 ? 'ON' : 'OFF', brightness: pct254(val) })
+      sendCommand('all', { state: val > 0 ? 'ON' : 'OFF', percent: val })
     }
   }
 
@@ -170,35 +175,45 @@ export default function LightingPage() {
             <p className="text-xs text-zinc-500">OLEDWorks Brite 3 · {FIXED_CCT_LABEL}</p>
           </div>
 
-          {/* Zigbee 接続ステータス */}
-          {isStaying && (
-            <div
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium"
-              style={{
-                background:
-                  zigbeeStatus === 'connected' ? 'rgba(34,197,94,0.1)'
-                  : zigbeeStatus === 'connecting' ? 'rgba(251,191,36,0.1)'
-                  : 'rgba(255,255,255,0.04)',
-                border: `1px solid ${
-                  zigbeeStatus === 'connected' ? 'rgba(34,197,94,0.2)'
-                  : zigbeeStatus === 'connecting' ? 'rgba(251,191,36,0.2)'
-                  : 'rgba(255,255,255,0.06)'
-                }`,
-              }}
-            >
-              {zigbeeStatus === 'connected' ? (
-                <><Wifi size={11} className="text-emerald-400" /><span className="text-emerald-400">Zigbee</span></>
-              ) : zigbeeStatus === 'connecting' ? (
-                <><motion.div className="w-2 h-2 bg-gold-400 rounded-full"
-                              animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1, repeat: Infinity }} />
-                  <span className="text-gold-400">接続中</span></>
-              ) : zigbeeStatus === 'simulated' ? (
-                <><Zap size={11} className="text-zinc-500" /><span className="text-zinc-500">シミュレーション</span></>
-              ) : (
-                <><WifiOff size={11} className="text-red-400" /><span className="text-red-400">オフライン</span></>
-              )}
-            </div>
-          )}
+          {/* 照明バックエンド接続ステータス (Zigbee / DALI-2) */}
+          {isStaying && (() => {
+            const isLive = backendStatus === 'zigbee' || backendStatus === 'dali' || backendStatus === 'both'
+            const label =
+              backendStatus === 'both' ? 'DALI-2 + Zigbee'
+              : backendStatus === 'dali' ? 'DALI-2'
+              : backendStatus === 'zigbee' ? 'Zigbee'
+              : backendStatus === 'connecting' ? '接続中'
+              : backendStatus === 'offline' ? 'オフライン'
+              : 'シミュレーション'
+            return (
+              <div
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium"
+                style={{
+                  background:
+                    isLive ? 'rgba(34,197,94,0.1)'
+                    : backendStatus === 'connecting' ? 'rgba(251,191,36,0.1)'
+                    : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${
+                    isLive ? 'rgba(34,197,94,0.2)'
+                    : backendStatus === 'connecting' ? 'rgba(251,191,36,0.2)'
+                    : 'rgba(255,255,255,0.06)'
+                  }`,
+                }}
+              >
+                {isLive ? (
+                  <><Wifi size={11} className="text-emerald-400" /><span className="text-emerald-400">{label}</span></>
+                ) : backendStatus === 'connecting' ? (
+                  <><motion.div className="w-2 h-2 bg-gold-400 rounded-full"
+                                animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1, repeat: Infinity }} />
+                    <span className="text-gold-400">{label}</span></>
+                ) : backendStatus === 'offline' ? (
+                  <><WifiOff size={11} className="text-red-400" /><span className="text-red-400">{label}</span></>
+                ) : (
+                  <><Zap size={11} className="text-zinc-500" /><span className="text-zinc-500">{label}</span></>
+                )}
+              </div>
+            )
+          })()}
 
           <motion.button
             onClick={toggleAll}
