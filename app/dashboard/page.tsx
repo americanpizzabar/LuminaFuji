@@ -12,7 +12,7 @@ import {
   Star, ExternalLink,
   Bell, ChevronRight, Wifi,
   Phone, Sun, Moon, Sunset, MapPin, X, ArrowRight,
-  Navigation2
+  Navigation2, BarChart3
 } from 'lucide-react'
 import { getLightingAnalytics, markGuestArrived, unmarkGuestArrived } from '@/lib/store'
 import { SCENES } from '@/lib/lighting'
@@ -534,6 +534,16 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
 
   const totalEvents = store.lightingHistory?.length ?? 0
 
+  // Sophisticated scene-usage visualization data (top scenes)
+  const sceneBars = Object.entries(analytics.sceneCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
+    .map(([name, count]) => {
+      const scene = SCENES.find(s => s.nameEn === name)
+      return { name, count, icon: scene?.icon ?? '✦', nameJa: scene?.nameJa ?? name }
+    })
+  const maxCount = Math.max(...sceneBars.map(b => b.count), 1)
+
   return (
     <div className="page-container">
       <motion.div variants={staggerChildren} initial="hidden" animate="show">
@@ -588,6 +598,59 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
                   ))}
                 </div>
               )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Scene distribution chart — sophisticated data viz */}
+        {sceneBars.length > 0 && (
+          <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl p-5 mb-4 glass">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                     style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.22)' }}>
+                  <BarChart3 size={14} className="text-violet-300" />
+                </div>
+                <span className="text-sm font-medium text-zinc-100">光のシーン分布</span>
+              </div>
+              <span className="text-[11px] text-zinc-400 tabular-nums">{totalEvents} 回の操作</span>
+            </div>
+
+            <div className="space-y-3.5">
+              {sceneBars.map((b, i) => {
+                const pct = Math.round((b.count / maxCount) * 100)
+                const isTop = i === 0
+                return (
+                  <div key={b.name}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base leading-none">{b.icon}</span>
+                        <span className="text-xs text-zinc-300 truncate">{b.nameJa}</span>
+                      </div>
+                      <span className="text-xs font-medium tabular-nums flex-shrink-0"
+                            style={{ color: isTop ? '#fbbf24' : '#c4b5fd' }}>
+                        {b.count}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{
+                          background: isTop
+                            ? 'linear-gradient(90deg, #d97706 0%, #fbbf24 60%, #fde68a 100%)'
+                            : 'linear-gradient(90deg, #8b5cf6 0%, #6366f1 50%, #22d3ee 100%)',
+                          boxShadow: isTop
+                            ? '0 0 12px rgba(251,191,36,0.4)'
+                            : '0 0 12px rgba(139,92,246,0.35)',
+                        }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 1, delay: 0.2 + i * 0.12, ease: [0.25, 0.1, 0.25, 1] }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </motion.div>
         )}
