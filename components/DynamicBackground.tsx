@@ -8,7 +8,32 @@ export default function DynamicBackground() {
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(160deg, #04040c 0%, #030309 40%, #05050b 70%, #040408 100%)',
+            'linear-gradient(160deg, #04040e 0%, #03030a 40%, #05050c 70%, #040409 100%)',
+        }}
+      />
+
+      {/* Star field */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,0.65) 0%, transparent 100%),
+            radial-gradient(1px 1px at 28% 7%, rgba(255,255,255,0.50) 0%, transparent 100%),
+            radial-gradient(1.5px 1.5px at 44% 25%, rgba(255,255,255,0.70) 0%, transparent 100%),
+            radial-gradient(1px 1px at 58% 12%, rgba(255,255,255,0.45) 0%, transparent 100%),
+            radial-gradient(1px 1px at 72% 32%, rgba(255,255,255,0.55) 0%, transparent 100%),
+            radial-gradient(1.5px 1.5px at 85% 9%, rgba(255,255,255,0.60) 0%, transparent 100%),
+            radial-gradient(1px 1px at 93% 40%, rgba(255,255,255,0.40) 0%, transparent 100%),
+            radial-gradient(1px 1px at 7% 52%, rgba(255,255,255,0.45) 0%, transparent 100%),
+            radial-gradient(1px 1px at 21% 44%, rgba(255,255,255,0.35) 0%, transparent 100%),
+            radial-gradient(1.5px 1.5px at 36% 58%, rgba(255,255,255,0.55) 0%, transparent 100%),
+            radial-gradient(1px 1px at 64% 48%, rgba(255,255,255,0.40) 0%, transparent 100%),
+            radial-gradient(1px 1px at 79% 55%, rgba(255,255,255,0.50) 0%, transparent 100%),
+            radial-gradient(1px 1px at 17% 70%, rgba(255,255,255,0.30) 0%, transparent 100%),
+            radial-gradient(1px 1px at 50% 65%, rgba(255,255,255,0.35) 0%, transparent 100%),
+            radial-gradient(1.5px 1.5px at 88% 72%, rgba(255,255,255,0.45) 0%, transparent 100%)
+          `,
+          animation: 'starTwinkle 8s ease-in-out infinite alternate',
         }}
       />
 
@@ -21,7 +46,7 @@ export default function DynamicBackground() {
           width: '65%',
           height: '65%',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 70%)',
           filter: 'blur(80px)',
         }}
       />
@@ -35,7 +60,7 @@ export default function DynamicBackground() {
           width: '55%',
           height: '55%',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)',
           filter: 'blur(100px)',
           animationDelay: '3s',
           animation: 'orbDrift 24s ease-in-out infinite reverse',
@@ -51,7 +76,7 @@ export default function DynamicBackground() {
           width: '45%',
           height: '40%',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(251,191,36,0.025) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(251,191,36,0.055) 0%, transparent 70%)',
           filter: 'blur(60px)',
           animation: 'orbDrift 18s ease-in-out infinite',
           animationDelay: '6s',
@@ -68,12 +93,12 @@ export default function DynamicBackground() {
         >
           <defs>
             <linearGradient id="fujiGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.055)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.008)" />
+              <stop offset="0%" stopColor="rgba(255,255,255,0.08)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.012)" />
             </linearGradient>
             <linearGradient id="lakeGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(120,160,220,0.035)" />
-              <stop offset="100%" stopColor="rgba(60,90,160,0.01)" />
+              <stop offset="0%" stopColor="rgba(120,160,220,0.055)" />
+              <stop offset="100%" stopColor="rgba(60,90,160,0.015)" />
             </linearGradient>
           </defs>
 
@@ -81,7 +106,7 @@ export default function DynamicBackground() {
           <path
             d="M0,170 L0,130 L80,90 L130,110 L180,60 L215,20 L250,60 L310,100 L370,80 L430,100 L430,170 Z"
             fill="url(#fujiGrad)"
-            opacity="0.45"
+            opacity="0.55"
           />
 
           {/* Main Fuji cone */}
@@ -93,19 +118,19 @@ export default function DynamicBackground() {
           {/* Snow cap highlight */}
           <path
             d="M205,28 L215,8 L225,28 L215,23 Z"
-            fill="rgba(255,255,255,0.12)"
+            fill="rgba(255,255,255,0.18)"
           />
 
           {/* Left ridge */}
           <path
             d="M0,170 L0,148 L60,170 Z"
-            fill="rgba(255,255,255,0.018)"
+            fill="rgba(255,255,255,0.025)"
           />
 
           {/* Right ridge */}
           <path
             d="M430,170 L430,140 L370,170 Z"
-            fill="rgba(255,255,255,0.018)"
+            fill="rgba(255,255,255,0.025)"
           />
 
           {/* Lake — Yamanakako reflection */}
@@ -123,7 +148,7 @@ export default function DynamicBackground() {
           bottom: '30%',
           height: '1px',
           background:
-            'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.03) 30%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.03) 70%, transparent 100%)',
+            'linear-gradient(to right, transparent 0%, rgba(255,255,255,0.05) 30%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.05) 70%, transparent 100%)',
         }}
       />
 
@@ -135,6 +160,14 @@ export default function DynamicBackground() {
           background: 'linear-gradient(to bottom, rgba(3,3,8,0.7) 0%, transparent 100%)',
         }}
       />
+
+      <style>{`
+        @keyframes starTwinkle {
+          0% { opacity: 0.6; }
+          50% { opacity: 0.9; }
+          100% { opacity: 0.7; }
+        }
+      `}</style>
     </div>
   )
 }
