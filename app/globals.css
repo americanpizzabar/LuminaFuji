@@ -326,9 +326,9 @@
 }
 
 @keyframes orbDrift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(2%, 2%) scale(1.04); }
-  66% { transform: translate(-2%, -3%) scale(0.96); }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%       { transform: translate3d(2%, 2%, 0) scale(1.04); }
+  66%       { transform: translate3d(-2%, -3%, 0) scale(0.96); }
 }
 
 @keyframes countdownPulse {

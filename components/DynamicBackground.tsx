@@ -74,6 +74,7 @@ export default function DynamicBackground() {
           borderRadius: '50%',
           background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, rgba(124,58,237,0.06) 45%, transparent 70%)',
           filter: 'blur(90px)',
+          willChange: 'transform',
         }}
       />
 
@@ -90,6 +91,7 @@ export default function DynamicBackground() {
           filter: 'blur(100px)',
           animation: 'orbDrift 26s ease-in-out infinite reverse',
           animationDelay: '3s',
+          willChange: 'transform',
         }}
       />
 
@@ -109,6 +111,7 @@ export default function DynamicBackground() {
               transformOrigin: 'bottom center',
               animation: `auroraSway ${r.dur}s ease-in-out ${r.delay}s infinite alternate`,
               mixBlendMode: 'screen',
+              willChange: 'transform, opacity',
             }}
           />
         ))}
@@ -184,18 +187,18 @@ export default function DynamicBackground() {
 
       <style>{`
         @keyframes starTwinkle {
-          0% { opacity: 0.6; }
-          50% { opacity: 0.92; }
-          100% { opacity: 0.72; }
+          0%   { opacity: 0.55; }
+          50%  { opacity: 0.90; }
+          100% { opacity: 0.70; }
         }
         @keyframes auroraSway {
-          0%   { transform: translateX(-10px) scaleY(0.88) skewX(-5deg); opacity: 0.3; }
-          50%  { transform: translateX(10px)  scaleY(1.12) skewX(5deg);  opacity: 0.65; }
-          100% { transform: translateX(-4px)  scaleY(0.96) skewX(-2deg); opacity: 0.4; }
+          0%   { transform: translate3d(-12px, 0, 0) scaleY(0.86); opacity: 0.28; }
+          50%  { transform: translate3d(12px, 0, 0)  scaleY(1.14); opacity: 0.62; }
+          100% { transform: translate3d(-5px, 0, 0)  scaleY(0.94); opacity: 0.36; }
         }
         @keyframes sparkleTwinkle {
-          0%, 100% { opacity: 0; transform: scale(0.5) rotate(0deg); }
-          50% { opacity: 1; transform: scale(1) rotate(45deg); }
+          0%, 100% { opacity: 0; transform: scale3d(0.5, 0.5, 1) rotate(0deg); }
+          50%       { opacity: 1; transform: scale3d(1.05, 1.05, 1) rotate(45deg); }
         }
       `}</style>
     </div>
