@@ -64,7 +64,7 @@ export const SCENES: LightingScene[] = [
     nameJa: 'くつろぎ',
     nameEn: 'Relax',
     brightness: 25,
-    icon: '🕯️',
+    icon: '🛋️',
     description: 'リラックスのための暖かな光',
   },
   {
