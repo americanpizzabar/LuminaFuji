@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { getLightingAnalytics, markGuestArrived, unmarkGuestArrived } from '@/lib/store'
 import { SCENES } from '@/lib/lighting'
+import SceneVisual from '@/components/SceneVisual'
 
 type GreetingKey = 'morning' | 'afternoon' | 'evening' | 'night'
 
@@ -421,9 +422,9 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                   whileHover={{ scale: 1.04, borderColor: 'rgba(251,191,36,0.3)' }}
                   whileTap={{ scale: 0.94 }}
                 >
-                  <span className="text-2xl animate-float" style={{ animationDelay: `${Math.random() * 2}s` }}>
-                    {scene.icon}
-                  </span>
+                  <div className="w-9 h-9">
+                    <SceneVisual id={scene.id} />
+                  </div>
                   <span className="text-[11px] text-zinc-400 text-center leading-tight">{scene.nameJa}</span>
                 </motion.div>
               </Link>
@@ -540,7 +541,7 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
     .slice(0, 5)
     .map(([name, count]) => {
       const scene = SCENES.find(s => s.nameEn === name)
-      return { name, count, icon: scene?.icon ?? '✦', nameJa: scene?.nameJa ?? name }
+      return { name, count, id: scene?.id ?? name, nameJa: scene?.nameJa ?? name }
     })
   const maxCount = Math.max(...sceneBars.map(b => b.count), 1)
 
@@ -624,7 +625,9 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
                   <div key={b.name}>
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-base leading-none">{b.icon}</span>
+                        <div className="w-5 h-5 flex-shrink-0">
+                          <SceneVisual id={b.id} />
+                        </div>
                         <span className="text-xs text-zinc-300 truncate">{b.nameJa}</span>
                       </div>
                       <span className="text-xs font-medium tabular-nums flex-shrink-0"

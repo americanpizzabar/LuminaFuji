@@ -11,6 +11,7 @@ import {
 import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
 import { recordLightingEvent } from '@/lib/store'
+import SceneVisual from '@/components/SceneVisual'
 
 type BackendStatus = 'connecting' | 'zigbee' | 'dali' | 'both' | 'simulated' | 'offline'
 
@@ -531,9 +532,9 @@ export default function LightingPage() {
                       ? { duration: 3, repeat: Infinity, ease: 'easeInOut', repeatType: 'reverse' }
                       : { duration: 0.3 }
                   }
-                  className="text-7xl mb-4 inline-block"
+                  className="mx-auto mb-4 w-28 h-28"
                 >
-                  {activeScene.icon}
+                  <SceneVisual id={activeScene.id} detailed paused={!isAllOn} />
                 </motion.div>
               </AnimatePresence>
 
@@ -594,8 +595,8 @@ export default function LightingPage() {
                   }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <motion.span
-                    className="text-2xl"
+                  <motion.div
+                    className="w-10 h-10 flex items-center justify-center"
                     animate={
                       isActive && isAllOn
                         ? {
@@ -610,8 +611,8 @@ export default function LightingPage() {
                     }
                     transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                   >
-                    {scene.icon}
-                  </motion.span>
+                    <SceneVisual id={scene.id} paused={!isActive || !isAllOn} />
+                  </motion.div>
                   <span className="text-[11px] whitespace-nowrap font-medium"
                         style={{ color: isActive ? `rgb(${sr},${sg},${sb})` : '#71717a' }}>
                     {scene.nameJa}

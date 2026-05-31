@@ -342,6 +342,97 @@
   100% { background-position: 0% 50%; }
 }
 
+/* ── SceneVisual SVG animation keyframes ─────────────────────── */
+@keyframes sceneBreath {
+  0%, 100% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.09); opacity: 1; }
+}
+@keyframes sceneRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes sceneRotateSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes sceneRipple {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+@keyframes sceneTwinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes sceneBreathSoft {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.05); opacity: 0.9; }
+}
+@keyframes sceneGlowPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+@keyframes sceneFadeStagger {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.85; }
+}
+@keyframes sceneRise {
+  0% { transform: translateY(4px); opacity: 0.7; }
+  100% { transform: translateY(-2px); opacity: 1; }
+}
+@keyframes sceneShimmer {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.6; }
+}
+
+.scene-breath {
+  animation: sceneBreath 4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-rotate {
+  animation: sceneRotate 26s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-rotate-slow {
+  animation: sceneRotateSlow 40s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-ripple {
+  animation: sceneRipple 3.3s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-twinkle {
+  animation: sceneTwinkle 2.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-breath-soft {
+  animation: sceneBreathSoft 5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-glow-pulse {
+  animation: sceneGlowPulse 3s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-fade-stagger {
+  animation: sceneFadeStagger 3.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-rise {
+  animation: sceneRise 6s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scene-shimmer {
+  animation: sceneShimmer 2.8s ease-in-out infinite;
+}
+
 /* ── Applied animation classes ────────────────────────────────── */
 .light-glow {
   animation: lightGlow 3s ease-in-out infinite;
