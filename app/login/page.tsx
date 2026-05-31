@@ -182,11 +182,16 @@ export default function LoginPage() {
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
-      {/* Background glow */}
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden"
+         style={{ background: 'radial-gradient(140% 100% at 50% -10%, #0b0a16 0%, #070710 45%, #050507 100%)' }}>
+      {/* Aurora background glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-600/5 rounded-full blur-3xl" />
+        <div className="absolute top-[12%] left-[50%] -translate-x-1/2 w-[28rem] h-[28rem] rounded-full blur-3xl animate-orb-drift"
+             style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-[6%] right-[-10%] w-80 h-80 rounded-full blur-3xl"
+             style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.14) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-[-8%] left-[-8%] w-72 h-72 rounded-full blur-3xl"
+             style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.05) 0%, transparent 70%)' }} />
       </div>
 
       <motion.div
@@ -197,11 +202,26 @@ export default function LoginPage() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-700/10 border border-amber-500/20 mb-5 glow-gold">
-            <span className="text-2xl">✦</span>
-          </div>
-          <h1 className="font-serif text-2xl font-light text-zinc-100 tracking-wide">Lumina Fuji</h1>
-          <p className="text-zinc-300 text-sm mt-1 tracking-wider">RESIDENCE YAMANAKAKO</p>
+          <motion.div
+            className="relative inline-flex items-center justify-center w-[68px] h-[68px] rounded-[20px] mb-5"
+            style={{
+              background: 'linear-gradient(145deg, rgba(139,92,246,0.22), rgba(34,211,238,0.12))',
+              border: '1px solid rgba(139,92,246,0.3)',
+              boxShadow: '0 0 26px rgba(139,92,246,0.35), 0 0 60px rgba(34,211,238,0.14), inset 0 1px 0 rgba(255,255,255,0.18)',
+            }}
+            animate={{
+              boxShadow: [
+                '0 0 26px rgba(139,92,246,0.35), 0 0 60px rgba(34,211,238,0.14), inset 0 1px 0 rgba(255,255,255,0.18)',
+                '0 0 38px rgba(139,92,246,0.5), 0 0 80px rgba(34,211,238,0.22), inset 0 1px 0 rgba(255,255,255,0.22)',
+                '0 0 26px rgba(139,92,246,0.35), 0 0 60px rgba(34,211,238,0.14), inset 0 1px 0 rgba(255,255,255,0.18)',
+              ],
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <span className="text-2xl text-aurora-gradient">✦</span>
+          </motion.div>
+          <h1 className="font-serif text-2xl font-light text-zinc-50 tracking-wide">Lumina Fuji</h1>
+          <p className="text-zinc-400 text-sm mt-1 tracking-[0.2em]">RESIDENCE YAMANAKAKO</p>
         </div>
 
         {/* Language switcher */}
@@ -212,9 +232,10 @@ export default function LoginPage() {
               onClick={() => switchLang(l)}
               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] transition-all ${
                 lang === l
-                  ? 'bg-zinc-700 text-zinc-100 font-medium'
-                  : 'text-zinc-400 hover:text-zinc-400 hover:bg-zinc-800/60'
+                  ? 'text-violet-200 font-medium'
+                  : 'text-zinc-400 hover:text-zinc-300 hover:bg-zinc-800/60'
               }`}
+              style={lang === l ? { background: 'rgba(139,92,246,0.18)', border: '1px solid rgba(139,92,246,0.28)' } : undefined}
             >
               <span>{LANGS[l].flag}</span>
               <span>{LANGS[l].label}</span>
@@ -244,10 +265,10 @@ export default function LoginPage() {
                       onChange={e => { setEmail(e.target.value); setError(null) }}
                       placeholder={t.emailPlaceholder}
                       autoComplete="email"
-                      className={`w-full bg-zinc-800/80 border rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-500 text-sm focus:outline-none focus:ring-1 transition-all mb-3 ${
+                      className={`w-full bg-zinc-800/80 border rounded-xl px-4 py-3.5 text-zinc-50 placeholder:text-zinc-500 text-sm focus:outline-none transition-all mb-3 ${
                         error
-                          ? 'border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20'
-                          : 'border-zinc-700 focus:border-gold-500/50 focus:ring-gold-500/20'
+                          ? 'border-red-500/50'
+                          : 'border-zinc-700 focus:border-violet-500/60'
                       }`}
                     />
 
@@ -268,10 +289,10 @@ export default function LoginPage() {
                     <button
                       type="submit"
                       disabled={!email.trim() || loading}
-                      className="w-full btn-gold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full btn-aurora flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading
-                        ? <div className="w-5 h-5 border-2 border-zinc-950/30 border-t-zinc-950 rounded-full animate-spin" />
+                        ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         : <><ArrowRight size={16} />{t.sendCode}</>
                       }
                     </button>
@@ -295,8 +316,9 @@ export default function LoginPage() {
                   </button>
 
                   <div className="text-center mb-5">
-                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gold-500/10 border border-gold-500/20 mb-3">
-                      <Mail size={18} className="text-gold-400" />
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-full mb-3"
+                         style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.25)' }}>
+                      <Mail size={18} className="text-violet-300" />
                     </div>
                     <p className="text-zinc-300 text-sm font-medium">{t.codeSent}</p>
                     <p className="text-zinc-300 text-xs mt-1">{maskedEmail}</p>
@@ -316,10 +338,10 @@ export default function LoginPage() {
                         setError(null)
                       }}
                       placeholder={t.codePlaceholder}
-                      className={`w-full bg-zinc-800/80 border rounded-xl px-4 py-3.5 text-zinc-100 placeholder:text-zinc-500 text-sm text-center tracking-[0.3em] focus:outline-none focus:ring-1 transition-all mb-3 ${
+                      className={`w-full bg-zinc-800/80 border rounded-xl px-4 py-3.5 text-zinc-50 placeholder:text-zinc-500 text-sm text-center tracking-[0.3em] focus:outline-none transition-all mb-3 ${
                         error
-                          ? 'border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20'
-                          : 'border-zinc-700 focus:border-gold-500/50 focus:ring-gold-500/20'
+                          ? 'border-red-500/50'
+                          : 'border-zinc-700 focus:border-violet-500/60'
                       }`}
                     />
 
@@ -340,10 +362,10 @@ export default function LoginPage() {
                     <button
                       type="submit"
                       disabled={otp.length !== 6 || loading}
-                      className="w-full btn-gold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full btn-aurora flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading
-                        ? <div className="w-5 h-5 border-2 border-zinc-950/30 border-t-zinc-950 rounded-full animate-spin" />
+                        ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         : <><CheckCircle2 size={16} />{t.verify}</>
                       }
                     </button>
@@ -368,8 +390,8 @@ export default function LoginPage() {
           {isDemoMode && (
             <div className="card p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={14} className="text-gold-500" />
-                <span className="text-xs text-gold-500 font-medium tracking-wider uppercase">
+                <Sparkles size={14} className="text-violet-300" />
+                <span className="text-xs text-violet-300 font-medium tracking-wider uppercase">
                   {t.demoMode}
                 </span>
               </div>

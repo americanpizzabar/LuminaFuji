@@ -247,8 +247,8 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
         {/* Wi-Fi + Phone */}
         <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 mb-5">
           <div className="rounded-2xl p-4 flex items-start gap-2.5"
-               style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <Wifi size={15} className="text-gold-400 flex-shrink-0 mt-0.5" />
+               style={{ background: 'rgba(34,211,238,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(34,211,238,0.14)' }}>
+            <Wifi size={15} className="text-cyan-300 flex-shrink-0 mt-0.5" />
             <div className="min-w-0">
               <p className="text-xs text-zinc-300 mb-0.5">Wi-Fi</p>
               <p className="text-xs text-zinc-200 font-medium truncate">{settings.wifiName}</p>
@@ -256,8 +256,8 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
             </div>
           </div>
           <div className="rounded-2xl p-4 flex items-start gap-2.5"
-               style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <Phone size={15} className="text-gold-400 flex-shrink-0 mt-0.5" />
+               style={{ background: 'rgba(167,139,250,0.05)', backdropFilter: 'blur(20px)', border: '1px solid rgba(167,139,250,0.14)' }}>
+            <Phone size={15} className="text-violet-300 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-xs text-zinc-300 mb-0.5">{t('home.booked.hostContact')}</p>
               <p className="text-xs text-zinc-200 font-medium">{settings.ownerPhone}</p>
@@ -311,8 +311,9 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
             <h1 className="font-serif text-3xl text-zinc-50 leading-tight">
               {t(`home.greetings.${greetKey}`)}
             </h1>
-            <p className="text-zinc-300 text-sm mt-1 font-light">
-              {guestInfo?.name?.split(' ')[0]} · {guestInfo?.reservationId}
+            <p className="text-sm mt-1 font-light">
+              <span className="text-aurora-gradient font-medium">{guestInfo?.name?.split(' ')[0]}</span>
+              <span className="text-zinc-400"> · {guestInfo?.reservationId}</span>
             </p>
           </div>
           {(unreadMsgs > 0 || pendingReqs > 0) && (
@@ -438,8 +439,8 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
         {/* Status strip */}
         <motion.div variants={fadeUp} className="grid grid-cols-3 gap-2 mb-5">
           <div className="rounded-2xl p-3 flex flex-col items-center gap-1.5"
-               style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <Wifi size={14} className="text-gold-400" />
+               style={{ background: 'rgba(34,211,238,0.05)', backdropFilter: 'blur(16px)', border: '1px solid rgba(34,211,238,0.14)' }}>
+            <Wifi size={14} className="text-cyan-300" />
             <p className="text-[11px] text-zinc-300">Wi-Fi</p>
             <p className="text-xs text-zinc-300 text-center leading-tight truncate w-full text-center">{settings.wifiName}</p>
           </div>

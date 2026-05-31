@@ -98,9 +98,9 @@ export default function Navigation() {
                 >
                   <div
                     className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)' }}
+                    style={{ background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.22)' }}
                   >
-                    <Icon size={15} className="text-gold-400" />
+                    <Icon size={15} className="text-violet-300" />
                   </div>
                   <span className="text-sm text-zinc-300 font-medium">{label}</span>
                 </Link>
@@ -142,8 +142,8 @@ export default function Navigation() {
                     style={
                       isActive
                         ? {
-                            background: 'rgba(251,191,36,0.12)',
-                            boxShadow: '0 0 16px rgba(251,191,36,0.15)',
+                            background: 'rgba(139,92,246,0.16)',
+                            boxShadow: '0 0 18px rgba(139,92,246,0.3)',
                           }
                         : {}
                     }
@@ -154,14 +154,14 @@ export default function Navigation() {
                       <motion.div
                         layoutId="nav-active-bg"
                         className="absolute inset-0 rounded-2xl"
-                        style={{ background: 'rgba(251,191,36,0.1)' }}
+                        style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.18), rgba(34,211,238,0.12))' }}
                         transition={{ type: 'spring', damping: 22, stiffness: 300 }}
                       />
                     )}
                     <Icon
                       size={20}
                       strokeWidth={isActive ? 2 : 1.5}
-                      className={`relative z-10 transition-colors duration-200 ${isActive ? 'text-gold-400' : 'text-zinc-300'}`}
+                      className={`relative z-10 transition-colors duration-200 ${isActive ? 'text-violet-300' : 'text-zinc-300'}`}
                     />
                     {badge ? (
                       <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[11px] text-white flex items-center justify-center font-medium z-20">
@@ -171,7 +171,7 @@ export default function Navigation() {
                   </motion.div>
                   <span
                     className={`text-[11px] leading-none font-medium transition-colors duration-200 ${
-                      isActive ? 'text-gold-400' : 'text-zinc-400'
+                      isActive ? 'text-violet-300' : 'text-zinc-400'
                     }`}
                   >
                     {label}
@@ -190,7 +190,7 @@ export default function Navigation() {
                   className="relative w-10 h-10 flex items-center justify-center rounded-2xl transition-colors duration-200"
                   style={
                     showMore
-                      ? { background: 'rgba(251,191,36,0.12)', boxShadow: '0 0 16px rgba(251,191,36,0.15)' }
+                      ? { background: 'rgba(139,92,246,0.16)', boxShadow: '0 0 18px rgba(139,92,246,0.3)' }
                       : {}
                   }
                   whileTap={{ scale: 0.88 }}
@@ -198,10 +198,10 @@ export default function Navigation() {
                   <MoreHorizontal
                     size={20}
                     strokeWidth={1.5}
-                    className={showMore ? 'text-gold-400' : 'text-zinc-300'}
+                    className={showMore ? 'text-violet-300' : 'text-zinc-300'}
                   />
                 </motion.div>
-                <span className={`text-[11px] leading-none font-medium ${showMore ? 'text-gold-400' : 'text-zinc-400'}`}>
+                <span className={`text-[11px] leading-none font-medium ${showMore ? 'text-violet-300' : 'text-zinc-400'}`}>
                   {t('nav.more')}
                 </span>
               </button>
