@@ -8,6 +8,7 @@ import Navigation from '@/components/Navigation'
 import PhaseSelector from '@/components/PhaseSelector'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import DynamicBackground from '@/components/DynamicBackground'
+import CinematicFrame from '@/components/CinematicFrame'
 import WelcomeRitual from '@/components/WelcomeRitual'
 import Link from 'next/link'
 import { BookOpen, LogOut } from 'lucide-react'
@@ -68,6 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <AuthGuard>
           <div className="dark min-h-screen">
             <DynamicBackground />
+            <CinematicFrame />
             <WelcomeRitual />
             <PhaseSelector />
             {/* Fixed top-right controls */}

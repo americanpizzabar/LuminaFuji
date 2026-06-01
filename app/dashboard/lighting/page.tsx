@@ -627,6 +627,17 @@ export default function LightingPage() {
               <p className="text-xs text-zinc-600 mt-2">
                 {activeScene.nameEn} · {brightness}% · {FIXED_CCT_LABEL}
               </p>
+              {SCENE_POETRY[activeScene.id]?.bgmHint && (
+                <motion.p
+                  key={activeScene.id + '-bgm'}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-[10px] mt-1.5 tracking-wide"
+                  style={{ color: 'rgba(255,184,119,0.3)' }}
+                >
+                  ♪ {SCENE_POETRY[activeScene.id].bgmHint}
+                </motion.p>
+              )}
 
               <AnimatePresence>
                 {lastSent && (
