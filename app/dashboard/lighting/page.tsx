@@ -9,6 +9,7 @@ import {
   brightnessToWarmRgb, FIXED_CCT_LABEL, SCENE_POETRY,
 } from '@/lib/lighting'
 import FloorPlan from '@/components/FloorPlan'
+import CircadianTuner from '@/components/CircadianTuner'
 import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
 import { recordLightingEvent, recordZoneEvent } from '@/lib/store'
@@ -323,6 +324,9 @@ export default function LightingPage() {
   const [zones, setZones] = useState<Zone[]>(DEFAULT_ZONES)
   const [isAllOn, setIsAllOn] = useState(true)
   const [floorPlanSelection, setFloorPlanSelection] = useState<string | null>(null)
+  const [circadianOpen, setCircadianOpen] = useState(false)
+  const [flickerMode,   setFlickerMode]   = useState(false)
+  const flickerRef = useRef<number | null>(null)
 
   // 調光ダイヤルのディテント（5%刻みでカチッと振動）を管理
   const detentRef = useRef(-1)
@@ -366,6 +370,29 @@ export default function LightingPage() {
     if (isStaying) sendCommand('all', { state: 'ON', percent: target })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoAmbient, now])
+
+  // 1/fゆらぎ（キャンドルライト・プロトコル） — 深い眠り処方箋のフリッカーエンジン
+  useEffect(() => {
+    if (!flickerMode) {
+      if (flickerRef.current) cancelAnimationFrame(flickerRef.current)
+      return
+    }
+    let t = 0
+    const tick = () => {
+      t += 0.55
+      // Multi-frequency superposition approximates 1/f noise spectrum
+      const noise =
+        0.50 * Math.sin(t * 0.082) +
+        0.25 * Math.sin(t * 0.191 + 1.31) +
+        0.125 * Math.sin(t * 0.413 + 2.71) +
+        0.0625 * Math.sin(t * 0.874 + 0.93)
+      const b = Math.round(5 + 2.8 * noise)
+      setBrightness(Math.max(2, Math.min(10, b)))
+      flickerRef.current = requestAnimationFrame(tick)
+    }
+    flickerRef.current = requestAnimationFrame(tick)
+    return () => { if (flickerRef.current) cancelAnimationFrame(flickerRef.current) }
+  }, [flickerMode])
 
   // 日没のフェードを圧縮再生（デモ／日中でも体験できるよう約8秒で1時間分を再現）
   const runPreview = () => {
@@ -528,6 +555,17 @@ export default function LightingPage() {
               </div>
             )
           })()}
+
+          {/* 光の処方箋ボタン */}
+          <motion.button
+            onClick={() => { hapticTap(); setCircadianOpen(true) }}
+            className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all lf-glow flex-shrink-0"
+            style={{ background: flickerMode ? 'rgba(120,160,220,0.12)' : 'rgba(255,200,100,0.08)', border: flickerMode ? '1px solid rgba(120,160,220,0.22)' : '1px solid rgba(255,200,100,0.18)', ['--lf-glow-color' as any]: 'rgba(255,200,100,0.5)' }}
+            whileTap={{ scale: 0.88 }}
+            title="光の処方箋"
+          >
+            <span className="text-base leading-none">{flickerMode ? '🌙' : '✦'}</span>
+          </motion.button>
 
           <motion.button
             onClick={toggleAll}
@@ -902,6 +940,22 @@ export default function LightingPage() {
         </div>
 
       </div>
+
+      {/* 光の処方箋モーダル */}
+      <CircadianTuner
+        open={circadianOpen}
+        onClose={() => setCircadianOpen(false)}
+        onApply={(targetBrightness, isFlicker) => {
+          setFlickerMode(isFlicker)
+          if (!isFlicker) {
+            setBrightness(targetBrightness)
+            setIsAllOn(targetBrightness > 0)
+            if (isStaying) sendCommand('all', { state: 'ON', percent: targetBrightness })
+          } else {
+            setIsAllOn(true)
+          }
+        }}
+      />
     </div>
   )
 }

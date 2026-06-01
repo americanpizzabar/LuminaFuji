@@ -595,6 +595,27 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
           <p className="text-zinc-300 text-sm mt-1 font-light">Thank you, {guestInfo?.name?.split(' ')[0]}</p>
         </motion.div>
 
+        {/* 光の設計図（Light Blueprint） */}
+        <motion.div variants={fadeUp} className="mb-4">
+          <Link href="/dashboard/blueprint">
+            <motion.div
+              className="rounded-3xl p-4 flex items-center gap-3"
+              style={{ background:'rgba(255,255,255,0.025)', border:'1px solid rgba(255,255,255,0.07)' }}
+              whileHover={{ scale:1.01, borderColor:'rgba(255,157,92,0.25)' }}
+              whileTap={{ scale:0.97 }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
+                   style={{ background:'rgba(255,157,92,0.08)', border:'1px solid rgba(255,157,92,0.14)' }}>
+                ✦
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-zinc-100">光の設計図を見る</p>
+                <p className="text-xs text-zinc-500 mt-0.5">あなただけの光のプロファイル · Blueprint</p>
+              </div>
+              <ArrowRight size={15} className="text-zinc-600 flex-shrink-0" />
+            </motion.div>
+          </Link>
+        </motion.div>
+
         {/* 光の記憶（チェックアウトのデジタルカード）を開く */}
         <motion.div variants={fadeUp} className="mb-5">
           <button onClick={() => setMemoryOpen(true)}
