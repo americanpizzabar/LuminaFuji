@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Power, Zap, Wifi, WifiOff, Check, Info } from 'lucide-react'
+import { ArrowLeft, Power, Zap, Wifi, WifiOff, Check, Info, Sunset, Moon } from 'lucide-react'
 import Link from 'next/link'
 import {
   SCENES, DEFAULT_ZONES, Zone, LightingScene,
@@ -13,6 +13,7 @@ import { usePhase } from '@/lib/phase'
 import { recordLightingEvent } from '@/lib/store'
 import SceneVisual from '@/components/SceneVisual'
 import { hapticTick, hapticTap } from '@/lib/haptics'
+import { getSunTimes, twilightProgress, formatClock } from '@/lib/sun'
 
 type BackendStatus = 'connecting' | 'zigbee' | 'dali' | 'both' | 'simulated' | 'offline'
 
@@ -325,6 +326,16 @@ export default function LightingPage() {
   const detentRef = useRef(-1)
   const zoneDetentRef = useRef<Record<string, number>>({})
 
+  // オート・アンビエント（日没連動の自動フェード）
+  const [autoAmbient, setAutoAmbient] = useState(false)
+  const [now, setNow] = useState<Date | null>(null)
+  const previewingRef = useRef(false)
+  useEffect(() => {
+    setNow(new Date())
+    const id = setInterval(() => setNow(new Date()), 30000)
+    return () => clearInterval(id)
+  }, [])
+
   const { status: backendStatus, sendCommand, lastSent } = useLightingControl(isStaying)
 
   const applyScene = useCallback((scene: LightingScene) => {
@@ -337,6 +348,45 @@ export default function LightingPage() {
       sendCommand('all', { state: scene.brightness > 0 ? 'ON' : 'OFF', percent: scene.brightness })
     }
   }, [isStaying, sendCommand])
+
+  // 日没情報と黄昏の進行度
+  const sun = now ? getSunTimes(now) : null
+  const twilight = now && sun ? twilightProgress(now, sun.sunset) : 0
+
+  // オートアンビエント有効時、黄昏の進行に合わせて明るさをリラックスへ寄せる
+  useEffect(() => {
+    if (!autoAmbient || !now || !sun || previewingRef.current) return
+    const p = twilightProgress(now, sun.sunset)
+    if (p <= 0) return // 日没前は手動設定を尊重して何もしない
+    const target = Math.round(70 - 52 * p) // 日中 70% → 完全な夜 18%
+    setIsAllOn(true)
+    setBrightness(prev => (Math.abs(prev - target) < 1 ? prev : target))
+    if (isStaying) sendCommand('all', { state: 'ON', percent: target })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoAmbient, now])
+
+  // 日没のフェードを圧縮再生（デモ／日中でも体験できるよう約8秒で1時間分を再現）
+  const runPreview = () => {
+    if (previewingRef.current) return
+    previewingRef.current = true
+    const startB = 72, endB = 18, dur = 8000, t0 = performance.now()
+    setActiveScene(SCENES[2]) // 昼
+    setBrightness(startB)
+    setIsAllOn(true)
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / dur)
+      const eased = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2
+      setBrightness(Math.round(startB + (endB - startB) * eased))
+      if (k < 1) {
+        requestAnimationFrame(tick)
+      } else {
+        previewingRef.current = false
+        setActiveScene(SCENES[4]) // くつろぎ
+        hapticTap()
+      }
+    }
+    requestAnimationFrame(tick)
+  }
 
   const toggleAll = () => {
     hapticTap()
@@ -654,6 +704,72 @@ export default function LightingPage() {
               <span>{t('lighting.off')}</span>
               <span>{t('lighting.max')}</span>
             </div>
+          </div>
+        </div>
+
+        {/* ── オート・アンビエント（日没連動の自動フェード） ───────── */}
+        <div className="px-4 mb-5">
+          <div className="p-5 rounded-3xl"
+               style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,157,92,0.14)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                     style={{ background: 'rgba(255,157,92,0.12)', border: '1px solid rgba(255,157,92,0.2)' }}>
+                  <Sunset size={16} className="text-ember-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-zinc-100">オート・アンビエント</p>
+                  <p className="text-[11px] text-zinc-400">日没に合わせて、気づかぬほど静かにリラックスへ</p>
+                </div>
+              </div>
+              <motion.button
+                onClick={() => { hapticTap(); setAutoAmbient(v => !v) }}
+                className="w-12 h-6 rounded-full relative flex-shrink-0 lf-glow"
+                style={{
+                  background: autoAmbient ? 'linear-gradient(135deg, #ff9d5c, #ffd1a3)' : 'rgba(255,255,255,0.1)',
+                  boxShadow: autoAmbient ? '0 0 12px rgba(255,157,92,0.4)' : 'none',
+                  ['--lf-glow-color' as any]: 'rgba(255,157,92,0.6)',
+                }}
+                whileTap={{ scale: 0.94 }}
+              >
+                <motion.span
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow"
+                  animate={{ left: autoAmbient ? '26px' : '2px' }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 400 }}
+                />
+              </motion.button>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] mb-1.5">
+              <span className="flex items-center gap-1 text-zinc-400">
+                {twilight >= 1 ? <Moon size={11} className="text-ember-400" /> : <Sunset size={11} className="text-ember-400" />}
+                本日の日没 {formatClock(sun?.sunset ?? null)}
+              </span>
+              <span style={{ color: twilight > 0 ? '#ffb877' : '#71717a' }}>
+                {twilight <= 0 ? '日中' : twilight >= 1 ? '夜 — くつろぎへ' : '黄昏 — 移行中'}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, #f5853f 0%, #ffb877 60%, #ffd1a3 100%)', boxShadow: '0 0 10px rgba(255,157,92,0.4)' }}
+                animate={{ width: `${Math.round(twilight * 100)}%` }}
+                transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </div>
+
+            <button
+              onClick={runPreview}
+              className="mt-4 w-full py-2.5 rounded-xl text-xs font-medium transition-all lf-glow"
+              style={{
+                background: 'rgba(255,157,92,0.08)',
+                border: '1px solid rgba(255,157,92,0.18)',
+                color: '#ffd1a3',
+                ['--lf-glow-color' as any]: 'rgba(255,157,92,0.5)',
+              }}
+            >
+              日没のフェードを今すぐ体験する
+            </button>
           </div>
         </div>
 
