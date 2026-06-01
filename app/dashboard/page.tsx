@@ -9,6 +9,7 @@ import { useLanguage } from '@/lib/useLanguage'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import CompanionInvite from '@/components/CompanionInvite'
 import MemoryCard from '@/components/MemoryCard'
+import SecretKey from '@/components/SecretKey'
 import {
   Lightbulb, BookOpen, MessageCircle,
   Star, ExternalLink,
@@ -717,6 +718,17 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
             </div>
           </motion.div>
         )}
+
+        {/* Digital Secret Key — ECUANEST VIP アクセス */}
+        <motion.div variants={fadeUp} className="mb-4">
+          <div className="mb-2">
+            <p className="text-xs text-zinc-600 uppercase tracking-[0.2em]">Your Legacy</p>
+          </div>
+          <SecretKey
+            reservationId={guestInfo?.reservationId ?? 'lf-guest'}
+            guestName={guestInfo?.name ?? 'ゲスト'}
+          />
+        </motion.div>
 
         {/* Guestbook CTA */}
         <motion.div variants={fadeUp} className="mb-4">

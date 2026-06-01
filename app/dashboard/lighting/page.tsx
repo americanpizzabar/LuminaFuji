@@ -6,8 +6,9 @@ import { ArrowLeft, Power, Zap, Wifi, WifiOff, Check, Info, Sunset, Moon } from 
 import Link from 'next/link'
 import {
   SCENES, DEFAULT_ZONES, Zone, LightingScene,
-  brightnessToWarmRgb, FIXED_CCT_LABEL,
+  brightnessToWarmRgb, FIXED_CCT_LABEL, SCENE_POETRY,
 } from '@/lib/lighting'
+import FloorPlan from '@/components/FloorPlan'
 import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
 import { recordLightingEvent, recordZoneEvent } from '@/lib/store'
@@ -321,6 +322,7 @@ export default function LightingPage() {
   const [brightness, setBrightness] = useState(25)
   const [zones, setZones] = useState<Zone[]>(DEFAULT_ZONES)
   const [isAllOn, setIsAllOn] = useState(true)
+  const [floorPlanSelection, setFloorPlanSelection] = useState<string | null>(null)
 
   // 調光ダイヤルのディテント（5%刻みでカチッと振動）を管理
   const detentRef = useRef(-1)
@@ -611,9 +613,18 @@ export default function LightingPage() {
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                 className="text-2xl font-serif text-zinc-50"
               >
-                {activeScene.nameJa}
+                {SCENE_POETRY[activeScene.id]?.poeticName ?? activeScene.nameJa}
               </motion.p>
-              <p className="text-xs text-zinc-300 mt-1">
+              <motion.p
+                key={activeScene.id + '-verse'}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                transition={{ delay: 0.25 }}
+                className="text-[11px] text-zinc-500 mt-2 px-4 leading-relaxed max-w-[260px] mx-auto"
+                style={{ fontStyle: 'italic' }}
+              >
+                {SCENE_POETRY[activeScene.id]?.verse}
+              </motion.p>
+              <p className="text-xs text-zinc-600 mt-2">
                 {activeScene.nameEn} · {brightness}% · {FIXED_CCT_LABEL}
               </p>
 
@@ -794,7 +805,7 @@ export default function LightingPage() {
           </div>
         </div>
 
-        {/* ── エリア別コントロール ───────────────────────── */}
+        {/* ── エリア別コントロール（平面図＋ゾーンカード） ─── */}
         <div className="px-4 mb-6">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-zinc-300 uppercase tracking-[0.2em]">{t('lighting.zones')}</p>
@@ -803,17 +814,59 @@ export default function LightingPage() {
               {isAllOn ? t('lighting.allOff') : t('lighting.allOn')}
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            {zones.map(zone => (
-              <ZoneCard
-                key={zone.id} zone={zone}
-                brightnessLabel={t('lighting.zoneBrightness')}
-                lr={lr} lg={lg} lb={lb}
-                onToggle={() => toggleZone(zone.id)}
-                onBrightnessChange={val => setZoneBrightness(zone.id, val)}
-              />
-            ))}
+
+          {/* Interactive floor plan */}
+          <div className="mb-3">
+            <FloorPlan
+              zones={zones}
+              selectedZoneId={floorPlanSelection}
+              onSelect={id => {
+                const zone = zones.find(z => z.id === id)
+                if (zone && !zone.isOn) toggleZone(id)
+                setFloorPlanSelection(prev => prev === id ? null : id)
+              }}
+            />
           </div>
+
+          {/* Selected zone detail */}
+          <AnimatePresence>
+            {floorPlanSelection && (() => {
+              const zone = zones.find(z => z.id === floorPlanSelection)
+              if (!zone) return null
+              return (
+                <motion.div key={floorPlanSelection}
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.3 }}>
+                  <ZoneCard
+                    zone={zone}
+                    brightnessLabel={t('lighting.zoneBrightness')}
+                    lr={lr} lg={lg} lb={lb}
+                    onToggle={() => toggleZone(zone.id)}
+                    onBrightnessChange={val => setZoneBrightness(zone.id, val)}
+                  />
+                </motion.div>
+              )
+            })()}
+          </AnimatePresence>
+
+          {/* All zones grid (collapsed to a compact bar when one is selected) */}
+          <AnimatePresence>
+            {!floorPlanSelection && (
+              <motion.div key="all-zones"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="grid grid-cols-2 gap-3 mt-3">
+                {zones.map(zone => (
+                  <ZoneCard
+                    key={zone.id} zone={zone}
+                    brightnessLabel={t('lighting.zoneBrightness')}
+                    lr={lr} lg={lg} lb={lb}
+                    onToggle={() => toggleZone(zone.id)}
+                    onBrightnessChange={val => setZoneBrightness(zone.id, val)}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* ── 製品リンク ─────────────────────────────────── */}

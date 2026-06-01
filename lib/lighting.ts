@@ -110,3 +110,42 @@ export function brightnessToWarmRgb(brightness: number): string {
 export function fixedCctRgb(): string {
   return brightnessToWarmRgb(100)
 }
+
+/** 各シーンの詩的な名前と情景テキスト（ライティング・オーケストレーション用）。 */
+export const SCENE_POETRY: Record<string, { poeticName: string; verse: string; bgmHint: string }> = {
+  dawn: {
+    poeticName: '夜明けの詩',
+    verse: '闇が静かに溶け、最初の光が地平を染める。世界はまだ息をひそめている。',
+    bgmHint: 'ピアノ・ソロ / 琴の独奏',
+  },
+  morning: {
+    poeticName: '清朝の光',
+    verse: '透き通る朝の空気に、清冽な光が踊る。富士の稜線が鮮やかに浮かび上がる。',
+    bgmHint: 'ジャズ・モーニング / アコースティック',
+  },
+  day: {
+    poeticName: '高原の白昼',
+    verse: '山の頂が輝き、影は短く意志は明確。光は遠慮なく、しかし穏やかに満ちる。',
+    bgmHint: 'ボサノバ / チェンバーポップ',
+  },
+  dusk: {
+    poeticName: '黄金の刻',
+    verse: '太陽が西へ傾く。光は金色に熟し、温もりが空気を染める。時間が緩む。',
+    bgmHint: 'ジャズ・バラード / シネマスコア',
+  },
+  evening: {
+    poeticName: '宵の静寂',
+    verse: '世界は柔らかくなり、言葉が少なくなる。光は主張をやめ、ただそこにある。',
+    bgmHint: 'アンビエント / ローファイ',
+  },
+  reading: {
+    poeticName: '書斎の灯台',
+    verse: '思考を照らす、静かで揺るぎない光。集中と安らぎが、ひとつの場所に宿る。',
+    bgmHint: 'クラシック / インストゥルメンタル',
+  },
+  sleep: {
+    poeticName: '星明かりの揺り籠',
+    verse: '瞼が重くなる。光はそっと囁き、意識を夢の縁へと、ゆっくりと誘う。',
+    bgmHint: 'ホワイトノイズ / 雨の音',
+  },
+}
