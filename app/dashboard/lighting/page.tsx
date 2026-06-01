@@ -10,7 +10,7 @@ import {
 } from '@/lib/lighting'
 import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
-import { recordLightingEvent } from '@/lib/store'
+import { recordLightingEvent, recordZoneEvent } from '@/lib/store'
 import SceneVisual from '@/components/SceneVisual'
 import { hapticTick, hapticTap } from '@/lib/haptics'
 import { getSunTimes, twilightProgress, formatClock } from '@/lib/sun'
@@ -401,6 +401,8 @@ export default function LightingPage() {
   const toggleZone = (id: string) => {
     hapticTap()
     const zone = zones.find(z => z.id === id)
+    // エリアを点灯した操作を記録（チェックアウトのお気に入りエリア算出用）
+    if (zone && !zone.isOn) recordZoneEvent(id)
     setZones(prev => prev.map(z => z.id === id ? { ...z, isOn: !z.isOn } : z))
     if (isStaying && zone) {
       sendCommand(id, { state: zone.isOn ? 'OFF' : 'ON', percent: zone.brightness })
@@ -409,7 +411,11 @@ export default function LightingPage() {
 
   const setZoneBrightness = (id: string, val: number) => {
     const detent = Math.round(val / 5)
-    if (zoneDetentRef.current[id] !== detent) { zoneDetentRef.current[id] = detent; hapticTick() }
+    if (zoneDetentRef.current[id] !== detent) {
+      zoneDetentRef.current[id] = detent
+      hapticTick()
+      if (val > 0) recordZoneEvent(id)
+    }
     setZones(prev => prev.map(z => z.id === id ? { ...z, brightness: val } : z))
     if (isStaying) {
       sendCommand(id, { state: val > 0 ? 'ON' : 'OFF', percent: val })

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePhase } from '@/lib/phase'
@@ -7,12 +8,13 @@ import { useStore } from '@/lib/useStore'
 import { useLanguage } from '@/lib/useLanguage'
 import AnnouncementBanner from '@/components/AnnouncementBanner'
 import CompanionInvite from '@/components/CompanionInvite'
+import MemoryCard from '@/components/MemoryCard'
 import {
   Lightbulb, BookOpen, MessageCircle,
   Star, ExternalLink,
   Bell, ChevronRight, Wifi,
   Phone, Sun, Moon, Sunset, MapPin, X, ArrowRight,
-  Navigation2, BarChart3
+  Navigation2, BarChart3, Sparkles
 } from 'lucide-react'
 import { getLightingAnalytics, markGuestArrived, unmarkGuestArrived } from '@/lib/store'
 import { SCENES } from '@/lib/lighting'
@@ -297,6 +299,8 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
     ? Math.max(0, Math.ceil((new Date(guestInfo.checkOut).getTime() - Date.now()) / 86400000))
     : 1
 
+  const [memoryOpen, setMemoryOpen] = useState(false)
+
   // Quick mood scenes (subset for dashboard)
   const moodScenes = SCENES.filter(s => ['evening', 'morning', 'reading', 'sleep'].includes(s.id))
 
@@ -334,6 +338,29 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
             </Link>
           )}
         </motion.div>
+
+        {/* ご出発の日：光の記憶（デジタル・チェックアウト） */}
+        {daysLeft === 0 && (
+          <motion.div variants={fadeUp} className="mb-4">
+            <button onClick={() => setMemoryOpen(true)}
+              className="w-full rounded-3xl p-4 flex items-center gap-3 text-left transition-all lf-glow"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,157,92,0.12) 0%, rgba(13,10,8,0.5) 100%)',
+                border: '1px solid rgba(255,157,92,0.22)',
+                ['--lf-glow-color' as any]: 'rgba(255,157,92,0.55)',
+              }}>
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 animate-ember-pulse"
+                   style={{ background: 'rgba(255,157,92,0.14)', border: '1px solid rgba(255,157,92,0.25)' }}>
+                <Sparkles size={18} className="text-ember-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-emissive">本日ご出発 — 光の記憶を受け取る</p>
+                <p className="text-xs text-zinc-400 mt-0.5">滞在中に紡いだ光の物語をカードに</p>
+              </div>
+              <ArrowRight size={16} className="text-ember-400 flex-shrink-0" />
+            </button>
+          </motion.div>
+        )}
 
         {/* Hero: Lighting Control */}
         <motion.div variants={fadeUp} className="mb-4">
@@ -523,6 +550,8 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
         </AnimatePresence>
 
       </motion.div>
+
+      <MemoryCard open={memoryOpen} onClose={() => setMemoryOpen(false)} />
     </div>
   )
 }
@@ -532,6 +561,15 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
   const [store] = useStore()
   const { t } = useLanguage()
   const analytics = getLightingAnalytics(store)
+
+  // チェックアウト時、光の記憶カードを一度だけ自動生成
+  const [memoryOpen, setMemoryOpen] = useState(false)
+  useEffect(() => {
+    const key = `lf_memory_${guestInfo?.reservationId ?? 'guest'}`
+    try {
+      if (!localStorage.getItem(key)) { localStorage.setItem(key, '1'); setMemoryOpen(true) }
+    } catch { /* localStorage 不可環境は自動表示しない */ }
+  }, [guestInfo])
 
   const totalEvents = store.lightingHistory?.length ?? 0
 
@@ -550,10 +588,32 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
       <motion.div variants={staggerChildren} initial="hidden" animate="show">
 
         {/* Hero thank you */}
-        <motion.div variants={fadeUp} className="mb-7 pt-2">
+        <motion.div variants={fadeUp} className="mb-5 pt-2">
           <p className="section-title">{t('home.post.status')}</p>
           <h1 className="font-serif text-3xl text-zinc-50 leading-tight">{t('home.post.thanks')}</h1>
           <p className="text-zinc-300 text-sm mt-1 font-light">Thank you, {guestInfo?.name?.split(' ')[0]}</p>
+        </motion.div>
+
+        {/* 光の記憶（チェックアウトのデジタルカード）を開く */}
+        <motion.div variants={fadeUp} className="mb-5">
+          <button onClick={() => setMemoryOpen(true)}
+            className="w-full rounded-3xl p-5 flex items-center gap-4 text-left transition-all lf-glow"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,157,92,0.12) 0%, rgba(13,10,8,0.5) 100%)',
+              border: '1px solid rgba(255,157,92,0.22)',
+              boxShadow: '0 4px 28px rgba(255,157,92,0.12)',
+              ['--lf-glow-color' as any]: 'rgba(255,157,92,0.55)',
+            }}>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 animate-ember-pulse"
+                 style={{ background: 'rgba(255,157,92,0.14)', border: '1px solid rgba(255,157,92,0.25)' }}>
+              <Sparkles size={20} className="text-ember-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-serif text-lg text-emissive leading-tight">光の記憶をひらく</p>
+              <p className="text-xs text-zinc-400 mt-0.5">Lumina Fuji で過ごした、あなただけの光の物語</p>
+            </div>
+            <ArrowRight size={18} className="text-ember-400 flex-shrink-0" />
+          </button>
         </motion.div>
 
         {/* Personalized light journey card */}
@@ -706,6 +766,8 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
         </motion.div>
 
       </motion.div>
+
+      <MemoryCard open={memoryOpen} onClose={() => setMemoryOpen(false)} />
     </div>
   )
 }

@@ -214,6 +214,8 @@ export interface AppStore {
   cleaningChecklist: CleaningTask[]
   maintenanceItems: MaintenanceItem[]
   places: RecommendedPlace[]
+  /** エリア別の照明操作回数（チェックアウト時の「お気に入りエリア」算出用） */
+  zoneUsage: Record<string, number>
 }
 
 // ─── Default data ────────────────────────────────────────────────────────────
@@ -355,6 +357,7 @@ const DEFAULT_STORE: AppStore = {
   cleaningChecklist: DEFAULT_CLEANING_CHECKLIST,
   maintenanceItems: [],
   places: DEFAULT_PLACES,
+  zoneUsage: {},
 }
 
 // ─── Storage operations ───────────────────────────────────────────────────────
@@ -416,6 +419,7 @@ export function resetStoreForGuest(guestInfo: GuestInfo, _guestBooking?: Booking
     messages: [],                             // 前ゲストとオーナーのチャットを除去
     serviceRequests: [],                      // 前ゲストのリクエストを除去
     lightingHistory: [],                      // 照明操作履歴をリセット
+    zoneUsage: {},                            // エリア別操作回数をリセット
     cleaningChecklist: DEFAULT_CLEANING_CHECKLIST.map(t => ({ ...t, done: false, doneAt: undefined, doneBy: undefined })),
     maintenanceItems: [],
     consultRequests: [],                      // オーナー側のリード情報を除去
@@ -531,6 +535,20 @@ export function recordLightingEvent(event: Omit<LightingEvent, 'timestamp'>): vo
   const store = getStore()
   const events = [{ ...event, timestamp: new Date().toISOString() }, ...store.lightingHistory].slice(0, 200)
   updateStore({ lightingHistory: events })
+}
+
+/** エリア（ゾーン）の操作を記録。チェックアウト時の「お気に入りエリア」算出に使う。 */
+export function recordZoneEvent(zoneId: string): void {
+  const store = getStore()
+  const zoneUsage = { ...store.zoneUsage, [zoneId]: (store.zoneUsage?.[zoneId] ?? 0) + 1 }
+  updateStore({ zoneUsage })
+}
+
+/** 最も多く操作したエリアを返す。 */
+export function getZoneAnalytics(store: AppStore) {
+  const counts = store.zoneUsage ?? {}
+  const top = Object.entries(counts).sort(([, a], [, b]) => b - a)[0]
+  return { counts, topZoneId: top ? top[0] : null, topZoneCount: top ? top[1] : 0 }
 }
 
 // Messages
