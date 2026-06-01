@@ -490,6 +490,28 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
           </Link>
         </motion.div>
 
+        {/* Light Alarm card */}
+        <motion.div variants={fadeUp} className="mb-4">
+          <Link href="/dashboard/alarm">
+            <motion.div
+              className="rounded-2xl p-4 flex items-center gap-3"
+              style={{ background: 'rgba(255,157,92,0.05)', border: '1px solid rgba(255,157,92,0.14)' }}
+              whileHover={{ scale: 1.01, borderColor: 'rgba(255,157,92,0.28)' }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
+                   style={{ background: 'rgba(255,157,92,0.08)', border: '1px solid rgba(255,157,92,0.16)' }}>
+                🌅
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-zinc-100">明日の光アラーム</p>
+                <p className="text-xs text-zinc-400 mt-0.5">朝の予定に合わせたサンライズ照明</p>
+              </div>
+              <ArrowRight size={15} className="text-zinc-600 flex-shrink-0" />
+            </motion.div>
+          </Link>
+        </motion.div>
+
         {/* Quick actions */}
         <motion.div variants={fadeUp}>
           <p className="section-title mb-3">{t('home.staying.quickActions')}</p>
@@ -773,6 +795,30 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
                 <p className="text-xs text-zinc-300 mt-0.5">{t('home.post.guestbookSub')}</p>
               </div>
               <ChevronRight size={16} className="text-zinc-400" />
+            </motion.div>
+          </Link>
+        </motion.div>
+
+        {/* Lumina Window — post-stay screen meditation */}
+        <motion.div variants={fadeUp} className="mb-4">
+          <Link href="/dashboard/window">
+            <motion.div
+              className="rounded-3xl p-4 flex items-center gap-3"
+              style={{ background: 'rgba(255,130,50,0.04)', border: '1px solid rgba(255,130,50,0.13)' }}
+              whileHover={{ scale: 1.01, borderColor: 'rgba(255,130,50,0.28)' }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <motion.div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'radial-gradient(circle, hsl(28,100%,50%) 0%, hsl(24,80%,20%) 70%)', border: '1px solid rgba(255,130,50,0.25)' }}
+                animate={{ boxShadow: ['0 0 8px rgba(255,130,50,0.2)', '0 0 20px rgba(255,130,50,0.45)', '0 0 8px rgba(255,130,50,0.2)'] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-zinc-100">Lumina の窓</p>
+                <p className="text-xs text-zinc-400 mt-0.5">記憶の光 · 手のひらの有機EL</p>
+              </div>
+              <ArrowRight size={15} className="text-zinc-600 flex-shrink-0" />
             </motion.div>
           </Link>
         </motion.div>

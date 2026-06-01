@@ -199,6 +199,14 @@ export interface MaintenanceItem {
   doneAt?: string
 }
 
+export type ArrivalMode = 'rest' | 'refresh' | 'explore'
+
+export interface LightAlarm {
+  time: string
+  plan: 'sport' | 'leisure' | 'work'
+  enabled: boolean
+}
+
 export interface AppStore {
   phase: GuestPhase
   guestInfo: GuestInfo | null
@@ -216,6 +224,12 @@ export interface AppStore {
   places: RecommendedPlace[]
   /** エリア別の照明操作回数（チェックアウト時の「お気に入りエリア」算出用） */
   zoneUsage: Record<string, number>
+  /** サイレント・オンボーディング: 到着時のゲスト状態 */
+  arrivalMode: ArrivalMode | null
+  /** 照明シーンが最後に変わった日時（無言のコンシェルジュ検知用） */
+  lastSceneChangeAt: string | null
+  /** 明日の光アラーム設定 */
+  lightAlarm: LightAlarm | null
 }
 
 // ─── Default data ────────────────────────────────────────────────────────────
@@ -358,6 +372,9 @@ const DEFAULT_STORE: AppStore = {
   maintenanceItems: [],
   places: DEFAULT_PLACES,
   zoneUsage: {},
+  arrivalMode: null,
+  lastSceneChangeAt: null,
+  lightAlarm: null,
 }
 
 // ─── Storage operations ───────────────────────────────────────────────────────

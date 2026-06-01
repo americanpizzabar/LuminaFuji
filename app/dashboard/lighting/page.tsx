@@ -12,7 +12,7 @@ import FloorPlan from '@/components/FloorPlan'
 import CircadianTuner from '@/components/CircadianTuner'
 import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
-import { recordLightingEvent, recordZoneEvent } from '@/lib/store'
+import { recordLightingEvent, recordZoneEvent, getStore, updateStore } from '@/lib/store'
 import SceneVisual from '@/components/SceneVisual'
 import { hapticTick, hapticTap } from '@/lib/haptics'
 import { getSunTimes, twilightProgress, formatClock } from '@/lib/sun'
@@ -351,9 +351,29 @@ export default function LightingPage() {
     setIsAllOn(scene.brightness > 0)
     if (isStaying) {
       recordLightingEvent({ sceneId: scene.id, sceneName: scene.nameEn })
+      updateStore({ lastSceneChangeAt: new Date().toISOString() })
       sendCommand('all', { state: scene.brightness > 0 ? 'ON' : 'OFF', percent: scene.brightness })
     }
   }, [isStaying, sendCommand])
+
+  // サイレント・オンボーディング: 到着モードに合わせた初期シーンを適用
+  useEffect(() => {
+    if (!isStaying) return
+    const store = getStore()
+    if (!store.arrivalMode) return
+    const sceneMap: Record<string, string> = { rest: 'sleep', refresh: 'morning', explore: 'evening' }
+    const targetId = sceneMap[store.arrivalMode]
+    if (targetId) {
+      const scene = SCENES.find(s => s.id === targetId)
+      if (scene) {
+        setActiveScene(scene)
+        setBrightness(store.arrivalMode === 'rest' ? 5 : store.arrivalMode === 'refresh' ? 80 : 70)
+        setIsAllOn(true)
+      }
+    }
+  // Runs once on mount when phase becomes staying
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isStaying])
 
   // 日没情報と黄昏の進行度
   const sun = now ? getSunTimes(now) : null

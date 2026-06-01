@@ -10,6 +10,8 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 import DynamicBackground from '@/components/DynamicBackground'
 import CinematicFrame from '@/components/CinematicFrame'
 import WelcomeRitual from '@/components/WelcomeRitual'
+import ArrivalCheck from '@/components/ArrivalCheck'
+import SilentConcierge from '@/components/SilentConcierge'
 import Link from 'next/link'
 import { BookOpen, LogOut } from 'lucide-react'
 import { getStore, clearGuestInfo } from '@/lib/store'
@@ -62,6 +64,13 @@ function LogoutButton() {
   )
 }
 
+function ArrivalCheckWrapper() {
+  const store = getStore()
+  const reservationId = store.guestInfo?.reservationId
+  if (!reservationId) return null
+  return <ArrivalCheck reservationId={reservationId} />
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <PhaseProvider>
@@ -71,6 +80,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <DynamicBackground />
             <CinematicFrame />
             <WelcomeRitual />
+            <ArrivalCheckWrapper />
+            <SilentConcierge />
             <PhaseSelector />
             {/* Fixed top-right controls */}
             <div className="fixed top-3 right-4 z-50 flex items-center gap-2">
