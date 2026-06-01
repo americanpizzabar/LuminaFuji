@@ -16,6 +16,22 @@ module.exports = {
           500: '#f59e0b',
           600: '#d97706',
         },
+        // ── OLED warm accent (2700–3000K アンバー / キャンドルゴールド) ──
+        // 有機ELが放つ最も美しい暖色。文字やボタンが部屋の灯りの一部のように発光する。
+        ember: {
+          200: '#ffe3c2',
+          300: '#ffd1a3',
+          400: '#ffb877', // ≈ 3000K warm white
+          500: '#ff9d5c', // ≈ 2700K
+          600: '#f5853f', // candle
+        },
+        // ── 漆黒（輪島塗のような奥行きのある温かいマットブラック） ──
+        lacquer: {
+          950: '#0a0807',
+          900: '#0d0a08',
+          800: '#12100d',
+          700: '#1a1714',
+        },
         // ── Neon violet (primary futuristic accent) ──────────────
         violet: {
           300: '#c4b5fd',
@@ -47,6 +63,8 @@ module.exports = {
         'orb-drift': 'orbDrift 20s ease-in-out infinite',
         'aurora-shift': 'auroraShift 8s linear infinite',
         'aurora-drift': 'auroraDrift 22s ease-in-out infinite',
+        'ember-pulse': 'emberPulse 4s ease-in-out infinite',
+        'curtain-reveal': 'curtainReveal 0.62s cubic-bezier(0.22,1,0.36,1) both',
       },
       keyframes: {
         fadeIn: {
@@ -94,6 +112,16 @@ module.exports = {
         auroraDrift: {
           '0%, 100%': { transform: 'translate(0, 0) scale(1)', opacity: '0.55' },
           '50%': { transform: 'translate(-3%, 2%) scale(1.08)', opacity: '0.8' },
+        },
+        // OLED の暖色がゆっくり明滅する（部屋の灯りのような呼吸）
+        emberPulse: {
+          '0%, 100%': { opacity: '0.55', filter: 'brightness(0.92)' },
+          '50%': { opacity: '1', filter: 'brightness(1.12)' },
+        },
+        // シアタールームのカーテンが静かに開くような画面遷移
+        curtainReveal: {
+          '0%': { opacity: '0', transform: 'translate3d(0, 10px, 0) scale(0.99)' },
+          '100%': { opacity: '1', transform: 'none' },
         },
       },
       backgroundImage: {

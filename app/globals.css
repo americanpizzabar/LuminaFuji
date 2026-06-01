@@ -25,12 +25,13 @@
   }
 
   body {
-    /* Matte-black base with a faint aurora wash */
-    background-color: #050507;
+    /* 漆黒（輪島塗のような奥行きのある温かいマットブラック）。
+       強いブルーライトを抑え、足元から立ち上る有機ELの暖色を感じさせる。 */
+    background-color: #0a0807;
     background-image:
-      radial-gradient(120% 80% at 12% -10%, rgba(139, 92, 246, 0.07) 0%, transparent 55%),
-      radial-gradient(110% 70% at 92% 4%, rgba(34, 211, 238, 0.055) 0%, transparent 52%),
-      radial-gradient(100% 60% at 50% 108%, rgba(99, 102, 241, 0.05) 0%, transparent 60%);
+      radial-gradient(120% 80% at 12% -10%, rgba(139, 92, 246, 0.045) 0%, transparent 55%),
+      radial-gradient(110% 70% at 92% 4%, rgba(34, 211, 238, 0.03) 0%, transparent 52%),
+      radial-gradient(125% 80% at 50% 114%, rgba(255, 157, 92, 0.07) 0%, transparent 62%);
     background-attachment: fixed;
     @apply text-zinc-100 antialiased;
     font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -177,6 +178,36 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     @apply border border-zinc-700/60 hover:border-violet-500/50 text-zinc-300 rounded-2xl px-6 py-3 transition-all duration-200 active:scale-95;
+  }
+
+  /* OLED 暖色プライマリボタン（キャンドルゴールド・エミッシブ） */
+  .btn-ember {
+    @apply text-lacquer-950 font-semibold rounded-2xl px-6 py-3 transition-all duration-200;
+    background: linear-gradient(135deg, #ff9d5c 0%, #ffb877 50%, #ffd1a3 100%);
+    background-size: 160% auto;
+    box-shadow: 0 4px 22px rgba(255, 157, 92, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  .btn-ember:hover { background-position: right center; box-shadow: 0 6px 30px rgba(255, 157, 92, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
+
+  /* ── フェード&グロウ ──────────────────────────────────────────
+     押した瞬間にふわりと灯り、指を離すとゆっくり残光が消える。
+     高級オーディオのインジケーターのような"残像のある発光"。 */
+  .lf-glow {
+    transition: box-shadow 1.15s cubic-bezier(0.2, 0.7, 0.2, 1),
+                filter 1.15s cubic-bezier(0.2, 0.7, 0.2, 1),
+                transform 0.18s ease;
+  }
+  .lf-glow:active {
+    transition: box-shadow 0.3s ease-out, filter 0.3s ease-out, transform 0.12s ease;
+    box-shadow: 0 0 26px var(--lf-glow-color, rgba(255, 157, 92, 0.6)),
+                0 0 64px var(--lf-glow-color, rgba(255, 157, 92, 0.22));
+    filter: brightness(1.14);
+  }
+
+  /* 有機ELの暖色で発光するエミッシブ・テキスト（文字が部屋の灯りの一部に見える） */
+  .text-emissive {
+    color: #ffd1a3;
+    text-shadow: 0 0 18px rgba(255, 157, 92, 0.35), 0 0 2px rgba(255, 184, 119, 0.45);
   }
 
   /* ── Typography ─────────────────────────────────────────────── */
@@ -481,6 +512,21 @@
 /* ── Scene background transition ──────────────────────────────── */
 .scene-bg-transition {
   transition: background 1200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── シアター・トランジション ──────────────────────────────────
+   画面が切り替わる際、シアタールームのカーテンが静かに開くような
+   イージングの効いた滑らかな立ち上がり。
+   100% で transform:none に戻すため、内部の position:fixed を壊さない。 */
+@keyframes curtainReveal {
+  0%   { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.99); }
+  100% { opacity: 1; transform: none; }
+}
+.page-reveal {
+  animation: curtainReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-reveal { animation: none; }
 }
 
 /* ── Luxury card hover ────────────────────────────────────────── */

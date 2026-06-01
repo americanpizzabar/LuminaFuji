@@ -12,6 +12,7 @@ import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
 import { recordLightingEvent } from '@/lib/store'
 import SceneVisual from '@/components/SceneVisual'
+import { hapticTick, hapticTap } from '@/lib/haptics'
 
 type BackendStatus = 'connecting' | 'zigbee' | 'dali' | 'both' | 'simulated' | 'offline'
 
@@ -320,9 +321,14 @@ export default function LightingPage() {
   const [zones, setZones] = useState<Zone[]>(DEFAULT_ZONES)
   const [isAllOn, setIsAllOn] = useState(true)
 
+  // 調光ダイヤルのディテント（5%刻みでカチッと振動）を管理
+  const detentRef = useRef(-1)
+  const zoneDetentRef = useRef<Record<string, number>>({})
+
   const { status: backendStatus, sendCommand, lastSent } = useLightingControl(isStaying)
 
   const applyScene = useCallback((scene: LightingScene) => {
+    hapticTap()
     setActiveScene(scene)
     setBrightness(scene.brightness)
     setIsAllOn(scene.brightness > 0)
@@ -333,6 +339,7 @@ export default function LightingPage() {
   }, [isStaying, sendCommand])
 
   const toggleAll = () => {
+    hapticTap()
     const next = !isAllOn
     setIsAllOn(next)
     setZones(prev => prev.map(z => ({ ...z, isOn: next })))
@@ -342,6 +349,7 @@ export default function LightingPage() {
   }
 
   const toggleZone = (id: string) => {
+    hapticTap()
     const zone = zones.find(z => z.id === id)
     setZones(prev => prev.map(z => z.id === id ? { ...z, isOn: !z.isOn } : z))
     if (isStaying && zone) {
@@ -350,6 +358,8 @@ export default function LightingPage() {
   }
 
   const setZoneBrightness = (id: string, val: number) => {
+    const detent = Math.round(val / 5)
+    if (zoneDetentRef.current[id] !== detent) { zoneDetentRef.current[id] = detent; hapticTick() }
     setZones(prev => prev.map(z => z.id === id ? { ...z, brightness: val } : z))
     if (isStaying) {
       sendCommand(id, { state: val > 0 ? 'ON' : 'OFF', percent: val })
@@ -357,6 +367,8 @@ export default function LightingPage() {
   }
 
   const handleBrightnessChange = (val: number) => {
+    const detent = Math.round(val / 5)
+    if (detent !== detentRef.current) { detentRef.current = detent; hapticTick() }
     setBrightness(val)
     setIsAllOn(val > 0)
     if (isStaying) {
@@ -461,10 +473,10 @@ export default function LightingPage() {
 
           <motion.button
             onClick={toggleAll}
-            className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all lf-glow"
             style={
               isAllOn
-                ? { background: `rgba(${lr},${lg},${lb},0.12)`, border: `1px solid rgba(${lr},${lg},${lb},0.25)` }
+                ? { background: `rgba(${lr},${lg},${lb},0.12)`, border: `1px solid rgba(${lr},${lg},${lb},0.25)`, ['--lf-glow-color' as any]: `rgba(${lr},${lg},${lb},0.6)` }
                 : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }
             }
             whileTap={{ scale: 0.88 }}
@@ -581,7 +593,7 @@ export default function LightingPage() {
                 <motion.button
                   key={scene.id}
                   onClick={() => applyScene(scene)}
-                  className="flex-shrink-0 flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 relative overflow-hidden"
+                  className="flex-shrink-0 flex flex-col items-center gap-2 px-4 py-3 rounded-2xl transition-all duration-300 relative overflow-hidden lf-glow"
                   style={{
                     background: isActive
                       ? `radial-gradient(ellipse at 50% 0%, rgba(${sr},${sg},${sb},0.22) 0%, rgba(0,0,0,0.5) 80%)`
@@ -592,6 +604,7 @@ export default function LightingPage() {
                       : '1px solid rgba(255,255,255,0.06)',
                     boxShadow: isActive ? `0 4px 20px rgba(${sr},${sg},${sb},0.18)` : 'none',
                     minWidth: '72px',
+                    ['--lf-glow-color' as any]: `rgba(${sr},${sg},${sb},0.55)`,
                   }}
                   whileTap={{ scale: 0.9 }}
                 >
