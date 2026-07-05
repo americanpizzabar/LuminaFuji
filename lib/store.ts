@@ -440,6 +440,9 @@ export function resetStoreForGuest(guestInfo: GuestInfo, _guestBooking?: Booking
     cleaningChecklist: DEFAULT_CLEANING_CHECKLIST.map(t => ({ ...t, done: false, doneAt: undefined, doneBy: undefined })),
     maintenanceItems: [],
     consultRequests: [],                      // オーナー側のリード情報を除去
+    arrivalMode: null,                        // 前ゲストの到着時コンディションを除去
+    lastSceneChangeAt: null,                  // 無言のコンシェルジュのタイマーをリセット
+    lightAlarm: null,                         // 前ゲストの光アラームを除去
     // places はオーナー/管理会社が管理する施設データのため維持する
   })
 }
@@ -551,14 +554,23 @@ export function updateConsultRequest(id: string, updates: Partial<ConsultRequest
 export function recordLightingEvent(event: Omit<LightingEvent, 'timestamp'>): void {
   const store = getStore()
   const events = [{ ...event, timestamp: new Date().toISOString() }, ...store.lightingHistory].slice(0, 200)
-  updateStore({ lightingHistory: events })
+  updateStore({ lightingHistory: events, lastSceneChangeAt: new Date().toISOString() })
 }
 
 /** エリア（ゾーン）の操作を記録。チェックアウト時の「お気に入りエリア」算出に使う。 */
 export function recordZoneEvent(zoneId: string): void {
   const store = getStore()
   const zoneUsage = { ...store.zoneUsage, [zoneId]: (store.zoneUsage?.[zoneId] ?? 0) + 1 }
-  updateStore({ zoneUsage })
+  updateStore({ zoneUsage, lastSceneChangeAt: new Date().toISOString() })
+}
+
+/**
+ * 照明への能動的な操作を記録する（履歴には残さない）。
+ * 無言のコンシェルジュの「2時間同一シーン」タイマーをリセットするために、
+ * 全体スイッチ・明るさスライダー・光の処方箋など、シーン以外の操作からも呼ぶ。
+ */
+export function touchLightingActivity(): void {
+  updateStore({ lastSceneChangeAt: new Date().toISOString() })
 }
 
 /** 最も多く操作したエリアを返す。 */

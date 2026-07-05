@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { PhaseProvider } from '@/lib/phase'
+import { PhaseProvider, usePhase } from '@/lib/phase'
 import { LanguageProvider } from '@/lib/useLanguage'
 import Navigation from '@/components/Navigation'
 import PhaseSelector from '@/components/PhaseSelector'
@@ -64,11 +64,11 @@ function LogoutButton() {
   )
 }
 
+/** サイレント・オンボーディングは滞在中（到着後）のみ。予約中・滞在後には表示しない。 */
 function ArrivalCheckWrapper() {
-  const store = getStore()
-  const reservationId = store.guestInfo?.reservationId
-  if (!reservationId) return null
-  return <ArrivalCheck reservationId={reservationId} />
+  const { phase, guestInfo } = usePhase()
+  if (phase !== 'staying' || !guestInfo?.reservationId) return null
+  return <ArrivalCheck reservationId={guestInfo.reservationId} />
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

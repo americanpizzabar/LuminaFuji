@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getStore, updateStore } from '@/lib/store'
+import { getStore, touchLightingActivity } from '@/lib/store'
+import { usePhase } from '@/lib/phase'
 import { hapticTick } from '@/lib/haptics'
 
 const TWO_HOURS = 2 * 60 * 60 * 1000
@@ -10,12 +11,6 @@ const CHECK_INTERVAL = 60 * 1000
 const BREATHING_MINUTES = 5
 
 type BreathPhase = 'inhale' | 'hold' | 'exhale' | 'rest'
-
-interface CycleState {
-  phase: BreathPhase
-  countdown: number
-  cycle: number
-}
 
 // 4-7-8 rhythm durations in seconds
 const PHASE_DURATION: Record<BreathPhase, number> = {
@@ -32,14 +27,6 @@ const PHASE_LABEL: Record<BreathPhase, string> = {
   rest: '',
 }
 
-// Target brightness (0–100) for each breathing phase
-const PHASE_BRIGHTNESS: Record<BreathPhase, number> = {
-  inhale: 40,
-  hold: 40,
-  exhale: 5,
-  rest: 5,
-}
-
 const NEXT_PHASE: Record<BreathPhase, BreathPhase> = {
   inhale: 'hold',
   hold: 'exhale',
@@ -48,68 +35,63 @@ const NEXT_PHASE: Record<BreathPhase, BreathPhase> = {
 }
 
 export default function SilentConcierge() {
+  const { phase } = usePhase()
   const [showToast, setShowToast] = useState(false)
   const [showBreathing, setShowBreathing] = useState(false)
-  const [breathState, setBreathState] = useState<CycleState>({ phase: 'inhale', countdown: 4, cycle: 0 })
+  const [breathPhase, setBreathPhase] = useState<BreathPhase>('inhale')
   const [timeLeft, setTimeLeft] = useState(BREATHING_MINUTES * 60)
-  const [dismissed, setDismissed] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const breathRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const dimissedRef = useRef(false)
+  const shownRef = useRef(false)
 
-  // Poll every minute to check if same scene has been active for 2+ hours
+  // 滞在中のみ、同一シーンが2時間以上続いていないか1分ごとに確認する
   useEffect(() => {
+    if (phase !== 'staying') return
     const check = () => {
-      if (dimissedRef.current) return
+      if (shownRef.current) return
       const store = getStore()
       if (!store.lastSceneChangeAt) return
       const elapsed = Date.now() - new Date(store.lastSceneChangeAt).getTime()
       if (elapsed >= TWO_HOURS) {
         setShowToast(true)
-        dimissedRef.current = true
+        shownRef.current = true
       }
     }
     const id = setInterval(check, CHECK_INTERVAL)
     return () => clearInterval(id)
-  }, [])
+  }, [phase])
 
-  // Breathing timer when active
+  // Countdown timer while breathing session is active
   useEffect(() => {
     if (!showBreathing) return
     const totalSec = BREATHING_MINUTES * 60
     setTimeLeft(totalSec)
     let remaining = totalSec
 
-    const tick = () => {
+    timerRef.current = setInterval(() => {
       remaining -= 1
       setTimeLeft(remaining)
       if (remaining <= 0) {
-        setShowBreathing(false)
-        if (timerRef.current) clearInterval(timerRef.current)
+        finishBreathing()
       }
-    }
-    timerRef.current = setInterval(tick, 1000)
+    }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showBreathing])
 
-  // 4-7-8 breath cycle animation
+  // 4-7-8 breath cycle state machine
   useEffect(() => {
     if (!showBreathing) return
-    let phase: BreathPhase = 'inhale'
-    let countdown = PHASE_DURATION.inhale
-
-    const advance = () => {
-      setBreathState(prev => {
-        const next = NEXT_PHASE[prev.phase]
-        return { phase: next, countdown: PHASE_DURATION[next], cycle: next === 'inhale' ? prev.cycle + 1 : prev.cycle }
-      })
-      phase = NEXT_PHASE[phase]
-      countdown = PHASE_DURATION[phase]
-      schedule()
-    }
+    let current: BreathPhase = 'inhale'
+    setBreathPhase('inhale')
 
     let tid: ReturnType<typeof setTimeout>
-    const schedule = () => { tid = setTimeout(advance, PHASE_DURATION[phase] * 1000) }
+    const schedule = () => {
+      tid = setTimeout(() => {
+        current = NEXT_PHASE[current]
+        setBreathPhase(current)
+        schedule()
+      }, PHASE_DURATION[current] * 1000)
+    }
     schedule()
     return () => clearTimeout(tid)
   }, [showBreathing])
@@ -118,21 +100,22 @@ export default function SilentConcierge() {
     hapticTick()
     setShowToast(false)
     setShowBreathing(true)
-    setBreathState({ phase: 'inhale', countdown: 4, cycle: 0 })
+  }
+
+  /** 終了（自然終了・手動とも）: 2時間タイマーをリセットして再提案を先送りする */
+  const finishBreathing = () => {
+    setShowBreathing(false)
+    if (timerRef.current) clearInterval(timerRef.current)
+    touchLightingActivity()
+    shownRef.current = false
   }
 
   const dismissToast = () => {
     setShowToast(false)
-    setDismissed(true)
+    // 「今は不要」の意思表示 — 2時間後に改めて様子をうかがう
+    touchLightingActivity()
+    shownRef.current = false
   }
-
-  const stopBreathing = () => {
-    setShowBreathing(false)
-    if (timerRef.current) clearInterval(timerRef.current)
-  }
-
-  const currentBrightness = PHASE_BRIGHTNESS[breathState.phase]
-  const glowOpacity = currentBrightness / 100
 
   return (
     <>
@@ -204,31 +187,43 @@ export default function SilentConcierge() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Warm OLED breathing orb */}
+            {/* Warm ambient wash — brightness breathes via opacity (smoothly animatable) */}
             <motion.div
               className="absolute inset-0"
               style={{
-                background: `radial-gradient(ellipse 60% 50% at 50% 50%, hsl(28,100%,${10 + Math.round(glowOpacity * 55)}%) 0%, transparent 70%)`,
+                background: 'radial-gradient(ellipse 60% 50% at 50% 50%, hsl(28,100%,42%) 0%, transparent 70%)',
               }}
-              animate={{ opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: PHASE_DURATION[breathState.phase], ease: 'easeInOut', repeat: Infinity }}
+              animate={{
+                opacity:
+                  breathPhase === 'inhale' ? 0.85 :
+                  breathPhase === 'hold'   ? 0.85 :
+                  0.18,
+              }}
+              transition={{ duration: PHASE_DURATION[breathPhase], ease: 'easeInOut' }}
             />
 
-            {/* Circle orb */}
+            {/* Breathing orb — scale and glow animate together over the full phase duration */}
             <motion.div
               className="relative rounded-full"
               style={{
                 width: 180,
                 height: 180,
-                background: `radial-gradient(circle, hsl(28,100%,${20 + Math.round(glowOpacity * 50)}%) 0%, hsl(24,100%,${5 + Math.round(glowOpacity * 20)}%) 60%, transparent 100%)`,
-                boxShadow: `0 0 ${40 + Math.round(glowOpacity * 80)}px rgba(255,157,92,${glowOpacity * 0.7})`,
+                background: 'radial-gradient(circle, hsl(28,100%,62%) 0%, hsl(24,100%,22%) 60%, transparent 100%)',
+                boxShadow: '0 0 110px rgba(255,157,92,0.65)',
               }}
               animate={{
-                scale: breathState.phase === 'inhale' ? [1, 1.3] : breathState.phase === 'exhale' ? [1.3, 1] : 1.3,
+                scale:
+                  breathPhase === 'inhale' ? 1.3 :
+                  breathPhase === 'hold'   ? 1.3 :
+                  1,
+                opacity:
+                  breathPhase === 'inhale' ? 1 :
+                  breathPhase === 'hold'   ? 1 :
+                  0.35,
               }}
               transition={{
-                duration: PHASE_DURATION[breathState.phase],
-                ease: breathState.phase === 'hold' ? 'linear' : 'easeInOut',
+                duration: PHASE_DURATION[breathPhase],
+                ease: breathPhase === 'hold' ? 'linear' : 'easeInOut',
               }}
             />
 
@@ -236,15 +231,15 @@ export default function SilentConcierge() {
             <div className="absolute flex flex-col items-center gap-2" style={{ top: '62%' }}>
               <AnimatePresence mode="wait">
                 <motion.p
-                  key={breathState.phase}
+                  key={breathPhase}
                   className="font-serif text-2xl"
-                  style={{ color: `rgba(255,220,180,${0.4 + glowOpacity * 0.6})` }}
+                  style={{ color: 'rgba(255,220,180,0.85)' }}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  {PHASE_LABEL[breathState.phase]}
+                  {PHASE_LABEL[breathPhase]}
                 </motion.p>
               </AnimatePresence>
               <p className="text-xs" style={{ color: 'rgba(255,180,120,0.35)' }}>
@@ -254,7 +249,7 @@ export default function SilentConcierge() {
 
             {/* Close */}
             <button
-              onClick={stopBreathing}
+              onClick={finishBreathing}
               className="absolute top-8 right-6 text-xs"
               style={{ color: 'rgba(255,180,120,0.3)' }}
             >

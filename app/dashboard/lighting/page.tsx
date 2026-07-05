@@ -12,7 +12,7 @@ import FloorPlan from '@/components/FloorPlan'
 import CircadianTuner from '@/components/CircadianTuner'
 import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
-import { recordLightingEvent, recordZoneEvent, getStore, updateStore } from '@/lib/store'
+import { recordLightingEvent, recordZoneEvent, getStore, touchLightingActivity } from '@/lib/store'
 import SceneVisual from '@/components/SceneVisual'
 import { hapticTick, hapticTap } from '@/lib/haptics'
 import { getSunTimes, twilightProgress, formatClock } from '@/lib/sun'
@@ -346,17 +346,20 @@ export default function LightingPage() {
 
   const applyScene = useCallback((scene: LightingScene) => {
     hapticTap()
+    setFlickerMode(false) // 手動シーン選択は1/fゆらぎ処方を終了する
     setActiveScene(scene)
     setBrightness(scene.brightness)
     setIsAllOn(scene.brightness > 0)
     if (isStaying) {
+      // recordLightingEvent が lastSceneChangeAt も更新する（無言のコンシェルジュ用）
       recordLightingEvent({ sceneId: scene.id, sceneName: scene.nameEn })
-      updateStore({ lastSceneChangeAt: new Date().toISOString() })
       sendCommand('all', { state: scene.brightness > 0 ? 'ON' : 'OFF', percent: scene.brightness })
     }
   }, [isStaying, sendCommand])
 
-  // サイレント・オンボーディング: 到着モードに合わせた初期シーンを適用
+  // サイレント・オンボーディング: 到着時に申告されたコンディションを
+  // 滞在中のデフォルトシーンとして適用する（画面を開くたびの初期状態。
+  // シーン状態はページ間で永続化しないため、固定デフォルトの代わりに使う）
   useEffect(() => {
     if (!isStaying) return
     const store = getStore()
@@ -380,8 +383,9 @@ export default function LightingPage() {
   const twilight = now && sun ? twilightProgress(now, sun.sunset) : 0
 
   // オートアンビエント有効時、黄昏の進行に合わせて明るさをリラックスへ寄せる
+  // （1/fゆらぎ処方の実行中はゆらぎエンジンに明るさ制御を譲る）
   useEffect(() => {
-    if (!autoAmbient || !now || !sun || previewingRef.current) return
+    if (!autoAmbient || !now || !sun || previewingRef.current || flickerMode) return
     const p = twilightProgress(now, sun.sunset)
     if (p <= 0) return // 日没前は手動設定を尊重して何もしない
     const target = Math.round(70 - 52 * p) // 日中 70% → 完全な夜 18%
@@ -417,6 +421,7 @@ export default function LightingPage() {
   // 日没のフェードを圧縮再生（デモ／日中でも体験できるよう約8秒で1時間分を再現）
   const runPreview = () => {
     if (previewingRef.current) return
+    setFlickerMode(false) // プレビューは1/fゆらぎと排他
     previewingRef.current = true
     const startB = 72, endB = 18, dur = 8000, t0 = performance.now()
     setActiveScene(SCENES[2]) // 昼
@@ -439,10 +444,12 @@ export default function LightingPage() {
 
   const toggleAll = () => {
     hapticTap()
+    setFlickerMode(false) // 全体スイッチ操作は1/fゆらぎ処方を終了する
     const next = !isAllOn
     setIsAllOn(next)
     setZones(prev => prev.map(z => ({ ...z, isOn: next })))
     if (isStaying) {
+      touchLightingActivity()
       sendCommand('all', { state: next ? 'ON' : 'OFF', percent: brightness })
     }
   }
@@ -472,8 +479,13 @@ export default function LightingPage() {
   }
 
   const handleBrightnessChange = (val: number) => {
+    setFlickerMode(false) // 手動の明るさ調整は1/fゆらぎ処方を終了する
     const detent = Math.round(val / 5)
-    if (detent !== detentRef.current) { detentRef.current = detent; hapticTick() }
+    if (detent !== detentRef.current) {
+      detentRef.current = detent
+      hapticTick()
+      if (isStaying) touchLightingActivity()
+    }
     setBrightness(val)
     setIsAllOn(val > 0)
     if (isStaying) {
@@ -967,6 +979,7 @@ export default function LightingPage() {
         onClose={() => setCircadianOpen(false)}
         onApply={(targetBrightness, isFlicker) => {
           setFlickerMode(isFlicker)
+          if (isStaying) touchLightingActivity() // 処方適用もコンシェルジュの2時間タイマーをリセット
           if (!isFlicker) {
             setBrightness(targetBrightness)
             setIsAllOn(targetBrightness > 0)

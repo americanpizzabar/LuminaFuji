@@ -2,9 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getStore, updateStore } from '@/lib/store'
+import { updateStore, recordLightingEvent } from '@/lib/store'
 import type { ArrivalMode } from '@/lib/store'
 import { hapticTap, hapticSuccess } from '@/lib/haptics'
+
+/** 到着コンディション → 適用シーン（lighting ページの初期化マップと対応） */
+const ARRIVAL_SCENE: Record<ArrivalMode, { sceneId: string; sceneName: string }> = {
+  rest:    { sceneId: 'sleep',   sceneName: 'Sleep' },
+  refresh: { sceneId: 'morning', sceneName: 'Morning' },
+  explore: { sceneId: 'evening', sceneName: 'Relax' },
+}
 
 interface Condition {
   id: ArrivalMode
@@ -53,11 +60,13 @@ export default function ArrivalCheck({ reservationId }: Props) {
 
   useEffect(() => {
     const key = `lf_arrival_check_${reservationId}`
+    let tid: ReturnType<typeof setTimeout> | null = null
     try {
       if (!localStorage.getItem(key)) {
-        setTimeout(() => setOpen(true), 1800)
+        tid = setTimeout(() => setOpen(true), 1800)
       }
     } catch { /* ignore */ }
+    return () => { if (tid) clearTimeout(tid) }
   }, [reservationId])
 
   const handleSelect = (cond: Condition) => {
@@ -69,6 +78,8 @@ export default function ArrivalCheck({ reservationId }: Props) {
     if (!chosen) return
     hapticSuccess()
     updateStore({ arrivalMode: chosen.id })
+    // プリセット適用をシーン変更として記録（履歴＋コンシェルジュの2時間タイマー起点）
+    recordLightingEvent(ARRIVAL_SCENE[chosen.id])
     const key = `lf_arrival_check_${reservationId}`
     try { localStorage.setItem(key, chosen.id) } catch { /* ignore */ }
     setConfirmed(true)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, AlarmClock, Check } from 'lucide-react'
@@ -34,8 +34,10 @@ const PLANS: { id: Plan; emoji: string; label: string; sub: string; description:
   },
 ]
 
-// Sunrise simulation: 20-minute ramp from near-dark to target brightness
+// サンライズ: 起床時刻の20分前から徐々に明るくなる
 const SUNRISE_MINUTES = 20
+// プレビューは20分間のランプを24秒に圧縮して再生する
+const PREVIEW_DURATION_MS = 24_000
 const SUNRISE_TARGET: Record<Plan, number> = { sport: 95, leisure: 65, work: 85 }
 const SUNRISE_COLOR: Record<Plan, string> = {
   sport: 'hsl(195,80%,70%)',
@@ -44,6 +46,14 @@ const SUNRISE_COLOR: Record<Plan, string> = {
 }
 
 type Phase = 'setup' | 'saved' | 'sunrise'
+
+/** 次の (今日 or 明日の) HH:MM を Date で返す */
+function nextWakeDate(time: string, from: Date): Date {
+  const [h, m] = time.split(':').map(Number)
+  const wake = new Date(from)
+  wake.setHours(h, m, 0, 0)
+  return wake
+}
 
 export default function AlarmPage() {
   const [phase, setPhase] = useState<Phase>('setup')
@@ -55,6 +65,10 @@ export default function AlarmPage() {
   const [sunProgress, setSunProgress] = useState(0) // 0–1
   const [sunBrightness, setSunBrightness] = useState(2)
   const sunRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // 手動停止した本番アラームの起床時刻 — ウォッチャーが同じアラームを再発火しないようにする
+  const skipWakeRef = useRef<number>(0)
+  // 現在のサンライズがプレビューか本番か
+  const sunriseSourceRef = useRef<'preview' | 'alarm'>('preview')
 
   useEffect(() => {
     const store = getStore()
@@ -65,61 +79,91 @@ export default function AlarmPage() {
     }
   }, [])
 
+  // アンマウント時にサンライズのintervalを確実に停止する
+  useEffect(() => {
+    return () => { if (sunRef.current) clearInterval(sunRef.current) }
+  }, [])
+
+  /** サンライズランプを開始する（プレビュー: 24秒 / 本番: 実時間） */
+  const startSunrise = useCallback((durationMs: number, p: Plan, source: 'preview' | 'alarm') => {
+    if (sunRef.current) clearInterval(sunRef.current)
+    sunriseSourceRef.current = source
+    setPlan(p)
+    setPhase('sunrise')
+    setSunProgress(0)
+    setSunBrightness(2)
+    const t0 = Date.now()
+    const target = SUNRISE_TARGET[p]
+    sunRef.current = setInterval(() => {
+      const k = Math.min(1, (Date.now() - t0) / durationMs)
+      setSunProgress(k)
+      setSunBrightness(Math.round(2 + (target - 2) * k))
+      if (k >= 1 && sunRef.current) {
+        clearInterval(sunRef.current)
+        sunRef.current = null
+      }
+    }, 100)
+  }, [])
+
+  // 本番アラーム監視: ページ表示中、起床20分前〜起床時刻の間に入ったら実時間サンライズを開始
+  useEffect(() => {
+    if (!existing?.enabled || phase === 'sunrise') return
+    const check = () => {
+      const now = new Date()
+      const wake = nextWakeDate(existing.time, now)
+      const start = wake.getTime() - SUNRISE_MINUTES * 60_000
+      if (wake.getTime() <= skipWakeRef.current) return // 手動停止済みのアラーム
+      if (now.getTime() >= start && now.getTime() < wake.getTime()) {
+        // 残り時間ぶんの実時間ランプ（最低60秒）
+        startSunrise(Math.max(wake.getTime() - now.getTime(), 60_000), existing.plan, 'alarm')
+      }
+    }
+    check()
+    const id = setInterval(check, 30_000)
+    return () => clearInterval(id)
+  }, [existing, phase, startSunrise])
+
   const handleSave = () => {
     hapticSuccess()
     const alarm: LightAlarm = { time, plan, enabled: true }
     updateStore({ lightAlarm: alarm })
     setExisting(alarm)
+    skipWakeRef.current = 0 // 新しい設定では停止履歴をリセット
     setPhase('saved')
 
-    // Schedule notification if supported
+    // 対応環境ではサンライズ開始時刻に通知を予約する（ページを開いている間のみ有効）
     if (typeof window !== 'undefined' && 'Notification' in window) {
       Notification.requestPermission().then(perm => {
-        if (perm === 'granted') {
-          const [h, m] = time.split(':').map(Number)
-          const now = new Date()
-          const wake = new Date(now)
-          wake.setHours(h, m - SUNRISE_MINUTES, 0, 0)
-          if (wake <= now) wake.setDate(wake.getDate() + 1)
-          const delay = wake.getTime() - Date.now()
-          if (delay > 0 && delay < 24 * 60 * 60 * 1000) {
-            setTimeout(() => {
+        if (perm !== 'granted') return
+        const now = new Date()
+        const wake = nextWakeDate(time, now)
+        if (wake <= now) wake.setDate(wake.getDate() + 1)
+        const delay = wake.getTime() - SUNRISE_MINUTES * 60_000 - Date.now()
+        if (delay > 0 && delay < 24 * 60 * 60 * 1000) {
+          setTimeout(() => {
+            try {
               new Notification('Lumina Fuji — 光のアラーム', {
                 body: `${time}の起床に向けて、サンライズが始まります。`,
                 icon: '/icon.png',
               })
-            }, delay)
-          }
+            } catch { /* 通知が拒否・失効していても静かに続行 */ }
+          }, delay)
         }
-      })
+      }).catch(() => { /* 通知非対応環境では静かに続行 */ })
     }
   }
 
   const handlePreview = () => {
     hapticTap()
-    setPhase('sunrise')
-    setSunProgress(0)
-    setSunBrightness(2)
-    const steps = SUNRISE_MINUTES * 60
-    let tick = 0
-    const target = SUNRISE_TARGET[plan]
-    const id = setInterval(() => {
-      tick += 1
-      const progress = tick / steps
-      const brightness = Math.round(2 + (target - 2) * progress)
-      setSunProgress(Math.min(progress, 1))
-      setSunBrightness(brightness)
-      if (tick >= steps) {
-        clearInterval(id)
-        setSunProgress(1)
-        setSunBrightness(target)
-      }
-    }, 100) // accelerated: 1 real second = 10 simulated minutes
-    sunRef.current = id
+    startSunrise(PREVIEW_DURATION_MS, plan, 'preview')
   }
 
-  const handleStopPreview = () => {
-    if (sunRef.current) clearInterval(sunRef.current)
+  const handleStopSunrise = () => {
+    if (sunRef.current) { clearInterval(sunRef.current); sunRef.current = null }
+    // 本番アラームを途中で閉じた場合、同じ起床時刻での再発火を抑止する
+    if (sunriseSourceRef.current === 'alarm' && existing) {
+      skipWakeRef.current = nextWakeDate(existing.time, new Date()).getTime()
+    }
     setPhase('saved')
     setSunProgress(0)
   }
@@ -251,6 +295,9 @@ export default function AlarmPage() {
               <p className="text-xs text-zinc-500 mt-1">
                 {selectedPlan.description}
               </p>
+              <p className="text-[11px] text-zinc-600 mt-3">
+                この画面を枕元に開いたままにすると、起床{SUNRISE_MINUTES}分前に画面が自動で明るくなります
+              </p>
             </div>
 
             {/* Preview button */}
@@ -261,7 +308,7 @@ export default function AlarmPage() {
               whileTap={{ scale: 0.97 }}
             >
               <span className="text-base">🌅</span>
-              サンライズをプレビュー
+              サンライズをプレビュー（24秒）
             </motion.button>
 
             <button
@@ -316,7 +363,7 @@ export default function AlarmPage() {
             </div>
 
             <button
-              onClick={handleStopPreview}
+              onClick={handleStopSunrise}
               className="absolute top-10 right-6 text-xs"
               style={{ color: 'rgba(255,200,130,0.4)' }}
             >
