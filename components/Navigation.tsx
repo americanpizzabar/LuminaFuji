@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Home, Lightbulb, Map, MessageCircle, MoreHorizontal, BookOpen, Bell, Camera } from 'lucide-react'
 import { usePhase } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
+import { expOf } from '@/lib/store'
 import { useLanguage } from '@/lib/useLanguage'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -20,6 +21,7 @@ function useNavItems() {
   const { phase } = usePhase()
   const [store] = useStore()
   const { t } = useLanguage()
+  const exp = expOf(store)
   const pendingRequests = store.serviceRequests.filter(r => r.status === 'pending').length
   const unreadMessages = store.messages.filter(m => m.from === 'owner' && !m.readByGuest).length
 
@@ -40,7 +42,8 @@ function useNavItems() {
 
   const post: NavItem[] = [
     { href: '/dashboard', label: t('nav.home'), icon: Home },
-    { href: '/dashboard/guestbook', label: t('nav.guestbook'), icon: Camera },
+    // ゲストブックは管理会社の構成で無効化できる
+    ...(exp.guestbook ? [{ href: '/dashboard/guestbook', label: t('nav.guestbook'), icon: Camera }] : []),
     { href: '/dashboard/chat', label: t('nav.chat'), icon: MessageCircle },
   ]
 
@@ -53,10 +56,11 @@ export default function Navigation() {
   const [showMore, setShowMore] = useState(false)
   const { phase } = usePhase()
   const { t } = useLanguage()
+  const [store] = useStore()
 
   const moreItems: NavItem[] = [
     { href: '/dashboard/guide', label: t('nav.guide'), icon: BookOpen },
-    { href: '/dashboard/guestbook', label: t('nav.guestbook'), icon: Camera },
+    ...(expOf(store).guestbook ? [{ href: '/dashboard/guestbook', label: t('nav.guestbook'), icon: Camera }] : []),
   ]
 
   return (

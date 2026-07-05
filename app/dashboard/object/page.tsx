@@ -6,6 +6,9 @@
  * スキャンした瞬間、照明が「茶の湯モード」へ移行し、職人のストーリーが展開される。
  */
 
+import { useStore } from '@/lib/useStore'
+import { expOf } from '@/lib/store'
+import FeatureUnavailable from '@/components/FeatureUnavailable'
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -267,7 +270,10 @@ function ObjectPageInner() {
   )
 }
 
+/** 管理会社の構成で一期一会オブジェクトが無効の場合は案内画面を表示する */
 export default function ObjectPage() {
+  const [store] = useStore()
+  if (!expOf(store).objectLink) return <FeatureUnavailable />
   return (
     <Suspense>
       <ObjectPageInner />

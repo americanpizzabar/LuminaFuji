@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { useLanguage } from '@/lib/useLanguage'
 import { useWakeLock } from '@/lib/useWakeLock'
+import { useStore } from '@/lib/useStore'
+import { expOf } from '@/lib/store'
+import FeatureUnavailable from '@/components/FeatureUnavailable'
 import { hapticTap } from '@/lib/haptics'
 
 const FACILITY_TZ = 'Asia/Tokyo'
@@ -36,7 +39,7 @@ function getYamanakakoDate(): string {
   })
 }
 
-export default function LuminaWindowPage() {
+function LuminaWindowInner() {
   const { t } = useLanguage()
   const [ready, setReady] = useState(false)
   const [time, setTime] = useState('')
@@ -273,4 +276,11 @@ export default function LuminaWindowPage() {
       </AnimatePresence>
     </>
   )
+}
+
+/** 管理会社の構成でLuminaの窓が無効の場合は案内画面を表示する */
+export default function LuminaWindowPage() {
+  const [store] = useStore()
+  if (!expOf(store).luminaWindow) return <FeatureUnavailable />
+  return <LuminaWindowInner />
 }

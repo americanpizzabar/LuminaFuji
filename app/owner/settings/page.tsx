@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { useStore } from '@/lib/useStore'
 import { getStore, setFacilitySettings, setAnnouncement } from '@/lib/store'
 import type { FacilitySettings, AnnouncementType } from '@/lib/store'
+import ExperienceSettingsPanel from '@/components/ExperienceSettingsPanel'
 
 const SCENE_OPTIONS = [
   { value: 'dawn',    label: '夜明け',   emoji: '🌅' },
@@ -581,6 +582,9 @@ export default function OwnerSettingsPage() {
             </button>
           </Link>
         </div>
+
+        {/* ── ゲスト体験機能 ── */}
+        <ExperienceSettingsPanel />
 
         {/* ── ECUANEST LINKS ── */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">

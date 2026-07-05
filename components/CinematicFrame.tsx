@@ -7,7 +7,12 @@
  * DynamicBackground の上に乗り、映画のような画質感を与える。
  */
 
+import { useStore } from '@/lib/useStore'
+import { expOf } from '@/lib/store'
+
 export default function CinematicFrame() {
+  const [store] = useStore()
+  if (!expOf(store).cinematicFrame) return null
   return (
     <div className="fixed inset-0 pointer-events-none" style={{ zIndex: -8 }} aria-hidden>
 

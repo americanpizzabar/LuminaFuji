@@ -15,7 +15,8 @@ import SilentConcierge from '@/components/SilentConcierge'
 import LightAlarmWatcher from '@/components/LightAlarmWatcher'
 import Link from 'next/link'
 import { BookOpen, LogOut } from 'lucide-react'
-import { getStore, clearGuestInfo } from '@/lib/store'
+import { getStore, clearGuestInfo, expOf } from '@/lib/store'
+import { useStore } from '@/lib/useStore'
 
 /** 旧 DEFAULT_GUEST_INFO (Yamada Taro / guest@example.com) のシードデータか判定 */
 function isStaleSeedGuest(info: { email?: string; name?: string } | null | undefined): boolean {
@@ -65,9 +66,11 @@ function LogoutButton() {
   )
 }
 
-/** サイレント・オンボーディングは滞在中（到着後）のみ。予約中・滞在後には表示しない。 */
+/** サイレント・オンボーディングは滞在中（到着後）のみ。予約中・滞在後・機能オフ時には表示しない。 */
 function ArrivalCheckWrapper() {
   const { phase, guestInfo } = usePhase()
+  const [store] = useStore()
+  if (!expOf(store).arrivalCheck) return null
   if (phase !== 'staying' || !guestInfo?.reservationId) return null
   return <ArrivalCheck reservationId={guestInfo.reservationId} />
 }

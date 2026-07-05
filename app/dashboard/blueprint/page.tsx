@@ -11,6 +11,8 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Download } from 'lucide-react'
 import { useStore } from '@/lib/useStore'
+import { expOf } from '@/lib/store'
+import FeatureUnavailable from '@/components/FeatureUnavailable'
 import { usePhase } from '@/lib/phase'
 import { getLightingAnalytics, getZoneAnalytics } from '@/lib/store'
 import { SCENES, DEFAULT_ZONES, SCENE_POETRY, brightnessToWarmRgb } from '@/lib/lighting'
@@ -87,7 +89,7 @@ function LightFingerprint({ reservationId, scenes }: { reservationId: string; sc
   )
 }
 
-export default function BlueprintPage() {
+function BlueprintInner() {
   const [store]       = useStore()
   const { guestInfo } = usePhase()
   const analytics     = getLightingAnalytics(store)
@@ -296,4 +298,11 @@ export default function BlueprintPage() {
       </div>
     </div>
   )
+}
+
+/** 管理会社の構成で光の設計図が無効の場合は案内画面を表示する */
+export default function BlueprintPage() {
+  const [store] = useStore()
+  if (!expOf(store).blueprint) return <FeatureUnavailable />
+  return <BlueprintInner />
 }

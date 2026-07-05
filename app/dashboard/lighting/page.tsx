@@ -12,7 +12,8 @@ import FloorPlan from '@/components/FloorPlan'
 import CircadianTuner from '@/components/CircadianTuner'
 import { useLanguage } from '@/lib/useLanguage'
 import { usePhase } from '@/lib/phase'
-import { recordLightingEvent, recordZoneEvent, getStore, touchLightingActivity } from '@/lib/store'
+import { recordLightingEvent, recordZoneEvent, getStore, touchLightingActivity, expOf } from '@/lib/store'
+import { useStore } from '@/lib/useStore'
 import SceneVisual from '@/components/SceneVisual'
 import { hapticTick, hapticTap } from '@/lib/haptics'
 import { getSunTimes, twilightProgress, formatClock } from '@/lib/sun'
@@ -317,6 +318,8 @@ function DriverStatusPanel({ status }: { status: BackendStatus }) {
 export default function LightingPage() {
   const { t } = useLanguage()
   const { phase } = usePhase()
+  const [appStore] = useStore()
+  const exp = expOf(appStore)
   const isStaying = phase === 'staying'
 
   const [activeScene, setActiveScene] = useState<LightingScene>(SCENES[4])
@@ -585,7 +588,8 @@ export default function LightingPage() {
             )
           })()}
 
-          {/* 光の処方箋ボタン */}
+          {/* 光の処方箋ボタン（管理会社の構成で非表示可） */}
+          {exp.circadianTuner && (
           <motion.button
             onClick={() => { hapticTap(); setCircadianOpen(true) }}
             className="w-10 h-10 rounded-2xl flex items-center justify-center transition-all lf-glow flex-shrink-0"
@@ -595,6 +599,7 @@ export default function LightingPage() {
           >
             <span className="text-base leading-none">{flickerMode ? '🌙' : '✦'}</span>
           </motion.button>
+          )}
 
           <motion.button
             onClick={toggleAll}
@@ -802,7 +807,8 @@ export default function LightingPage() {
           </div>
         </div>
 
-        {/* ── オート・アンビエント（日没連動の自動フェード） ───────── */}
+        {/* ── オート・アンビエント（日没連動の自動フェード）（管理会社の構成で非表示可） ── */}
+        {exp.autoAmbient && (
         <div className="px-4 mb-5">
           <div className="p-5 rounded-3xl"
                style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,157,92,0.14)' }}>
@@ -867,6 +873,7 @@ export default function LightingPage() {
             </button>
           </div>
         </div>
+        )}
 
         {/* ── 固定色温度インフォ（dim-to-warm 説明） ───────── */}
         <div className="px-4 mb-6">
@@ -970,7 +977,8 @@ export default function LightingPage() {
 
       </div>
 
-      {/* 光の処方箋モーダル */}
+      {/* 光の処方箋モーダル（管理会社の構成で無効化可） */}
+      {exp.circadianTuner && (
       <CircadianTuner
         open={circadianOpen}
         onClose={() => setCircadianOpen(false)}
@@ -986,6 +994,7 @@ export default function LightingPage() {
           }
         }}
       />
+      )}
     </div>
   )
 }

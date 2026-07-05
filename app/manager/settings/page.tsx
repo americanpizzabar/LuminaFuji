@@ -13,6 +13,7 @@ import {
   DEFAULT_NOTIFICATION_SETTINGS,
 } from '@/lib/store'
 import type { NotificationSettings, FacilitySettings } from '@/lib/store'
+import ExperienceSettingsPanel from '@/components/ExperienceSettingsPanel'
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -469,6 +470,9 @@ export default function ManagerSettingsPage() {
             </button>
           </div>
         </div>
+
+        {/* ── SECTION C: ゲスト体験機能 ───────────────────────────────────── */}
+        <ExperienceSettingsPanel />
 
         {/* ── LIGHTING HARDWARE SETUP ──────────────────────────────────────── */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">

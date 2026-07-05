@@ -10,6 +10,8 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePhase } from '@/lib/phase'
+import { useStore } from '@/lib/useStore'
+import { expOf } from '@/lib/store'
 import { hapticCeremony } from '@/lib/haptics'
 
 const RISING_MOTES = [
@@ -23,10 +25,12 @@ const RISING_MOTES = [
 
 export default function WelcomeRitual() {
   const { phase, guestInfo } = usePhase()
+  const [store] = useStore()
+  const enabled = expOf(store).welcomeRitual
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (phase !== 'staying' || !guestInfo) return
+    if (!enabled || phase !== 'staying' || !guestInfo) return
     const key = `lf_welcome_${guestInfo.reservationId ?? 'guest'}`
     try {
       if (localStorage.getItem(key)) return
@@ -38,7 +42,7 @@ export default function WelcomeRitual() {
     hapticCeremony()
     const timer = setTimeout(() => setVisible(false), 5200)
     return () => clearTimeout(timer)
-  }, [phase, guestInfo])
+  }, [phase, guestInfo, enabled])
 
   // 儀式の実行中フラグと完了イベント。
   // サイレント・オンボーディング等の後続オーバーレイが、この演出に被らないよう待機するために使う。

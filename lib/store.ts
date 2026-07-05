@@ -207,6 +207,73 @@ export interface LightAlarm {
   enabled: boolean
 }
 
+/**
+ * ゲスト体験機能の有効/無効設定（管理会社・オーナーが施設ごとに構成する）。
+ * 全ての管理会社が全機能を使うわけではないため、運用方針に合わせて
+ * 個別にオン/オフでき、オフの機能はゲスト画面から完全に消える。
+ */
+export interface ExperienceSettings {
+  /** 入室の儀式（チェックイン初回の光のセレモニー） */
+  welcomeRitual: boolean
+  /** シネマティック演出（フィルムグレイン・ビネット） */
+  cinematicFrame: boolean
+  /** サイレント・オンボーディング（到着時の状態ヒアリング＋照明プリセット） */
+  arrivalCheck: boolean
+  /** 光の処方箋（サーカディアン・チューナー） */
+  circadianTuner: boolean
+  /** オート・アンビエント（日没連動の自動フェード） */
+  autoAmbient: boolean
+  /** 無言のコンシェルジュ（長時間同一シーン検知→呼吸ライト提案） */
+  silentConcierge: boolean
+  /** コンシェルジュの検知しきい値（時間） */
+  conciergeHours: number
+  /** 明日の光アラーム（サンライズ・ウェイクアップ） */
+  lightAlarm: boolean
+  /** サンライズ開始（起床何分前か） */
+  alarmLeadMinutes: number
+  /** 一期一会オブジェクト（工芸品QR連携 — 物理設置が必要） */
+  objectLink: boolean
+  /** 星空のゲストブック */
+  guestbook: boolean
+  /** 光の記憶カード（デジタル・チェックアウト） */
+  memoryCard: boolean
+  /** 光の設計図（滞在後のパーソナル・プロファイル） */
+  blueprint: boolean
+  /** Luminaの窓（帰宅後のスマホ常夜灯体験） */
+  luminaWindow: boolean
+  /** シークレットキー（ECUANEST VIP相談 — プログラム運用が必要） */
+  secretKey: boolean
+  /** リピーター特典・再予約導線 */
+  repeaterCta: boolean
+}
+
+export const DEFAULT_EXPERIENCE_SETTINGS: ExperienceSettings = {
+  welcomeRitual: true,
+  cinematicFrame: true,
+  arrivalCheck: true,
+  circadianTuner: true,
+  autoAmbient: true,
+  silentConcierge: true,
+  conciergeHours: 2,
+  lightAlarm: true,
+  alarmLeadMinutes: 20,
+  objectLink: true,
+  guestbook: true,
+  memoryCard: true,
+  blueprint: true,
+  luminaWindow: true,
+  secretKey: true,
+  repeaterCta: true,
+}
+
+/**
+ * 体験設定を安全に取り出す。古い localStorage データに experienceSettings が
+ * 無い場合や、将来フィールドが増えた場合もデフォルトで補完する。
+ */
+export function expOf(store: AppStore): ExperienceSettings {
+  return { ...DEFAULT_EXPERIENCE_SETTINGS, ...(store.experienceSettings ?? {}) }
+}
+
 export interface AppStore {
   phase: GuestPhase
   guestInfo: GuestInfo | null
@@ -230,6 +297,8 @@ export interface AppStore {
   lastSceneChangeAt: string | null
   /** 明日の光アラーム設定 */
   lightAlarm: LightAlarm | null
+  /** ゲスト体験機能の構成（管理会社・オーナーが編集する施設レベル設定） */
+  experienceSettings: ExperienceSettings
 }
 
 // ─── Default data ────────────────────────────────────────────────────────────
@@ -375,6 +444,7 @@ const DEFAULT_STORE: AppStore = {
   arrivalMode: null,
   lastSceneChangeAt: null,
   lightAlarm: null,
+  experienceSettings: DEFAULT_EXPERIENCE_SETTINGS,
 }
 
 // ─── Storage operations ───────────────────────────────────────────────────────
@@ -390,7 +460,13 @@ export function getStore(): AppStore {
       localStorage.setItem(STORE_KEY, JSON.stringify(store))
       return store
     }
-    return { ...DEFAULT_STORE, ...JSON.parse(raw) }
+    const parsed = JSON.parse(raw)
+    return {
+      ...DEFAULT_STORE,
+      ...parsed,
+      // ネストされた設定はディープマージ（将来フィールドが増えても既存データを壊さない）
+      experienceSettings: { ...DEFAULT_EXPERIENCE_SETTINGS, ...(parsed.experienceSettings ?? {}) },
+    }
   } catch {
     return DEFAULT_STORE
   }

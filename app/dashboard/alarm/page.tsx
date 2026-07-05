@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, AlarmClock, Check, BatteryCharging } from 'lucide-react'
-import { getStore, updateStore } from '@/lib/store'
+import { getStore, updateStore, expOf } from '@/lib/store'
 import type { LightAlarm } from '@/lib/store'
+import { useStore } from '@/lib/useStore'
 import { useLanguage } from '@/lib/useLanguage'
 import { useWakeLock } from '@/lib/useWakeLock'
 import { hapticTap, hapticSuccess } from '@/lib/haptics'
-import SunriseGlow, { SunrisePlan, SUNRISE_TARGET, SUNRISE_LEAD_MINUTES } from '@/components/SunriseGlow'
+import FeatureUnavailable from '@/components/FeatureUnavailable'
+import SunriseGlow, { SunrisePlan, SUNRISE_TARGET } from '@/components/SunriseGlow'
 
 const PLAN_EMOJI: Record<SunrisePlan, string> = { sport: '🏃', leisure: '🌅', work: '💻' }
 const PLAN_IDS: SunrisePlan[] = ['sport', 'leisure', 'work']
@@ -19,8 +21,11 @@ const PREVIEW_DURATION_MS = 24_000
 
 type Phase = 'setup' | 'saved' | 'preview' | 'standby'
 
-export default function AlarmPage() {
+function AlarmPageInner() {
   const { t } = useLanguage()
+  const [appStore] = useStore()
+  // サンライズ開始タイミングは管理会社が10/20/30分から構成する
+  const leadMin = expOf(appStore).alarmLeadMinutes
   const [phase, setPhase] = useState<Phase>('setup')
   const [plan, setPlan] = useState<SunrisePlan>('leisure')
   const [time, setTime] = useState('07:00')
@@ -82,7 +87,7 @@ export default function AlarmPage() {
         const wake = new Date(now)
         wake.setHours(h, m, 0, 0)
         if (wake <= now) wake.setDate(wake.getDate() + 1)
-        const delay = wake.getTime() - SUNRISE_LEAD_MINUTES * 60_000 - Date.now()
+        const delay = wake.getTime() - leadMin * 60_000 - Date.now()
         if (delay > 0 && delay < 24 * 60 * 60 * 1000) {
           if (notifRef.current) clearTimeout(notifRef.current)
           notifRef.current = setTimeout(() => {
@@ -177,7 +182,7 @@ export default function AlarmPage() {
                 />
               </div>
               <p className="text-xs text-zinc-500 mt-2 text-center">
-                {t('alarm.sunriseNote', { time, min: SUNRISE_LEAD_MINUTES })}
+                {t('alarm.sunriseNote', { time, min: leadMin })}
               </p>
             </div>
 
@@ -244,7 +249,7 @@ export default function AlarmPage() {
               <p className="text-xs text-zinc-400">{t(`alarm.${plan}`)}</p>
               <p className="text-xs text-zinc-500 mt-1">{t(`alarm.${plan}Desc`)}</p>
               <p className="text-[11px] text-zinc-600 mt-3">
-                {t('alarm.standbyNote', { min: SUNRISE_LEAD_MINUTES })}
+                {t('alarm.standbyNote', { min: leadMin })}
               </p>
             </div>
 
@@ -327,4 +332,11 @@ export default function AlarmPage() {
       </AnimatePresence>
     </div>
   )
+}
+
+/** 管理会社の構成で光アラームが無効の場合は案内画面を表示する */
+export default function AlarmPage() {
+  const [store] = useStore()
+  if (!expOf(store).lightAlarm) return <FeatureUnavailable />
+  return <AlarmPageInner />
 }

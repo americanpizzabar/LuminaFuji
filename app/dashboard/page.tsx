@@ -17,7 +17,7 @@ import {
   Phone, Sun, Moon, Sunset, MapPin, X, ArrowRight,
   Navigation2, BarChart3, Sparkles
 } from 'lucide-react'
-import { getLightingAnalytics, markGuestArrived, unmarkGuestArrived } from '@/lib/store'
+import { getLightingAnalytics, markGuestArrived, unmarkGuestArrived, expOf } from '@/lib/store'
 import { SCENES } from '@/lib/lighting'
 import SceneVisual from '@/components/SceneVisual'
 
@@ -290,6 +290,7 @@ function BookedHome({ guestInfo }: { guestInfo: any }) {
 function StayingHome({ guestInfo }: { guestInfo: any }) {
   const [store] = useStore()
   const { t } = useLanguage()
+  const exp = expOf(store)
   const analytics = getLightingAnalytics(store)
   const settings = store.facilitySettings
   const pendingReqs = store.serviceRequests.filter(r => r.status === 'pending').length
@@ -341,7 +342,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
         </motion.div>
 
         {/* ご出発の日：光の記憶（デジタル・チェックアウト） */}
-        {daysLeft === 0 && (
+        {daysLeft === 0 && exp.memoryCard && (
           <motion.div variants={fadeUp} className="mb-4">
             <button onClick={() => setMemoryOpen(true)}
               className="w-full rounded-3xl p-4 flex items-center gap-3 text-left transition-all lf-glow"
@@ -490,7 +491,8 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
           </Link>
         </motion.div>
 
-        {/* Light Alarm card — 設定済みなら時刻を表示 */}
+        {/* Light Alarm card — 設定済みなら時刻を表示（管理会社の構成で非表示可） */}
+        {exp.lightAlarm && (
         <motion.div variants={fadeUp} className="mb-4">
           <Link href="/dashboard/alarm">
             <motion.div
@@ -519,6 +521,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
             </motion.div>
           </Link>
         </motion.div>
+        )}
 
         {/* Quick actions */}
         <motion.div variants={fadeUp}>
@@ -529,7 +532,8 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
               { href: '/dashboard/chat',     label: t('home.staying.concierge'),       sub: t('home.staying.conciergeSub'),       emoji: '💬', color: 'rgba(99,102,241,0.08)', borderColor: 'rgba(99,102,241,0.12)' },
               { href: '/dashboard/map',      label: t('home.staying.nearbySpots'),     sub: t('home.staying.nearbySpotsSub'),     emoji: '🗺️', color: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.1)' },
               { href: '/dashboard/guestbook',label: t('home.staying.writeGuestbook'),  sub: t('home.staying.writeGuestbookSub'), emoji: '📸', color: 'rgba(236,72,153,0.06)', borderColor: 'rgba(236,72,153,0.1)' },
-            ].map(({ href, label, sub, emoji, color, borderColor }) => (
+            ].filter(({ href }) => href !== '/dashboard/guestbook' || exp.guestbook)
+             .map(({ href, label, sub, emoji, color, borderColor }) => (
               <Link key={href} href={href}>
                 <motion.div
                   className="rounded-2xl p-4 flex flex-col gap-2 cursor-pointer"
@@ -591,16 +595,18 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
 function PostHome({ guestInfo }: { guestInfo: any }) {
   const [store] = useStore()
   const { t } = useLanguage()
+  const exp = expOf(store)
   const analytics = getLightingAnalytics(store)
 
   // チェックアウト時、光の記憶カードを一度だけ自動生成
   const [memoryOpen, setMemoryOpen] = useState(false)
   useEffect(() => {
+    if (!exp.memoryCard) return
     const key = `lf_memory_${guestInfo?.reservationId ?? 'guest'}`
     try {
       if (!localStorage.getItem(key)) { localStorage.setItem(key, '1'); setMemoryOpen(true) }
     } catch { /* localStorage 不可環境は自動表示しない */ }
-  }, [guestInfo])
+  }, [guestInfo, exp.memoryCard])
 
   const totalEvents = store.lightingHistory?.length ?? 0
 
@@ -625,7 +631,8 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
           <p className="text-zinc-300 text-sm mt-1 font-light">Thank you, {guestInfo?.name?.split(' ')[0]}</p>
         </motion.div>
 
-        {/* 光の設計図（Light Blueprint） */}
+        {/* 光の設計図（Light Blueprint）（管理会社の構成で非表示可） */}
+        {exp.blueprint && (
         <motion.div variants={fadeUp} className="mb-4">
           <Link href="/dashboard/blueprint">
             <motion.div
@@ -645,8 +652,10 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
             </motion.div>
           </Link>
         </motion.div>
+        )}
 
         {/* 光の記憶（チェックアウトのデジタルカード）を開く */}
+        {exp.memoryCard && (
         <motion.div variants={fadeUp} className="mb-5">
           <button onClick={() => setMemoryOpen(true)}
             className="w-full rounded-3xl p-5 flex items-center gap-4 text-left transition-all lf-glow"
@@ -667,6 +676,7 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
             <ArrowRight size={18} className="text-ember-400 flex-shrink-0" />
           </button>
         </motion.div>
+        )}
 
         {/* Personalized light journey card */}
         {analytics.topScene && (
@@ -770,7 +780,8 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
           </motion.div>
         )}
 
-        {/* Digital Secret Key — ECUANEST VIP アクセス */}
+        {/* Digital Secret Key — ECUANEST VIP アクセス（管理会社の構成で非表示可） */}
+        {exp.secretKey && (
         <motion.div variants={fadeUp} className="mb-4">
           <div className="mb-2">
             <p className="text-xs text-zinc-600 uppercase tracking-[0.2em]">Your Legacy</p>
@@ -780,8 +791,10 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
             guestName={guestInfo?.name ?? 'ゲスト'}
           />
         </motion.div>
+        )}
 
-        {/* Guestbook CTA */}
+        {/* Guestbook CTA（管理会社の構成で非表示可） */}
+        {exp.guestbook && (
         <motion.div variants={fadeUp} className="mb-4">
           <Link href="/dashboard/guestbook">
             <motion.div
@@ -806,8 +819,10 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
             </motion.div>
           </Link>
         </motion.div>
+        )}
 
-        {/* Lumina Window — post-stay screen meditation */}
+        {/* Lumina Window — post-stay screen meditation（管理会社の構成で非表示可） */}
+        {exp.luminaWindow && (
         <motion.div variants={fadeUp} className="mb-4">
           <Link href="/dashboard/window">
             <motion.div
@@ -830,8 +845,10 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
             </motion.div>
           </Link>
         </motion.div>
+        )}
 
-        {/* Repeater offer */}
+        {/* Repeater offer（管理会社の構成で非表示可） */}
+        {exp.repeaterCta && (
         <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl p-5"
           style={{
             background: 'linear-gradient(135deg, rgba(251,191,36,0.07) 0%, rgba(251,120,36,0.03) 100%)',
@@ -851,6 +868,7 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
             {t('home.post.rebook')} <ExternalLink size={12} />
           </a>
         </motion.div>
+        )}
 
       </motion.div>
 

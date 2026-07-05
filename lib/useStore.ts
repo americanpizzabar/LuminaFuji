@@ -14,9 +14,10 @@ export function useStore(): [AppStore, (partial: Partial<AppStore>) => void] {
 
   useEffect(() => {
     // Listen for changes from other tabs or same-tab dispatches
+    // getStore() を通すことでデフォルト値のマージ（古いデータの欠損フィールド補完）を保証する
     const handler = (e: StorageEvent) => {
       if (e.key === STORE_KEY && e.newValue) {
-        try { setStore(JSON.parse(e.newValue)) } catch {}
+        try { setStore(getStore()) } catch {}
       }
     }
     window.addEventListener('storage', handler)

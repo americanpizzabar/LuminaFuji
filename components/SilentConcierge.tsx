@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getStore, touchLightingActivity } from '@/lib/store'
+import { getStore, touchLightingActivity, expOf } from '@/lib/store'
 import { usePhase } from '@/lib/phase'
+import { useStore } from '@/lib/useStore'
 import { useLanguage } from '@/lib/useLanguage'
 import { hapticTick, hapticSuccess } from '@/lib/haptics'
 
-const TWO_HOURS = 2 * 60 * 60 * 1000
 const CHECK_INTERVAL = 60 * 1000
 const BREATHING_MINUTES = 5
 // 完了の余韻を見せてから静かに閉じるまでの時間
@@ -33,6 +33,9 @@ const NEXT_PHASE: Record<BreathPhase, BreathPhase> = {
 export default function SilentConcierge() {
   const { phase } = usePhase()
   const { t } = useLanguage()
+  const [appStore] = useStore()
+  const conciergeEnabled = expOf(appStore).silentConcierge
+  const conciergeHours = expOf(appStore).conciergeHours
   const [showToast, setShowToast] = useState(false)
   const [showBreathing, setShowBreathing] = useState(false)
   const [breathPhase, setBreathPhase] = useState<BreathPhase>('inhale')
@@ -42,22 +45,25 @@ export default function SilentConcierge() {
   const afterglowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const shownRef = useRef(false)
 
-  // 滞在中のみ、同一シーンが2時間以上続いていないか1分ごとに確認する
+  // 滞在中のみ、同一シーンが設定時間以上続いていないか1分ごとに確認する
+  // （しきい値は管理会社が1〜4時間で構成できる。チェック時に都度読むため変更が即反映される）
   useEffect(() => {
-    if (phase !== 'staying') return
+    if (phase !== 'staying' || !conciergeEnabled) return
     const check = () => {
       if (shownRef.current) return
       const store = getStore()
-      if (!store.lastSceneChangeAt) return
+      const exp = expOf(store)
+      if (!exp.silentConcierge || !store.lastSceneChangeAt) return
+      const threshold = exp.conciergeHours * 60 * 60 * 1000
       const elapsed = Date.now() - new Date(store.lastSceneChangeAt).getTime()
-      if (elapsed >= TWO_HOURS) {
+      if (elapsed >= threshold) {
         setShowToast(true)
         shownRef.current = true
       }
     }
     const id = setInterval(check, CHECK_INTERVAL)
     return () => clearInterval(id)
-  }, [phase])
+  }, [phase, conciergeEnabled])
 
   // Countdown timer while breathing session is active
   useEffect(() => {
@@ -174,7 +180,7 @@ export default function SilentConcierge() {
                   <p className="text-sm font-medium text-zinc-200 leading-snug">
                     {t('concierge.title')}
                   </p>
-                  <p className="text-xs text-zinc-500 mt-0.5">{t('concierge.sub')}</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">{t('concierge.sub', { hours: conciergeHours })}</p>
                 </div>
                 <button
                   onClick={dismissToast}

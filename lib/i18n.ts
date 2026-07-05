@@ -221,6 +221,11 @@ const ja = {
     genericError: '申し訳ございません。一時的なエラーが発生しました。もう一度お試しください。',
     suggestions: ['WiFiのパスワードは？', 'チェックアウトの時間は？', 'おすすめのレストランは？', '照明の操作方法を教えて'],
   },
+  feature: {
+    off: 'この機能は現在ご利用いただけません',
+    offSub: '施設の運用方針により無効になっています',
+    back: 'ホームへ戻る',
+  },
   arrival: {
     label: 'サイレント・オンボーディング',
     question: '今、どんな状態ですか？',
@@ -237,7 +242,7 @@ const ja = {
   },
   concierge: {
     title: '少し張り詰めすぎていませんか？',
-    sub: '同じ照明で2時間が経ちました',
+    sub: '同じ照明で{hours}時間が経ちました',
     start: '5分間のマインドフルネス・ライト',
     inhale: '吸う', hold: '止める', exhale: '吐く',
     remaining: '{time} 残り',
@@ -506,6 +511,11 @@ const en: TranslationDict = {
     genericError: 'Sorry, a temporary error occurred. Please try again.',
     suggestions: ['What\'s the WiFi password?', 'What time is check-out?', 'Restaurant recommendations?', 'How do I control the lights?'],
   },
+  feature: {
+    off: 'This feature is currently unavailable',
+    offSub: 'It has been disabled by the property\'s policy',
+    back: 'Back to home',
+  },
   arrival: {
     label: 'Silent Onboarding',
     question: 'How are you feeling right now?',
@@ -522,7 +532,7 @@ const en: TranslationDict = {
   },
   concierge: {
     title: 'Feeling a little tense?',
-    sub: 'The same light has been on for 2 hours',
+    sub: 'The same light has been on for {hours} hours',
     start: '5-minute Mindfulness Light',
     inhale: 'Inhale', hold: 'Hold', exhale: 'Exhale',
     remaining: '{time} left',
@@ -791,6 +801,11 @@ const zh: TranslationDict = {
     genericError: '非常抱歉，发生了临时错误。请重试。',
     suggestions: ['Wi-Fi密码是什么？', '退房时间是几点？', '有什么好的餐厅推荐？', '如何控制灯光？'],
   },
+  feature: {
+    off: '该功能当前不可用',
+    offSub: '已根据设施运营方针停用',
+    back: '返回首页',
+  },
   arrival: {
     label: '静默入住引导',
     question: '您现在感觉如何？',
@@ -807,7 +822,7 @@ const zh: TranslationDict = {
   },
   concierge: {
     title: '是否有些紧绷了？',
-    sub: '同一灯光已持续2小时',
+    sub: '同一灯光已持续{hours}小时',
     start: '5分钟正念之光',
     inhale: '吸气', hold: '屏息', exhale: '呼气',
     remaining: '剩余 {time}',
@@ -1076,6 +1091,11 @@ const ko: TranslationDict = {
     genericError: '죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해 주세요.',
     suggestions: ['Wi-Fi 비밀번호는?', '체크아웃 시간은?', '맛집 추천해 주세요', '조명 조작 방법을 알려주세요'],
   },
+  feature: {
+    off: '이 기능은 현재 이용할 수 없습니다',
+    offSub: '시설 운영 방침에 따라 비활성화되어 있습니다',
+    back: '홈으로 돌아가기',
+  },
   arrival: {
     label: '사일런트 온보딩',
     question: '지금, 어떤 상태이신가요?',
@@ -1092,7 +1112,7 @@ const ko: TranslationDict = {
   },
   concierge: {
     title: '조금 긴장하고 계신 건 아닌가요?',
-    sub: '같은 조명이 2시간째 이어지고 있어요',
+    sub: '같은 조명이 {hours}시간째 이어지고 있어요',
     start: '5분 마음챙김 라이트',
     inhale: '들이쉬기', hold: '멈추기', exhale: '내쉬기',
     remaining: '{time} 남음',
@@ -1361,6 +1381,11 @@ const fr: TranslationDict = {
     genericError: 'Désolé, une erreur temporaire s\'est produite. Veuillez réessayer.',
     suggestions: ['Quel est le mot de passe Wi-Fi ?', 'À quelle heure est le départ ?', 'Des recommandations de restaurants ?', 'Comment contrôler l\'éclairage ?'],
   },
+  feature: {
+    off: 'Cette fonction est actuellement indisponible',
+    offSub: 'Elle a été désactivée par la politique de l\'établissement',
+    back: 'Retour à l\'accueil',
+  },
   arrival: {
     label: 'Accueil silencieux',
     question: 'Comment vous sentez-vous ?',
@@ -1377,7 +1402,7 @@ const fr: TranslationDict = {
   },
   concierge: {
     title: 'Un peu de tension, peut-être ?',
-    sub: 'La même lumière depuis 2 heures',
+    sub: 'La même lumière depuis {hours} heures',
     start: 'Lumière de pleine conscience — 5 min',
     inhale: 'Inspirez', hold: 'Retenez', exhale: 'Expirez',
     remaining: '{time} restantes',

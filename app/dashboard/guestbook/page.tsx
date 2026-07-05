@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Heart, X, PenLine, Send } from 'lucide-react'
 import Link from 'next/link'
 import { useStore } from '@/lib/useStore'
+import { expOf } from '@/lib/store'
+import FeatureUnavailable from '@/components/FeatureUnavailable'
 import { addGuestbookPost, likeGuestbookPost, getStore } from '@/lib/store'
 import { usePhase } from '@/lib/phase'
 import { useLanguage } from '@/lib/useLanguage'
@@ -29,7 +31,7 @@ function hashPost(id: string) {
   }
 }
 
-export default function GuestbookPage() {
+function GuestbookInner() {
   const [store, update] = useStore()
   const { guestInfo }   = usePhase()
   const { t }           = useLanguage()
@@ -302,4 +304,11 @@ export default function GuestbookPage() {
       </AnimatePresence>
     </div>
   )
+}
+
+/** 管理会社の構成でゲストブックが無効の場合は案内画面を表示する */
+export default function GuestbookPage() {
+  const [store] = useStore()
+  if (!expOf(store).guestbook) return <FeatureUnavailable />
+  return <GuestbookInner />
 }

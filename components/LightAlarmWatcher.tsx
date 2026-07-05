@@ -9,12 +9,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { getStore } from '@/lib/store'
+import { getStore, expOf } from '@/lib/store'
 import { usePhase } from '@/lib/phase'
 import { useLanguage } from '@/lib/useLanguage'
 import { useWakeLock } from '@/lib/useWakeLock'
 import { hapticSuccess } from '@/lib/haptics'
-import SunriseGlow, { SunrisePlan, SUNRISE_TARGET, SUNRISE_LEAD_MINUTES } from '@/components/SunriseGlow'
+import SunriseGlow, { SunrisePlan, SUNRISE_TARGET } from '@/components/SunriseGlow'
 
 const CHECK_INTERVAL_MS = 30_000
 
@@ -48,11 +48,15 @@ export default function LightAlarmWatcher() {
   useEffect(() => {
     if (phase !== 'staying' || active) return
     const check = () => {
-      const alarm = getStore().lightAlarm
+      const store = getStore()
+      const exp = expOf(store)
+      // 管理会社の構成でオフの場合は発火しない（リード分数も都度読む）
+      if (!exp.lightAlarm) return
+      const alarm = store.lightAlarm
       if (!alarm?.enabled) return
       const now = new Date()
       const wake = todayAt(alarm.time, now)
-      const start = wake.getTime() - SUNRISE_LEAD_MINUTES * 60_000
+      const start = wake.getTime() - exp.alarmLeadMinutes * 60_000
       if (wake.getTime() <= skipWakeRef.current) return
       if (now.getTime() >= start && now.getTime() < wake.getTime()) {
         setDone(false)
