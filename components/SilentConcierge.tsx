@@ -4,11 +4,14 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getStore, touchLightingActivity } from '@/lib/store'
 import { usePhase } from '@/lib/phase'
-import { hapticTick } from '@/lib/haptics'
+import { useLanguage } from '@/lib/useLanguage'
+import { hapticTick, hapticSuccess } from '@/lib/haptics'
 
 const TWO_HOURS = 2 * 60 * 60 * 1000
 const CHECK_INTERVAL = 60 * 1000
 const BREATHING_MINUTES = 5
+// 完了の余韻を見せてから静かに閉じるまでの時間
+const AFTERGLOW_MS = 3600
 
 type BreathPhase = 'inhale' | 'hold' | 'exhale' | 'rest'
 
@@ -20,13 +23,6 @@ const PHASE_DURATION: Record<BreathPhase, number> = {
   rest: 1,
 }
 
-const PHASE_LABEL: Record<BreathPhase, string> = {
-  inhale: '吸う',
-  hold: '止める',
-  exhale: '吐く',
-  rest: '',
-}
-
 const NEXT_PHASE: Record<BreathPhase, BreathPhase> = {
   inhale: 'hold',
   hold: 'exhale',
@@ -36,11 +32,14 @@ const NEXT_PHASE: Record<BreathPhase, BreathPhase> = {
 
 export default function SilentConcierge() {
   const { phase } = usePhase()
+  const { t } = useLanguage()
   const [showToast, setShowToast] = useState(false)
   const [showBreathing, setShowBreathing] = useState(false)
   const [breathPhase, setBreathPhase] = useState<BreathPhase>('inhale')
   const [timeLeft, setTimeLeft] = useState(BREATHING_MINUTES * 60)
+  const [sessionDone, setSessionDone] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const afterglowRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const shownRef = useRef(false)
 
   // 滞在中のみ、同一シーンが2時間以上続いていないか1分ごとに確認する
@@ -62,7 +61,7 @@ export default function SilentConcierge() {
 
   // Countdown timer while breathing session is active
   useEffect(() => {
-    if (!showBreathing) return
+    if (!showBreathing || sessionDone) return
     const totalSec = BREATHING_MINUTES * 60
     setTimeLeft(totalSec)
     let remaining = totalSec
@@ -71,16 +70,16 @@ export default function SilentConcierge() {
       remaining -= 1
       setTimeLeft(remaining)
       if (remaining <= 0) {
-        finishBreathing()
+        completeSession()
       }
     }, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showBreathing])
+  }, [showBreathing, sessionDone])
 
-  // 4-7-8 breath cycle state machine
+  // 4-7-8 breath cycle state machine — 位相の切り替わりを微細な振動でも伝える（目を閉じたまま整えられる）
   useEffect(() => {
-    if (!showBreathing) return
+    if (!showBreathing || sessionDone) return
     let current: BreathPhase = 'inhale'
     setBreathPhase('inhale')
 
@@ -89,23 +88,45 @@ export default function SilentConcierge() {
       tid = setTimeout(() => {
         current = NEXT_PHASE[current]
         setBreathPhase(current)
+        if (current !== 'rest') hapticTick()
         schedule()
       }, PHASE_DURATION[current] * 1000)
     }
     schedule()
     return () => clearTimeout(tid)
-  }, [showBreathing])
+  }, [showBreathing, sessionDone])
+
+  // アンマウント時の後始末
+  useEffect(() => {
+    return () => { if (afterglowRef.current) clearTimeout(afterglowRef.current) }
+  }, [])
 
   const startBreathing = () => {
     hapticTick()
     setShowToast(false)
+    setSessionDone(false)
     setShowBreathing(true)
   }
 
-  /** 終了（自然終了・手動とも）: 2時間タイマーをリセットして再提案を先送りする */
-  const finishBreathing = () => {
-    setShowBreathing(false)
+  /** 5分完走 — 余韻を見せてから静かに閉じる */
+  const completeSession = () => {
     if (timerRef.current) clearInterval(timerRef.current)
+    hapticSuccess()
+    setSessionDone(true)
+    touchLightingActivity()
+    shownRef.current = false
+    afterglowRef.current = setTimeout(() => {
+      setShowBreathing(false)
+      setSessionDone(false)
+    }, AFTERGLOW_MS)
+  }
+
+  /** 手動終了 — 2時間タイマーをリセットして再提案を先送りする */
+  const closeBreathing = () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (afterglowRef.current) clearTimeout(afterglowRef.current)
+    setShowBreathing(false)
+    setSessionDone(false)
     touchLightingActivity()
     shownRef.current = false
   }
@@ -116,6 +137,8 @@ export default function SilentConcierge() {
     touchLightingActivity()
     shownRef.current = false
   }
+
+  const isLit = sessionDone || breathPhase === 'inhale' || breathPhase === 'hold'
 
   return (
     <>
@@ -149,9 +172,9 @@ export default function SilentConcierge() {
                 </motion.div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-zinc-200 leading-snug">
-                    少し張り詰めすぎていませんか？
+                    {t('concierge.title')}
                   </p>
-                  <p className="text-xs text-zinc-500 mt-0.5">同じ照明で2時間が経ちました</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">{t('concierge.sub')}</p>
                 </div>
                 <button
                   onClick={dismissToast}
@@ -170,7 +193,7 @@ export default function SilentConcierge() {
                   color: '#ff9d5c',
                 }}
               >
-                5分間のマインドフルネス・ライト
+                {t('concierge.start')}
               </button>
             </div>
           </motion.div>
@@ -185,7 +208,7 @@ export default function SilentConcierge() {
             style={{ background: '#030201' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 1.2 } }}
           >
             {/* Warm ambient wash — brightness breathes via opacity (smoothly animatable) */}
             <motion.div
@@ -193,13 +216,8 @@ export default function SilentConcierge() {
               style={{
                 background: 'radial-gradient(ellipse 60% 50% at 50% 50%, hsl(28,100%,42%) 0%, transparent 70%)',
               }}
-              animate={{
-                opacity:
-                  breathPhase === 'inhale' ? 0.85 :
-                  breathPhase === 'hold'   ? 0.85 :
-                  0.18,
-              }}
-              transition={{ duration: PHASE_DURATION[breathPhase], ease: 'easeInOut' }}
+              animate={{ opacity: isLit ? 0.85 : 0.18 }}
+              transition={{ duration: sessionDone ? 2 : PHASE_DURATION[breathPhase], ease: 'easeInOut' }}
             />
 
             {/* Breathing orb — scale and glow animate together over the full phase duration */}
@@ -212,18 +230,12 @@ export default function SilentConcierge() {
                 boxShadow: '0 0 110px rgba(255,157,92,0.65)',
               }}
               animate={{
-                scale:
-                  breathPhase === 'inhale' ? 1.3 :
-                  breathPhase === 'hold'   ? 1.3 :
-                  1,
-                opacity:
-                  breathPhase === 'inhale' ? 1 :
-                  breathPhase === 'hold'   ? 1 :
-                  0.35,
+                scale: sessionDone ? 1.15 : isLit ? 1.3 : 1,
+                opacity: isLit ? 1 : 0.35,
               }}
               transition={{
-                duration: PHASE_DURATION[breathPhase],
-                ease: breathPhase === 'hold' ? 'linear' : 'easeInOut',
+                duration: sessionDone ? 2 : PHASE_DURATION[breathPhase],
+                ease: breathPhase === 'hold' && !sessionDone ? 'linear' : 'easeInOut',
               }}
             />
 
@@ -231,7 +243,7 @@ export default function SilentConcierge() {
             <div className="absolute flex flex-col items-center gap-2" style={{ top: '62%' }}>
               <AnimatePresence mode="wait">
                 <motion.p
-                  key={breathPhase}
+                  key={sessionDone ? 'done' : breathPhase}
                   className="font-serif text-2xl"
                   style={{ color: 'rgba(255,220,180,0.85)' }}
                   initial={{ opacity: 0, y: 6 }}
@@ -239,22 +251,28 @@ export default function SilentConcierge() {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.4 }}
                 >
-                  {PHASE_LABEL[breathPhase]}
+                  {sessionDone
+                    ? t('concierge.done')
+                    : breathPhase === 'rest' ? '' : t(`concierge.${breathPhase}`)}
                 </motion.p>
               </AnimatePresence>
               <p className="text-xs" style={{ color: 'rgba(255,180,120,0.35)' }}>
-                {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')} 残り
+                {sessionDone
+                  ? t('concierge.doneSub')
+                  : t('concierge.remaining', { time: `${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')}` })}
               </p>
             </div>
 
             {/* Close */}
-            <button
-              onClick={finishBreathing}
-              className="absolute top-8 right-6 text-xs"
-              style={{ color: 'rgba(255,180,120,0.3)' }}
-            >
-              閉じる
-            </button>
+            {!sessionDone && (
+              <button
+                onClick={closeBreathing}
+                className="absolute top-8 right-6 text-xs"
+                style={{ color: 'rgba(255,180,120,0.3)' }}
+              >
+                {t('concierge.close')}
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

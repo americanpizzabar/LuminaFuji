@@ -4,12 +4,17 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { useLanguage } from '@/lib/useLanguage'
+import { useWakeLock } from '@/lib/useWakeLock'
+import { hapticTap } from '@/lib/haptics'
 
 const FACILITY_TZ = 'Asia/Tokyo'
 
 // 呼吸リズム: 4秒でゆっくり明るく、6秒でゆっくり暗く（計10秒周期）
 const BREATH_CYCLE_S = 10
 const BREATH_PEAK_AT = 0.4 // 4s / 10s
+// 操作UIの自動非表示までの時間
+const CONTROLS_HIDE_MS = 3500
 
 function getYamanakakoTime(): string {
   return new Date().toLocaleTimeString('ja-JP', {
@@ -31,38 +36,17 @@ function getYamanakakoDate(): string {
   })
 }
 
-type WakeLockSentinel = {
-  released: boolean
-  release: () => Promise<void>
-}
-
 export default function LuminaWindowPage() {
+  const { t } = useLanguage()
   const [ready, setReady] = useState(false)
-  // SSR/プリレンダー時は空文字 → クライアント初回レンダーも空文字 → effect で充填（ハイドレーション安全）
   const [time, setTime] = useState('')
   const [date, setDate] = useState('')
-  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+  // ランプとしての誤消灯を防ぐ: タップは操作UIの表示/非表示、消灯は明示ボタンのみ
+  const [controlsVisible, setControlsVisible] = useState(false)
+  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const acquireWakeLock = async () => {
-    try {
-      if ('wakeLock' in navigator) {
-        wakeLockRef.current = await (navigator as any).wakeLock.request('screen')
-      }
-    } catch {
-      // Wake Lock 非対応・拒否時は画面が自然に暗くなるのを許容する
-    }
-  }
-
-  // 灯している間のみ: タブが再表示されたら Wake Lock を取り直す
-  // （ブラウザはページ非表示時にロックを自動解放するため）
-  useEffect(() => {
-    if (!ready) return
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') acquireWakeLock()
-    }
-    document.addEventListener('visibilitychange', onVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
-  }, [ready])
+  // 灯している間だけ画面を維持（アンマウント時も自動で解放される）
+  useWakeLock(ready)
 
   useEffect(() => {
     setTime(getYamanakakoTime())
@@ -74,17 +58,26 @@ export default function LuminaWindowPage() {
     return () => clearInterval(id)
   }, [])
 
-  const handleEnter = async () => {
-    await acquireWakeLock()
-    setReady(true)
+  useEffect(() => {
+    return () => { if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current) }
+  }, [])
+
+  const showControls = () => {
+    setControlsVisible(true)
+    if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current)
+    controlsTimerRef.current = setTimeout(() => setControlsVisible(false), CONTROLS_HIDE_MS)
   }
 
-  const handleExit = async () => {
-    if (wakeLockRef.current) {
-      await wakeLockRef.current.release().catch(() => {})
-      wakeLockRef.current = null
-    }
+  const handleEnter = () => {
+    hapticTap()
+    setReady(true)
+    showControls() // 点灯直後は操作方法を一瞬見せてからフェードアウト
+  }
+
+  const handleExit = () => {
+    hapticTap()
     setReady(false)
+    setControlsVisible(false)
   }
 
   return (
@@ -104,7 +97,7 @@ export default function LuminaWindowPage() {
                 <ArrowLeft size={16} className="text-zinc-400" />
               </Link>
               <div>
-                <p className="text-[10px] text-zinc-500 tracking-[0.2em] uppercase">Lumina の窓</p>
+                <p className="text-[10px] text-zinc-500 tracking-[0.2em] uppercase">{t('luminaWindow.label')}</p>
                 <h1 className="font-serif text-xl text-zinc-100">Lumina Window</h1>
               </div>
             </div>
@@ -120,7 +113,6 @@ export default function LuminaWindowPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              {/* Preview glow */}
               <motion.div
                 className="w-20 h-20 rounded-2xl mx-auto mb-5 flex items-center justify-center"
                 style={{
@@ -132,13 +124,13 @@ export default function LuminaWindowPage() {
               />
 
               <h2 className="font-serif text-2xl text-zinc-50 text-center mb-3">
-                記憶の光
+                {t('luminaWindow.memory')}
               </h2>
               <p className="text-sm text-zinc-400 text-center leading-relaxed mb-2">
-                あの山中湖のほとりで見た、有機ELの暖かな光。
+                {t('luminaWindow.desc1')}
               </p>
               <p className="text-sm text-zinc-400 text-center leading-relaxed">
-                スマートフォンの画面が、今日もあなたの手のひらで灯ります。
+                {t('luminaWindow.desc2')}
               </p>
             </motion.div>
 
@@ -149,10 +141,10 @@ export default function LuminaWindowPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <p className="text-xs text-zinc-500 mb-2">現在の山中湖</p>
+              <p className="text-xs text-zinc-500 mb-2">{t('luminaWindow.now')}</p>
               <p className="font-serif text-3xl text-zinc-200 tabular-nums">{time || '--:--:--'}</p>
               <p className="text-xs text-zinc-500 mt-1">{date || ' '}</p>
-              <p className="text-[11px] text-zinc-600 mt-2">標高 982m · 山梨県南都留郡山中湖村</p>
+              <p className="text-[11px] text-zinc-600 mt-2">{t('luminaWindow.place')}</p>
             </motion.div>
 
             <motion.button
@@ -163,11 +155,11 @@ export default function LuminaWindowPage() {
               transition={{ delay: 0.3 }}
               whileTap={{ scale: 0.97 }}
             >
-              光を灯す
+              {t('luminaWindow.ignite')}
             </motion.button>
 
             <p className="text-[11px] text-zinc-600 text-center mt-3">
-              画面をスリープしないよう維持します
+              {t('luminaWindow.keepAwake')}
             </p>
           </motion.div>
         )}
@@ -187,7 +179,7 @@ export default function LuminaWindowPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2 }}
-            onClick={handleExit}
+            onClick={showControls}
           >
             {/* Breathing veil — 4秒で明るく、6秒で暗く。opacity は GPU 合成で滑らか */}
             <motion.div
@@ -221,7 +213,7 @@ export default function LuminaWindowPage() {
             />
 
             {/* Time display */}
-            <div className="relative text-center">
+            <div className="relative text-center pointer-events-none">
               <motion.p
                 className="font-serif tabular-nums"
                 style={{
@@ -239,20 +231,43 @@ export default function LuminaWindowPage() {
                 山中湖 · Yamanaka-ko
               </p>
               <p className="mt-1 text-xs" style={{ color: 'hsl(18,45%,19%)' }}>
-                記憶の光
+                {t('luminaWindow.memory')}
               </p>
             </div>
 
-            {/* Tap to exit hint — fades out after 3 s */}
-            <motion.p
-              className="absolute bottom-10 text-xs"
-              style={{ color: 'hsl(18,45%,19%)' }}
-              initial={{ opacity: 0.5 }}
-              animate={{ opacity: 0 }}
-              transition={{ delay: 3, duration: 1.5 }}
-            >
-              タップで戻る
-            </motion.p>
+            {/* Controls — タップで表示、3.5秒で自動非表示。消灯は明示ボタンのみ */}
+            <AnimatePresence>
+              {controlsVisible && (
+                <motion.div
+                  className="absolute bottom-10 left-0 right-0 flex justify-center"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleExit() }}
+                    className="py-2.5 px-7 rounded-2xl text-xs font-semibold"
+                    style={{
+                      background: 'rgba(10,4,2,0.35)',
+                      border: '1px solid rgba(60,25,8,0.45)',
+                      color: 'hsl(20,70%,22%)',
+                      backdropFilter: 'blur(8px)',
+                    }}
+                  >
+                    {t('luminaWindow.close')}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 初回だけの操作ヒント（コントロール非表示時に極薄で滞留） */}
+            {!controlsVisible && (
+              <p className="absolute bottom-10 text-[11px] pointer-events-none"
+                 style={{ color: 'hsl(18,45%,22%)', opacity: 0.5 }}>
+                {t('luminaWindow.controlsHint')}
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

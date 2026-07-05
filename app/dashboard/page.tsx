@@ -490,7 +490,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
           </Link>
         </motion.div>
 
-        {/* Light Alarm card */}
+        {/* Light Alarm card — 設定済みなら時刻を表示 */}
         <motion.div variants={fadeUp} className="mb-4">
           <Link href="/dashboard/alarm">
             <motion.div
@@ -504,9 +504,17 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                 🌅
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-zinc-100">明日の光アラーム</p>
-                <p className="text-xs text-zinc-400 mt-0.5">朝の予定に合わせたサンライズ照明</p>
+                <p className="text-sm font-semibold text-zinc-100">{t('alarm.label')}</p>
+                <p className="text-xs mt-0.5"
+                   style={{ color: store.lightAlarm?.enabled ? '#ffb877' : '#a1a1aa' }}>
+                  {store.lightAlarm?.enabled
+                    ? t('alarm.cardSubSet', { time: store.lightAlarm.time })
+                    : t('alarm.cardSub')}
+                </p>
               </div>
+              {store.lightAlarm?.enabled && (
+                <span className="w-2 h-2 rounded-full flex-shrink-0 animate-pulse" style={{ background: '#ffb877' }} />
+              )}
               <ArrowRight size={15} className="text-zinc-600 flex-shrink-0" />
             </motion.div>
           </Link>
@@ -815,8 +823,8 @@ function PostHome({ guestInfo }: { guestInfo: any }) {
                 transition={{ duration: 3, repeat: Infinity }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-zinc-100">Lumina の窓</p>
-                <p className="text-xs text-zinc-400 mt-0.5">記憶の光 · 手のひらの有機EL</p>
+                <p className="text-sm font-semibold text-zinc-100">{t('luminaWindow.label')}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">{t('luminaWindow.cardSub')}</p>
               </div>
               <ArrowRight size={15} className="text-zinc-600 flex-shrink-0" />
             </motion.div>

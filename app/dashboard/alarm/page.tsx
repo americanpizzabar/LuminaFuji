@@ -1,74 +1,43 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { ArrowLeft, AlarmClock, Check } from 'lucide-react'
+import { ArrowLeft, AlarmClock, Check, BatteryCharging } from 'lucide-react'
 import { getStore, updateStore } from '@/lib/store'
 import type { LightAlarm } from '@/lib/store'
+import { useLanguage } from '@/lib/useLanguage'
+import { useWakeLock } from '@/lib/useWakeLock'
 import { hapticTap, hapticSuccess } from '@/lib/haptics'
+import SunriseGlow, { SunrisePlan, SUNRISE_TARGET, SUNRISE_LEAD_MINUTES } from '@/components/SunriseGlow'
 
-type Plan = 'sport' | 'leisure' | 'work'
+const PLAN_EMOJI: Record<SunrisePlan, string> = { sport: '🏃', leisure: '🌅', work: '💻' }
+const PLAN_IDS: SunrisePlan[] = ['sport', 'leisure', 'work']
 
-const PLANS: { id: Plan; emoji: string; label: string; sub: string; description: string }[] = [
-  {
-    id: 'sport',
-    emoji: '🏃',
-    label: 'スポーツ・ハイキング',
-    sub: 'Active Morning',
-    description: '活動的な朝に向けて、爽やかな白昼の光でお目覚めをサポート',
-  },
-  {
-    id: 'leisure',
-    emoji: '🌅',
-    label: 'ゆっくりした朝',
-    sub: 'Slow Morning',
-    description: '温かみのある夜明けの光がゆっくり満ちていく、ぜいたくな目覚め',
-  },
-  {
-    id: 'work',
-    emoji: '💻',
-    label: '仕事・リモートワーク',
-    sub: 'Focus Morning',
-    description: '集中力を高める清潔な光が、頭をシャープにしてくれます',
-  },
-]
-
-// サンライズ: 起床時刻の20分前から徐々に明るくなる
-const SUNRISE_MINUTES = 20
-// プレビューは20分間のランプを24秒に圧縮して再生する
+// プレビューは20分のランプを24秒に圧縮して再生する
 const PREVIEW_DURATION_MS = 24_000
-const SUNRISE_TARGET: Record<Plan, number> = { sport: 95, leisure: 65, work: 85 }
-const SUNRISE_COLOR: Record<Plan, string> = {
-  sport: 'hsl(195,80%,70%)',
-  leisure: 'hsl(28,100%,65%)',
-  work: 'hsl(50,90%,75%)',
-}
 
-type Phase = 'setup' | 'saved' | 'sunrise'
-
-/** 次の (今日 or 明日の) HH:MM を Date で返す */
-function nextWakeDate(time: string, from: Date): Date {
-  const [h, m] = time.split(':').map(Number)
-  const wake = new Date(from)
-  wake.setHours(h, m, 0, 0)
-  return wake
-}
+type Phase = 'setup' | 'saved' | 'preview' | 'standby'
 
 export default function AlarmPage() {
+  const { t } = useLanguage()
   const [phase, setPhase] = useState<Phase>('setup')
-  const [plan, setPlan] = useState<Plan>('leisure')
+  const [plan, setPlan] = useState<SunrisePlan>('leisure')
   const [time, setTime] = useState('07:00')
   const [existing, setExisting] = useState<LightAlarm | null>(null)
 
-  // Sunrise simulation state
-  const [sunProgress, setSunProgress] = useState(0) // 0–1
-  const [sunBrightness, setSunBrightness] = useState(2)
-  const sunRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  // 手動停止した本番アラームの起床時刻 — ウォッチャーが同じアラームを再発火しないようにする
-  const skipWakeRef = useRef<number>(0)
-  // 現在のサンライズがプレビューか本番か
-  const sunriseSourceRef = useRef<'preview' | 'alarm'>('preview')
+  // プレビューランプ
+  const [previewProgress, setPreviewProgress] = useState(0)
+  const previewRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // スタンバイ（枕元）モードの時計
+  const [clock, setClock] = useState('')
+
+  // 通知の予約タイマー — 再セット時に前の予約を破棄して多重通知を防ぐ
+  const notifRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // スタンバイ中は画面を眠らせない（本番のサンライズは常駐ウォッチャーが引き継ぐ）
+  useWakeLock(phase === 'standby')
 
   useEffect(() => {
     const store = getStore()
@@ -76,77 +45,53 @@ export default function AlarmPage() {
       setExisting(store.lightAlarm)
       setPlan(store.lightAlarm.plan)
       setTime(store.lightAlarm.time)
+      setPhase('saved')
     }
   }, [])
 
-  // アンマウント時にサンライズのintervalを確実に停止する
+  // アンマウント時に各タイマーを確実に停止
   useEffect(() => {
-    return () => { if (sunRef.current) clearInterval(sunRef.current) }
-  }, [])
-
-  /** サンライズランプを開始する（プレビュー: 24秒 / 本番: 実時間） */
-  const startSunrise = useCallback((durationMs: number, p: Plan, source: 'preview' | 'alarm') => {
-    if (sunRef.current) clearInterval(sunRef.current)
-    sunriseSourceRef.current = source
-    setPlan(p)
-    setPhase('sunrise')
-    setSunProgress(0)
-    setSunBrightness(2)
-    const t0 = Date.now()
-    const target = SUNRISE_TARGET[p]
-    sunRef.current = setInterval(() => {
-      const k = Math.min(1, (Date.now() - t0) / durationMs)
-      setSunProgress(k)
-      setSunBrightness(Math.round(2 + (target - 2) * k))
-      if (k >= 1 && sunRef.current) {
-        clearInterval(sunRef.current)
-        sunRef.current = null
-      }
-    }, 100)
-  }, [])
-
-  // 本番アラーム監視: ページ表示中、起床20分前〜起床時刻の間に入ったら実時間サンライズを開始
-  useEffect(() => {
-    if (!existing?.enabled || phase === 'sunrise') return
-    const check = () => {
-      const now = new Date()
-      const wake = nextWakeDate(existing.time, now)
-      const start = wake.getTime() - SUNRISE_MINUTES * 60_000
-      if (wake.getTime() <= skipWakeRef.current) return // 手動停止済みのアラーム
-      if (now.getTime() >= start && now.getTime() < wake.getTime()) {
-        // 残り時間ぶんの実時間ランプ（最低60秒）
-        startSunrise(Math.max(wake.getTime() - now.getTime(), 60_000), existing.plan, 'alarm')
-      }
+    return () => {
+      if (previewRef.current) clearInterval(previewRef.current)
+      if (notifRef.current) clearTimeout(notifRef.current)
     }
-    check()
-    const id = setInterval(check, 30_000)
+  }, [])
+
+  // スタンバイモードの時計（1秒ごと）
+  useEffect(() => {
+    if (phase !== 'standby') return
+    const update = () => setClock(new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }))
+    update()
+    const id = setInterval(update, 1000)
     return () => clearInterval(id)
-  }, [existing, phase, startSunrise])
+  }, [phase])
 
   const handleSave = () => {
     hapticSuccess()
     const alarm: LightAlarm = { time, plan, enabled: true }
     updateStore({ lightAlarm: alarm })
     setExisting(alarm)
-    skipWakeRef.current = 0 // 新しい設定では停止履歴をリセット
     setPhase('saved')
 
-    // 対応環境ではサンライズ開始時刻に通知を予約する（ページを開いている間のみ有効）
+    // 対応環境ではサンライズ開始時刻に通知を予約する（アプリを開いている間のみ有効）
     if (typeof window !== 'undefined' && 'Notification' in window) {
       Notification.requestPermission().then(perm => {
         if (perm !== 'granted') return
+        const [h, m] = time.split(':').map(Number)
         const now = new Date()
-        const wake = nextWakeDate(time, now)
+        const wake = new Date(now)
+        wake.setHours(h, m, 0, 0)
         if (wake <= now) wake.setDate(wake.getDate() + 1)
-        const delay = wake.getTime() - SUNRISE_MINUTES * 60_000 - Date.now()
+        const delay = wake.getTime() - SUNRISE_LEAD_MINUTES * 60_000 - Date.now()
         if (delay > 0 && delay < 24 * 60 * 60 * 1000) {
-          setTimeout(() => {
+          if (notifRef.current) clearTimeout(notifRef.current)
+          notifRef.current = setTimeout(() => {
             try {
-              new Notification('Lumina Fuji — 光のアラーム', {
-                body: `${time}の起床に向けて、サンライズが始まります。`,
+              new Notification('Lumina Fuji — Light Alarm', {
+                body: t('alarm.savedTitle', { time }),
                 icon: '/icon.png',
               })
-            } catch { /* 通知が拒否・失効していても静かに続行 */ }
+            } catch { /* 通知が失効していても静かに続行 */ }
           }, delay)
         }
       }).catch(() => { /* 通知非対応環境では静かに続行 */ })
@@ -155,17 +100,24 @@ export default function AlarmPage() {
 
   const handlePreview = () => {
     hapticTap()
-    startSunrise(PREVIEW_DURATION_MS, plan, 'preview')
+    setPhase('preview')
+    setPreviewProgress(0)
+    if (previewRef.current) clearInterval(previewRef.current)
+    const t0 = Date.now()
+    previewRef.current = setInterval(() => {
+      const k = Math.min(1, (Date.now() - t0) / PREVIEW_DURATION_MS)
+      setPreviewProgress(k)
+      if (k >= 1 && previewRef.current) {
+        clearInterval(previewRef.current)
+        previewRef.current = null
+      }
+    }, 100)
   }
 
-  const handleStopSunrise = () => {
-    if (sunRef.current) { clearInterval(sunRef.current); sunRef.current = null }
-    // 本番アラームを途中で閉じた場合、同じ起床時刻での再発火を抑止する
-    if (sunriseSourceRef.current === 'alarm' && existing) {
-      skipWakeRef.current = nextWakeDate(existing.time, new Date()).getTime()
-    }
+  const stopPreview = () => {
+    if (previewRef.current) { clearInterval(previewRef.current); previewRef.current = null }
+    setPreviewProgress(0)
     setPhase('saved')
-    setSunProgress(0)
   }
 
   const handleDisable = () => {
@@ -175,7 +127,7 @@ export default function AlarmPage() {
     setPhase('setup')
   }
 
-  const selectedPlan = PLANS.find(p => p.id === plan)!
+  const previewBrightness = Math.round(2 + (SUNRISE_TARGET[plan] - 2) * previewProgress)
 
   return (
     <div className="page-container pb-28">
@@ -186,17 +138,16 @@ export default function AlarmPage() {
           <ArrowLeft size={16} className="text-zinc-400" />
         </Link>
         <div>
-          <p className="text-[10px] text-zinc-500 tracking-[0.2em] uppercase">明日の光アラーム</p>
+          <p className="text-[10px] text-zinc-500 tracking-[0.2em] uppercase">{t('alarm.label')}</p>
           <h1 className="font-serif text-xl text-zinc-100">Light Alarm</h1>
         </div>
       </div>
 
       <AnimatePresence mode="wait">
         {/* ─── Setup / Edit ─── */}
-        {(phase === 'setup') && (
+        {phase === 'setup' && (
           <motion.div key="setup" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
 
-            {/* Existing alarm banner */}
             {existing && (
               <motion.div
                 className="mb-4 rounded-2xl p-4 flex items-center gap-3"
@@ -205,16 +156,16 @@ export default function AlarmPage() {
               >
                 <AlarmClock size={16} className="text-ember-400 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="text-xs text-ember-400 font-medium">設定済みアラーム</p>
-                  <p className="text-sm text-zinc-200">{existing.time} · {PLANS.find(p => p.id === existing.plan)?.label}</p>
+                  <p className="text-xs text-ember-400 font-medium">{t('alarm.existing')}</p>
+                  <p className="text-sm text-zinc-200">{existing.time} · {t(`alarm.${existing.plan}`)}</p>
                 </div>
-                <button onClick={handleDisable} className="text-xs text-zinc-500 hover:text-zinc-300">解除</button>
+                <button onClick={handleDisable} className="text-xs text-zinc-500 hover:text-zinc-300">{t('alarm.disable')}</button>
               </motion.div>
             )}
 
             {/* Wake time */}
             <div className="mb-5">
-              <p className="text-xs text-zinc-500 tracking-[0.15em] uppercase mb-3">起床時刻</p>
+              <p className="text-xs text-zinc-500 tracking-[0.15em] uppercase mb-3">{t('alarm.wakeTime')}</p>
               <div className="rounded-2xl p-5 flex items-center justify-center"
                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <input
@@ -226,19 +177,19 @@ export default function AlarmPage() {
                 />
               </div>
               <p className="text-xs text-zinc-500 mt-2 text-center">
-                サンライズ照明は {time} の {SUNRISE_MINUTES} 分前から始まります
+                {t('alarm.sunriseNote', { time, min: SUNRISE_LEAD_MINUTES })}
               </p>
             </div>
 
             {/* Plan picker */}
-            <p className="text-xs text-zinc-500 tracking-[0.15em] uppercase mb-3">明日の予定</p>
+            <p className="text-xs text-zinc-500 tracking-[0.15em] uppercase mb-3">{t('alarm.plans')}</p>
             <div className="space-y-2.5 mb-6">
-              {PLANS.map((p) => {
-                const isSelected = plan === p.id
+              {PLAN_IDS.map((id) => {
+                const isSelected = plan === id
                 return (
                   <motion.button
-                    key={p.id}
-                    onClick={() => { hapticTap(); setPlan(p.id) }}
+                    key={id}
+                    onClick={() => { hapticTap(); setPlan(id) }}
                     className="w-full rounded-2xl p-4 flex items-center gap-4 text-left"
                     style={{
                       background: isSelected ? 'rgba(255,157,92,0.09)' : 'rgba(255,255,255,0.025)',
@@ -246,10 +197,10 @@ export default function AlarmPage() {
                     }}
                     whileTap={{ scale: 0.97 }}
                   >
-                    <span className="text-2xl">{p.emoji}</span>
+                    <span className="text-2xl">{PLAN_EMOJI[id]}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-zinc-100">{p.label}</p>
-                      <p className="text-xs text-zinc-400 mt-0.5 leading-snug">{p.description}</p>
+                      <p className="text-sm font-semibold text-zinc-100">{t(`alarm.${id}`)}</p>
+                      <p className="text-xs text-zinc-400 mt-0.5 leading-snug">{t(`alarm.${id}Desc`)}</p>
                     </div>
                     {isSelected && (
                       <motion.div
@@ -270,16 +221,15 @@ export default function AlarmPage() {
               className="w-full py-3.5 rounded-2xl font-semibold text-sm btn-ember mb-3"
               whileTap={{ scale: 0.97 }}
             >
-              光アラームをセット
+              {t('alarm.set')}
             </motion.button>
           </motion.div>
         )}
 
-        {/* ─── Saved confirmation ─── */}
+        {/* ─── Saved ─── */}
         {phase === 'saved' && (
           <motion.div key="saved" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
 
-            {/* Confirmation card */}
             <div className="rounded-3xl p-6 mb-5 flex flex-col items-center text-center"
                  style={{ background: 'linear-gradient(135deg, rgba(255,157,92,0.1) 0%, rgba(10,8,6,0.5) 100%)', border: '1px solid rgba(255,157,92,0.2)' }}>
               <motion.div
@@ -288,19 +238,26 @@ export default function AlarmPage() {
                 animate={{ boxShadow: ['0 0 0 rgba(255,157,92,0)', '0 0 24px rgba(255,157,92,0.3)', '0 0 0 rgba(255,157,92,0)'] }}
                 transition={{ duration: 2.5, repeat: Infinity }}
               >
-                {selectedPlan.emoji}
+                {PLAN_EMOJI[plan]}
               </motion.div>
-              <p className="font-serif text-xl text-zinc-50 mb-1">{time} に光が届きます</p>
-              <p className="text-xs text-zinc-400">{selectedPlan.label}</p>
-              <p className="text-xs text-zinc-500 mt-1">
-                {selectedPlan.description}
-              </p>
+              <p className="font-serif text-xl text-zinc-50 mb-1">{t('alarm.savedTitle', { time })}</p>
+              <p className="text-xs text-zinc-400">{t(`alarm.${plan}`)}</p>
+              <p className="text-xs text-zinc-500 mt-1">{t(`alarm.${plan}Desc`)}</p>
               <p className="text-[11px] text-zinc-600 mt-3">
-                この画面を枕元に開いたままにすると、起床{SUNRISE_MINUTES}分前に画面が自動で明るくなります
+                {t('alarm.standbyNote', { min: SUNRISE_LEAD_MINUTES })}
               </p>
             </div>
 
-            {/* Preview button */}
+            {/* 枕元スタンバイ — 画面を保ったまま朝を待つ */}
+            <motion.button
+              onClick={() => { hapticTap(); setPhase('standby') }}
+              className="w-full py-3.5 rounded-2xl text-sm font-semibold mb-3 flex items-center justify-center gap-2 btn-ember"
+              whileTap={{ scale: 0.97 }}
+            >
+              <span className="text-base">🌙</span>
+              {t('alarm.standby')}
+            </motion.button>
+
             <motion.button
               onClick={handlePreview}
               className="w-full py-3.5 rounded-2xl text-sm font-semibold mb-3 flex items-center justify-center gap-2"
@@ -308,67 +265,63 @@ export default function AlarmPage() {
               whileTap={{ scale: 0.97 }}
             >
               <span className="text-base">🌅</span>
-              サンライズをプレビュー（24秒）
+              {t('alarm.preview')}
             </motion.button>
 
             <button
               onClick={() => setPhase('setup')}
               className="w-full py-3 text-xs text-zinc-500"
             >
-              設定を変更する
+              {t('alarm.change')}
             </button>
           </motion.div>
         )}
 
-        {/* ─── Sunrise simulation ─── */}
-        {phase === 'sunrise' && (
+        {/* ─── Preview sunrise ─── */}
+        {phase === 'preview' && (
+          <SunriseGlow
+            key="preview"
+            progress={previewProgress}
+            brightness={previewBrightness}
+            plan={plan}
+            statusText={previewProgress < 1 ? t('alarm.simulating') : t('alarm.wakeNow')}
+            onClose={stopPreview}
+            closeLabel={t('alarm.close')}
+            zIndex={180}
+          />
+        )}
+
+        {/* ─── Bedside standby ─── */}
+        {phase === 'standby' && (
           <motion.div
-            key="sunrise"
-            className="fixed inset-0 z-[180] flex flex-col items-center justify-center"
-            style={{ background: `hsl(${plan === 'sport' ? '200' : '20'},80%,${2 + Math.round(sunProgress * 8)}%)` }}
+            key="standby"
+            className="fixed inset-0 z-[170] flex flex-col items-center justify-center select-none"
+            style={{ background: '#020101' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            onClick={() => setPhase('saved')}
           >
-            {/* Horizon glow */}
-            <motion.div
-              className="absolute bottom-0 left-0 right-0"
-              style={{
-                height: `${20 + sunProgress * 50}%`,
-                background: `linear-gradient(to top, ${SUNRISE_COLOR[plan]} 0%, transparent 100%)`,
-                opacity: 0.15 + sunProgress * 0.5,
-              }}
-            />
-
-            {/* Sun orb */}
-            <motion.div
-              className="relative rounded-full"
-              style={{
-                width: 120,
-                height: 120,
-                background: `radial-gradient(circle, ${SUNRISE_COLOR[plan]} 0%, transparent 70%)`,
-                boxShadow: `0 0 ${40 + sunProgress * 80}px ${SUNRISE_COLOR[plan]}`,
-                opacity: 0.2 + sunProgress * 0.8,
-                transform: `translateY(${(1 - sunProgress) * 80}px)`,
-              }}
-            />
-
-            <div className="absolute text-center" style={{ top: '65%' }}>
-              <p className="font-serif text-xl mb-1" style={{ color: `rgba(255,220,160,${0.3 + sunProgress * 0.7})` }}>
-                {Math.round(sunBrightness)}%
-              </p>
-              <p className="text-xs" style={{ color: `rgba(255,200,130,${0.2 + sunProgress * 0.5})` }}>
-                {sunProgress < 1 ? 'サンライズシミュレーション' : '起床の時刻です'}
-              </p>
-            </div>
-
-            <button
-              onClick={handleStopSunrise}
-              className="absolute top-10 right-6 text-xs"
-              style={{ color: 'rgba(255,200,130,0.4)' }}
+            {/* 減光された時計 — 眠りを妨げない最小限の存在感 */}
+            <motion.p
+              className="font-serif tabular-nums"
+              style={{ fontSize: '3.4rem', lineHeight: 1, color: 'rgba(255,157,92,0.30)' }}
+              animate={{ opacity: [0.75, 1, 0.75] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
             >
-              閉じる
-            </button>
+              {clock}
+            </motion.p>
+            <p className="mt-4 text-xs" style={{ color: 'rgba(255,157,92,0.18)' }}>
+              {existing?.time} · {existing && t(`alarm.${existing.plan}`)}
+            </p>
+            <div className="mt-8 flex items-center gap-1.5" style={{ color: 'rgba(255,157,92,0.14)' }}>
+              <BatteryCharging size={12} />
+              <span className="text-[11px]">{t('alarm.chargeHint')}</span>
+            </div>
+            <p className="absolute bottom-10 text-[11px]" style={{ color: 'rgba(255,157,92,0.12)' }}>
+              {t('alarm.standbyExit')}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>

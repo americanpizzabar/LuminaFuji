@@ -6,7 +6,7 @@ import { ArrowLeft, Power, Zap, Wifi, WifiOff, Check, Info, Sunset, Moon } from 
 import Link from 'next/link'
 import {
   SCENES, DEFAULT_ZONES, Zone, LightingScene,
-  brightnessToWarmRgb, FIXED_CCT_LABEL, SCENE_POETRY,
+  brightnessToWarmRgb, FIXED_CCT_LABEL, SCENE_POETRY, ARRIVAL_PRESETS,
 } from '@/lib/lighting'
 import FloorPlan from '@/components/FloorPlan'
 import CircadianTuner from '@/components/CircadianTuner'
@@ -364,15 +364,12 @@ export default function LightingPage() {
     if (!isStaying) return
     const store = getStore()
     if (!store.arrivalMode) return
-    const sceneMap: Record<string, string> = { rest: 'sleep', refresh: 'morning', explore: 'evening' }
-    const targetId = sceneMap[store.arrivalMode]
-    if (targetId) {
-      const scene = SCENES.find(s => s.id === targetId)
-      if (scene) {
-        setActiveScene(scene)
-        setBrightness(store.arrivalMode === 'rest' ? 5 : store.arrivalMode === 'refresh' ? 80 : 70)
-        setIsAllOn(true)
-      }
+    const preset = ARRIVAL_PRESETS[store.arrivalMode]
+    const scene = preset && SCENES.find(s => s.id === preset.sceneId)
+    if (scene) {
+      setActiveScene(scene)
+      setBrightness(preset.brightness)
+      setIsAllOn(true)
     }
   // Runs once on mount when phase becomes staying
   // eslint-disable-next-line react-hooks/exhaustive-deps

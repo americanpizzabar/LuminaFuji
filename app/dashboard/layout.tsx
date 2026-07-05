@@ -12,6 +12,7 @@ import CinematicFrame from '@/components/CinematicFrame'
 import WelcomeRitual from '@/components/WelcomeRitual'
 import ArrivalCheck from '@/components/ArrivalCheck'
 import SilentConcierge from '@/components/SilentConcierge'
+import LightAlarmWatcher from '@/components/LightAlarmWatcher'
 import Link from 'next/link'
 import { BookOpen, LogOut } from 'lucide-react'
 import { getStore, clearGuestInfo } from '@/lib/store'
@@ -82,6 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <WelcomeRitual />
             <ArrivalCheckWrapper />
             <SilentConcierge />
+            <LightAlarmWatcher />
             <PhaseSelector />
             {/* Fixed top-right controls */}
             <div className="fixed top-3 right-4 z-50 flex items-center gap-2">

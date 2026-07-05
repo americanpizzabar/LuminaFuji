@@ -40,6 +40,17 @@ export default function WelcomeRitual() {
     return () => clearTimeout(timer)
   }, [phase, guestInfo])
 
+  // 儀式の実行中フラグと完了イベント。
+  // サイレント・オンボーディング等の後続オーバーレイが、この演出に被らないよう待機するために使う。
+  useEffect(() => {
+    if (!visible) return
+    document.documentElement.dataset.lfRitual = '1'
+    return () => {
+      delete document.documentElement.dataset.lfRitual
+      window.dispatchEvent(new Event('lf:welcome-done'))
+    }
+  }, [visible])
+
   const firstName = guestInfo?.name?.split(' ')[0] ?? ''
   const ease = [0.22, 1, 0.36, 1] as const
 

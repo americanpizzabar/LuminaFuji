@@ -111,6 +111,16 @@ export function fixedCctRgb(): string {
   return brightnessToWarmRgb(100)
 }
 
+/**
+ * サイレント・オンボーディング: 到着時コンディション → 適用プリセット。
+ * ArrivalCheck（記録）と照明ページ（初期シーン適用）の両方が参照する唯一の定義。
+ */
+export const ARRIVAL_PRESETS: Record<'rest' | 'refresh' | 'explore', { sceneId: string; sceneName: string; brightness: number }> = {
+  rest:    { sceneId: 'sleep',   sceneName: 'Sleep',   brightness: 5 },
+  refresh: { sceneId: 'morning', sceneName: 'Morning', brightness: 80 },
+  explore: { sceneId: 'evening', sceneName: 'Relax',   brightness: 70 },
+}
+
 /** 各シーンの詩的な名前と情景テキスト（ライティング・オーケストレーション用）。 */
 export const SCENE_POETRY: Record<string, { poeticName: string; verse: string; bgmHint: string }> = {
   dawn: {
