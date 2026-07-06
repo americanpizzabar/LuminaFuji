@@ -8,6 +8,8 @@ import {
   respondToServiceRequest, completeServiceRequest, updateServiceRequest,
   getStore,
 } from '@/lib/store'
+import { scopeOf, isDutyOf, getOpsPerformance } from '@/lib/store'
+import ScopeNotice from '@/components/ScopeNotice'
 import type { ServiceRequest, ServiceStatus } from '@/lib/store'
 import { Bell, Clock, CheckCircle2, AlertTriangle, MessageSquare } from 'lucide-react'
 
@@ -186,21 +188,18 @@ function RequestCard({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ManagerRequestsPage() {
+function ManagerRequestsInner() {
   const [store, update] = useStore()
   const [tab, setTab] = useState<Tab>('pending')
 
   const all = store.serviceRequests
 
-  // Summary stats
-  const total = all.length
+  // Summary stats — オーナー分析と同じ getOpsPerformance で一元計算
+  const ops = getOpsPerformance(store)
+  const total = ops.totalRequests
   const pendingCount = all.filter(r => r.status === 'pending').length
-  const completed = all.filter(r => r.status === 'done' && r.completedAt)
-  const completionRate = total > 0 ? Math.round((completed.length / total) * 100) : 0
-  const avgResponseMs = completed.length > 0
-    ? completed.reduce((sum, r) => sum + (new Date(r.completedAt!).getTime() - new Date(r.createdAt).getTime()), 0) / completed.length
-    : 0
-  const avgResponseMin = Math.round(avgResponseMs / 60000)
+  const completionRate = ops.completionRate ?? 0
+  const avgResponseMin = ops.avgCompletionMin ?? 0
 
   // Filtered list
   const filtered = tab === 'all'
@@ -328,4 +327,21 @@ export default function ManagerRequestsPage() {
       )}
     </motion.div>
   )
+}
+
+/** 委託範囲でリクエスト対応が担当外の場合は案内を表示する */
+export default function ManagerRequestsPage() {
+  const [store] = useStore()
+  if (!isDutyOf(scopeOf(store), 'guestRequests', 'manager')) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-xl font-medium text-zinc-100">リクエスト対応</h1>
+          <p className="text-sm text-zinc-300 mt-0.5">ゲストリクエストの履歴と対応</p>
+        </div>
+        <ScopeNotice duty="ゲストリクエスト対応" handledBy="owner" accent="teal" />
+      </div>
+    )
+  }
+  return <ManagerRequestsInner />
 }

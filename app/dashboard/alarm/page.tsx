@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, AlarmClock, Check, BatteryCharging } from 'lucide-react'
-import { getStore, updateStore, expOf } from '@/lib/store'
+import { getStore, updateStore, expOf, recordEngagement } from '@/lib/store'
 import type { LightAlarm } from '@/lib/store'
 import { useStore } from '@/lib/useStore'
 import { useLanguage } from '@/lib/useLanguage'
@@ -75,6 +75,7 @@ function AlarmPageInner() {
     hapticSuccess()
     const alarm: LightAlarm = { time, plan, enabled: true }
     updateStore({ lightAlarm: alarm })
+    recordEngagement('alarm_set')
     setExisting(alarm)
     setPhase('saved')
 

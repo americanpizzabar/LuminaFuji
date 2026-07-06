@@ -6,12 +6,12 @@
  * 高級デザイン誌のような見た目で、ECUANESTのクロージングを演出する。
  */
 
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Download } from 'lucide-react'
 import { useStore } from '@/lib/useStore'
-import { expOf } from '@/lib/store'
+import { expOf, recordEngagement } from '@/lib/store'
 import FeatureUnavailable from '@/components/FeatureUnavailable'
 import { usePhase } from '@/lib/phase'
 import { getLightingAnalytics, getZoneAnalytics } from '@/lib/store'
@@ -92,6 +92,9 @@ function LightFingerprint({ reservationId, scenes }: { reservationId: string; sc
 function BlueprintInner() {
   const [store]       = useStore()
   const { guestInfo } = usePhase()
+
+  // 体験エンゲージメント: 設計図の閲覧を匿名集計する
+  useEffect(() => { recordEngagement('blueprint_viewed') }, [])
   const analytics     = getLightingAnalytics(store)
   const zoneData      = getZoneAnalytics(store)
 

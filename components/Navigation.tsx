@@ -23,7 +23,7 @@ function useNavItems() {
   const { t } = useLanguage()
   const exp = expOf(store)
   const pendingRequests = store.serviceRequests.filter(r => r.status === 'pending').length
-  const unreadMessages = store.messages.filter(m => m.from === 'owner' && !m.readByGuest).length
+  const unreadMessages = store.messages.filter(m => m.from !== 'guest' && !m.readByGuest).length
 
   const staying: NavItem[] = [
     { href: '/dashboard', label: t('nav.home'), icon: Home },

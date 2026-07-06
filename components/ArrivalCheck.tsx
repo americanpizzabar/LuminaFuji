@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { updateStore, recordLightingEvent } from '@/lib/store'
+import { updateStore, recordLightingEvent, recordEngagement } from '@/lib/store'
 import type { ArrivalMode } from '@/lib/store'
 import { ARRIVAL_PRESETS } from '@/lib/lighting'
 import { useLanguage } from '@/lib/useLanguage'
@@ -69,6 +69,7 @@ export default function ArrivalCheck({ reservationId }: Props) {
     if (!chosen) return
     hapticSuccess()
     updateStore({ arrivalMode: chosen })
+    recordEngagement('arrival_answered', `arrival_mode_${chosen}`)
     // プリセット適用をシーン変更として記録（履歴＋コンシェルジュの2時間タイマー起点）
     const preset = ARRIVAL_PRESETS[chosen]
     recordLightingEvent({ sceneId: preset.sceneId, sceneName: preset.sceneName })
@@ -80,6 +81,7 @@ export default function ArrivalCheck({ reservationId }: Props) {
   // 答えたくないゲストに静けさを返す。二度と尋ねない。
   const handleSkip = () => {
     hapticTap()
+    recordEngagement('arrival_skipped')
     markAnswered('skipped')
     setOpen(false)
   }

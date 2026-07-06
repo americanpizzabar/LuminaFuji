@@ -12,6 +12,7 @@ import { useStore } from '@/lib/useStore'
 import { getStore, setFacilitySettings, setAnnouncement } from '@/lib/store'
 import type { FacilitySettings, AnnouncementType } from '@/lib/store'
 import ExperienceSettingsPanel from '@/components/ExperienceSettingsPanel'
+import ServiceScopePanel from '@/components/ServiceScopePanel'
 
 const SCENE_OPTIONS = [
   { value: 'dawn',    label: '夜明け',   emoji: '🌅' },
@@ -582,6 +583,9 @@ export default function OwnerSettingsPage() {
             </button>
           </Link>
         </div>
+
+        {/* ── 委託サービス範囲（管理会社への委託契約） ── */}
+        <ServiceScopePanel />
 
         {/* ── ゲスト体験機能 ── */}
         <ExperienceSettingsPanel />

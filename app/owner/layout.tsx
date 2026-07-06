@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { PhaseProvider } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
-import { getUnreadCounts } from '@/lib/store'
+import { getActionableCounts } from '@/lib/store'
 
 const OWNER_PIN = process.env.NEXT_PUBLIC_OWNER_PIN ?? '1234'
 
@@ -23,7 +23,8 @@ const navItems = [
 
 function OwnerLayoutInner({ children, pathname }: { children: React.ReactNode, pathname: string }) {
   const [store] = useStore()
-  const counts = getUnreadCounts(store)
+  // 委託範囲で自分が担当する業務＋リード（オーナー専任）だけをバッジに出す
+  const counts = getActionableCounts(store, 'owner')
   const router = useRouter()
 
   const logout = () => {
@@ -75,8 +76,8 @@ function OwnerLayoutInner({ children, pathname }: { children: React.ReactNode, p
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href
             const badge =
-              href === '/owner/consults' ? counts.newConsults :
-              href === '/owner/guests' ? counts.pendingRequests :
+              href === '/owner/consults' ? counts.consults :
+              href === '/owner/guests' ? counts.requests + counts.messages :
               undefined
             return (
               <Link key={href} href={href}

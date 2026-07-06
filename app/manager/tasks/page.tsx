@@ -4,8 +4,9 @@ import { motion } from 'framer-motion'
 import { useStore } from '@/lib/useStore'
 import {
   updateCleaningTask, resetCleaningChecklist, addMaintenanceItem,
-  updateMaintenanceItem, getStore
+  updateMaintenanceItem, getStore, scopeOf, isDutyOf,
 } from '@/lib/store'
+import ScopeNotice from '@/components/ScopeNotice'
 import { CheckSquare, Wrench, AlertTriangle, Plus, RefreshCw, Clock } from 'lucide-react'
 import { useState } from 'react'
 
@@ -29,6 +30,9 @@ const STATUS_CONFIG = {
 
 export default function ManagerTasksPage() {
   const [store, update] = useStore()
+  const scope = scopeOf(store)
+  const handlesCleaning = isDutyOf(scope, 'cleaning', 'manager')
+  const handlesMaintenance = isDutyOf(scope, 'maintenance', 'manager')
   const [tab, setTab] = useState<'cleaning' | 'maintenance'>('cleaning')
   const [showAdd, setShowAdd] = useState(false)
   const [desc, setDesc] = useState('')
@@ -97,7 +101,10 @@ export default function ManagerTasksPage() {
         ))}
       </div>
 
-      {tab === 'cleaning' && (
+      {tab === 'cleaning' && !handlesCleaning && (
+        <ScopeNotice duty="清掃" handledBy="owner" accent="teal" />
+      )}
+      {tab === 'cleaning' && handlesCleaning && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -147,7 +154,10 @@ export default function ManagerTasksPage() {
         </div>
       )}
 
-      {tab === 'maintenance' && (
+      {tab === 'maintenance' && !handlesMaintenance && (
+        <ScopeNotice duty="メンテナンス" handledBy="owner" accent="teal" />
+      )}
+      {tab === 'maintenance' && handlesMaintenance && (
         <div className="space-y-4">
           {/* Add form */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">

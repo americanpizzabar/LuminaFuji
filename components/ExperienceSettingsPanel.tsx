@@ -30,6 +30,8 @@ interface FeatureDef {
   requires?: string
   /** 有効時に表示する数値パラメータ */
   param?: 'conciergeHours' | 'alarmLeadMinutes'
+  /** 対応する利用計測キー（featureEngagement） — 利用実績チップの表示に使う */
+  engagementKey?: string
 }
 
 interface Group {
@@ -47,7 +49,7 @@ const GROUPS: Group[] = [
         desc: 'チェックイン初回、光のウェーブとともに迎える5秒のセレモニー' },
       { key: 'cinematicFrame', emoji: '🎞️', name: 'シネマティック演出',
         desc: 'フィルムグレインとビネットによる映画のような画面質感' },
-      { key: 'arrivalCheck',   emoji: '🤍', name: 'サイレント・オンボーディング',
+      { key: 'arrivalCheck',   emoji: '🤍', name: 'サイレント・オンボーディング', engagementKey: 'arrival_answered',
         desc: '到着時にゲストの状態（疲労・時差など）を伺い、照明を先回りでプリセット' },
     ],
   },
@@ -59,16 +61,16 @@ const GROUPS: Group[] = [
         desc: '時差ぼけ・集中・睡眠に合わせた光のプロトコル（1/fゆらぎキャンドル含む）' },
       { key: 'autoAmbient',    emoji: '🌇', name: 'オート・アンビエント',
         desc: '日没に同期して、気づかないほど静かにくつろぎの光へ移行' },
-      { key: 'silentConcierge', emoji: '🕊️', name: '無言のコンシェルジュ',
+      { key: 'silentConcierge', emoji: '🕊️', name: '無言のコンシェルジュ', engagementKey: 'concierge_accepted',
         desc: '同じ照明が長時間続いたとき、5分間の呼吸ライトを静かに提案',
         param: 'conciergeHours' },
-      { key: 'lightAlarm',     emoji: '🌅', name: '明日の光アラーム',
+      { key: 'lightAlarm',     emoji: '🌅', name: '明日の光アラーム', engagementKey: 'alarm_set',
         desc: '翌朝の予定に合わせ、画面がサンライズとなって起こすウェイクアップ',
         param: 'alarmLeadMinutes' },
       { key: 'objectLink',     emoji: '🏺', name: '一期一会オブジェクト',
         desc: '客室の工芸品QRから、職人の物語と専用照明シーンを起動',
         requires: '工芸品＋QRタグの設置が必要' },
-      { key: 'guestbook',      emoji: '✨', name: '星空のゲストブック',
+      { key: 'guestbook',      emoji: '✨', name: '星空のゲストブック', engagementKey: 'guestbook_posted',
         desc: 'ゲストの声が星となって夜空に灯るコミュニティ空間',
         requires: '投稿内容の定期的な確認を推奨' },
     ],
@@ -77,13 +79,13 @@ const GROUPS: Group[] = [
     title: 'チェックアウト後',
     sub: '記憶の持ち帰りとリレーション構築',
     items: [
-      { key: 'memoryCard',  emoji: '💌', name: '光の記憶カード',
+      { key: 'memoryCard',  emoji: '💌', name: '光の記憶カード', engagementKey: 'memory_opened',
         desc: '滞在中の照明履歴から生成する、その人だけのチェックアウトカード' },
-      { key: 'blueprint',   emoji: '📐', name: '光の設計図',
+      { key: 'blueprint',   emoji: '📐', name: '光の設計図', engagementKey: 'blueprint_viewed',
         desc: 'ゲスト固有の光のプロファイルをアートデータとして進呈' },
-      { key: 'luminaWindow', emoji: '🪟', name: 'Luminaの窓',
+      { key: 'luminaWindow', emoji: '🪟', name: 'Luminaの窓', engagementKey: 'window_lit',
         desc: '帰宅後もスマホの画面が施設の有機EL常夜灯になる継続体験' },
-      { key: 'secretKey',   emoji: '🗝️', name: 'シークレットキー',
+      { key: 'secretKey',   emoji: '🗝️', name: 'シークレットキー', engagementKey: 'secretkey_revealed',
         desc: 'ECUANEST照明コンサルへのVIP専用キーを進呈',
         requires: 'VIP相談プログラムの運用が必要' },
       { key: 'repeaterCta', emoji: '🎁', name: 'リピーター特典',
@@ -268,8 +270,14 @@ export default function ExperienceSettingsPanel() {
                           {item.emoji}
                         </span>
                         <div className="min-w-0">
-                          <p className={`text-sm font-medium ${enabled ? 'text-zinc-100' : 'text-zinc-500'}`}>
+                          <p className={`text-sm font-medium flex items-center gap-2 ${enabled ? 'text-zinc-100' : 'text-zinc-500'}`}>
                             {item.name}
+                            {item.engagementKey && (store.featureEngagement?.[item.engagementKey] ?? 0) > 0 && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-md tabular-nums"
+                                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#a1a1aa' }}>
+                                利用 {store.featureEngagement[item.engagementKey]}回
+                              </span>
+                            )}
                           </p>
                           <p className="text-[11px] text-zinc-500 mt-0.5 leading-snug">{item.desc}</p>
                           {item.requires && (

@@ -6,8 +6,10 @@ import { useStore } from '@/lib/useStore'
 import {
   updateCleaningTask, resetCleaningChecklist, addMaintenanceItem,
   updateMaintenanceItem, getStore, respondToServiceRequest,
-  completeServiceRequest, timeElapsed,
+  completeServiceRequest, timeElapsed, scopeOf, isDutyOf,
 } from '@/lib/store'
+import GuestBriefingCard from '@/components/GuestBriefingCard'
+import ScopeNotice from '@/components/ScopeNotice'
 import {
   CheckSquare, Calendar, Wrench, AlertTriangle, ChevronRight,
   Plus, RefreshCw, Bell, Users, Clock, Check,
@@ -33,6 +35,11 @@ const SERVICE_EMOJIS: Record<string, string> = {
 
 export default function ManagerDashboardPage() {
   const [store, update] = useStore()
+  // 委託サービス範囲 — 担当業務だけを作業環境に出す
+  const scope = scopeOf(store)
+  const handlesRequests = isDutyOf(scope, 'guestRequests', 'manager')
+  const handlesCleaning = isDutyOf(scope, 'cleaning', 'manager')
+  const handlesMaintenance = isDutyOf(scope, 'maintenance', 'manager')
   const [showAddMaint, setShowAddMaint] = useState(false)
   const [maintDesc, setMaintDesc] = useState('')
   const [maintArea, setMaintArea] = useState('living')
@@ -55,7 +62,7 @@ export default function ManagerDashboardPage() {
   const activeRequests = store.serviceRequests.filter(
     r => r.status === 'pending' || r.status === 'inProgress'
   )
-  const pendingCount = activeRequests.filter(r => r.status === 'pending').length
+  const pendingCount = handlesRequests ? activeRequests.filter(r => r.status === 'pending').length : 0
 
   // Handlers
   const toggleTask = (id: string, done: boolean) => {
@@ -114,7 +121,13 @@ export default function ManagerDashboardPage() {
         </div>
       </div>
 
+      {/* ─── 今日のゲスト・ブリーフィング（担当時のみ） ─────────────────────── */}
+      {handlesRequests && <GuestBriefingCard accent="teal" />}
+
       {/* ─── Service Request Notifications (most prominent) ─────────────────── */}
+      {!handlesRequests ? (
+        <ScopeNotice duty="ゲストリクエスト対応" handledBy="owner" accent="teal" />
+      ) : (
       <div className={`bg-zinc-900 border rounded-2xl p-5 ${activeRequests.length > 0 ? 'border-amber-500/30' : 'border-zinc-800'}`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-zinc-200 flex items-center gap-2">
@@ -207,6 +220,7 @@ export default function ManagerDashboardPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* ─── Current / Next Guest ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -246,6 +260,9 @@ export default function ManagerDashboardPage() {
       </div>
 
       {/* ─── Cleaning Checklist ──────────────────────────────────────────────── */}
+      {!handlesCleaning ? (
+        <ScopeNotice duty="清掃" handledBy="owner" accent="teal" />
+      ) : (
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -295,8 +312,12 @@ export default function ManagerDashboardPage() {
           ))}
         </div>
       </div>
+      )}
 
       {/* ─── Maintenance ─────────────────────────────────────────────────────── */}
+      {!handlesMaintenance ? (
+        <ScopeNotice duty="メンテナンス" handledBy="owner" accent="teal" />
+      ) : (
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-zinc-200 flex items-center gap-2">
@@ -354,6 +375,7 @@ export default function ManagerDashboardPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* ─── Quick Links ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3">

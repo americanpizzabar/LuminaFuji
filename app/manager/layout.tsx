@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { LayoutDashboard, Users, CheckSquare, BarChart2, LogOut, Wrench, Settings } from 'lucide-react'
 import { PhaseProvider } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
+import { getActionableCounts } from '@/lib/store'
 
 const navItems = [
   { href: '/manager/dashboard', label: '今日', icon: LayoutDashboard },
@@ -18,9 +19,8 @@ const navItems = [
 function ManagerLayoutInner({ children, pathname }: { children: React.ReactNode; pathname: string }) {
   const router = useRouter()
   const [store] = useStore()
-  const pendingRequests = store.serviceRequests.filter(r => r.status === 'pending').length
-  const openMaintenance = store.maintenanceItems.filter(m => m.status === 'open').length
-  const pendingClean = store.cleaningChecklist.filter(t => !t.done).length
+  // 委託範囲（ServiceScope）で担当している業務の件数だけをバッジに出す
+  const counts = getActionableCounts(store, 'manager')
 
   const logout = () => {
     localStorage.removeItem('lf_manager_auth')
@@ -37,9 +37,9 @@ function ManagerLayoutInner({ children, pathname }: { children: React.ReactNode;
             </div>
             <span className="text-sm font-medium text-zinc-200">Lumina Fuji</span>
             <span className="text-xs text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20">管理会社</span>
-            {(pendingRequests + openMaintenance) > 0 && (
+            {counts.total > 0 && (
               <span className="w-5 h-5 bg-amber-500 rounded-full text-[11px] text-zinc-950 flex items-center justify-center font-medium ml-1">
-                {pendingRequests + openMaintenance}
+                {counts.total}
               </span>
             )}
           </div>
@@ -63,7 +63,7 @@ function ManagerLayoutInner({ children, pathname }: { children: React.ReactNode;
         <div className="max-w-5xl mx-auto px-4 pt-2 pb-3 flex items-center justify-around">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href
-            const badge = href === '/manager/guests' ? pendingRequests : undefined
+            const badge = href === '/manager/guests' ? (counts.requests + counts.messages) || undefined : undefined
             return (
               <Link key={href} href={href}
                 className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all relative ${isActive ? 'text-teal-400' : 'text-zinc-300 hover:text-zinc-300'}`}>

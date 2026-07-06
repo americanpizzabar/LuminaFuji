@@ -294,7 +294,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
   const analytics = getLightingAnalytics(store)
   const settings = store.facilitySettings
   const pendingReqs = store.serviceRequests.filter(r => r.status === 'pending').length
-  const unreadMsgs = store.messages.filter(m => m.from === 'owner' && !m.readByGuest).length
+  const unreadMsgs = store.messages.filter(m => m.from !== 'guest' && !m.readByGuest).length
   const { key: greetKey } = getGreetingKey()
 
   const daysLeft = guestInfo?.checkOut
@@ -575,7 +575,7 @@ function StayingHome({ guestInfo }: { guestInfo: any }) {
                     <span className="text-xs text-blue-400 font-medium">{t('home.staying.hostMessage')}</span>
                   </div>
                   <p className="text-sm text-zinc-300 line-clamp-2">
-                    {store.messages.filter(m => m.from === 'owner').slice(-1)[0]?.content}
+                    {store.messages.filter(m => m.from !== 'guest').slice(-1)[0]?.content}
                   </p>
                   <p className="text-xs text-zinc-300 mt-1 flex items-center gap-1">{t('home.staying.tapToCheck')} <ArrowRight size={11} /></p>
                 </div>

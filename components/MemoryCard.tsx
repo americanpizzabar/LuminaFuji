@@ -7,17 +7,20 @@
  * すぐ下に「この光環境を自宅に再現する」導線（ECUANEST コンサルティング）を置く。
  */
 
-import { useMemo } from 'react'
+import { useMemo , useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { X, Sparkles, ArrowRight, Clock, Layers, MapPin } from 'lucide-react'
 import { useStore } from '@/lib/useStore'
-import { getLightingAnalytics, getZoneAnalytics } from '@/lib/store'
+import { getLightingAnalytics, getZoneAnalytics, recordEngagement } from '@/lib/store'
 import { SCENES, DEFAULT_ZONES } from '@/lib/lighting'
 import SceneVisual from '@/components/SceneVisual'
 import { hapticSuccess } from '@/lib/haptics'
 
 export default function MemoryCard({ open, onClose }: { open: boolean; onClose: () => void }) {
+  // 体験エンゲージメント: カードが開かれた回数を匿名集計する
+  useEffect(() => { if (open) recordEngagement('memory_opened') }, [open])
+
   const [store] = useStore()
 
   const data = useMemo(() => {

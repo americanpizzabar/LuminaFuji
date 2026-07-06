@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getStore, touchLightingActivity, expOf } from '@/lib/store'
+import { getStore, touchLightingActivity, expOf, recordEngagement } from '@/lib/store'
 import { usePhase } from '@/lib/phase'
 import { useStore } from '@/lib/useStore'
 import { useLanguage } from '@/lib/useLanguage'
@@ -109,6 +109,7 @@ export default function SilentConcierge() {
 
   const startBreathing = () => {
     hapticTick()
+    recordEngagement('concierge_accepted')
     setShowToast(false)
     setSessionDone(false)
     setShowBreathing(true)
@@ -138,6 +139,7 @@ export default function SilentConcierge() {
   }
 
   const dismissToast = () => {
+    recordEngagement('concierge_dismissed')
     setShowToast(false)
     // 「今は不要」の意思表示 — 2時間後に改めて様子をうかがう
     touchLightingActivity()

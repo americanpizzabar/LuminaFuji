@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useStore } from '@/lib/useStore'
 import { expOf } from '@/lib/store'
 import FeatureUnavailable from '@/components/FeatureUnavailable'
-import { addGuestbookPost, likeGuestbookPost, getStore } from '@/lib/store'
+import { addGuestbookPost, likeGuestbookPost, getStore, recordEngagement } from '@/lib/store'
 import { usePhase } from '@/lib/phase'
 import { useLanguage } from '@/lib/useLanguage'
 import { hapticTap, hapticSuccess } from '@/lib/haptics'
@@ -60,6 +60,7 @@ function GuestbookInner() {
     if (!message.trim()) return
     setSubmitting(true)
     await new Promise(r => setTimeout(r, 500))
+    recordEngagement('guestbook_posted')
     addGuestbookPost({
       author:  guestInfo?.name        ?? 'Guest',
       country: guestInfo?.nationality ?? 'Japan',

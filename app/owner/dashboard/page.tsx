@@ -11,6 +11,9 @@ import {
   getRevenueStats, getUnreadCounts,
   updateServiceRequest, getStore, sendMessage as storeSendMessage
 } from '@/lib/store'
+import { scopeOf, isDutyOf } from '@/lib/store'
+import GuestBriefingCard from '@/components/GuestBriefingCard'
+import { ScopeChip } from '@/components/ScopeNotice'
 import { useState, useEffect } from 'react'
 import PhaseBadge from '@/components/PhaseBadge'
 
@@ -24,6 +27,9 @@ export default function OwnerDashboardPage() {
   const [sending, setSending] = useState(false)
   const [activeDrawer, setActiveDrawer] = useState<DrawerKey>(null)
 
+  const scope = scopeOf(store)
+  const ownerHandlesRequests = isDutyOf(scope, 'guestRequests', 'owner')
+  const ownerHandlesChat = isDutyOf(scope, 'guestChat', 'owner')
   const currentBooking = store.bookingHistory.find(b => b.status === 'staying')
   const nextBooking = store.bookingHistory.find(b => b.status === 'confirmed')
   const pendingReqs = store.serviceRequests.filter(r => r.status === 'pending')
@@ -80,6 +86,9 @@ export default function OwnerDashboardPage() {
       </div>
 
       {/* Stats — clickable cards */}
+      {/* 今日のゲスト・ブリーフィング（オーナーがゲスト対応を担当する場合） */}
+      {ownerHandlesRequests && <GuestBriefingCard accent="blue" />}
+
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map(({ key, label, value, sub, icon: Icon, color, bg }) => (
           <button
@@ -121,7 +130,7 @@ export default function OwnerDashboardPage() {
               </div>
               {/* Message to guest */}
               <div className="border-t border-zinc-800 pt-3">
-                <p className="text-xs text-zinc-300 mb-2">ゲストへメッセージ</p>
+                <p className="text-xs text-zinc-300 mb-2 flex items-center gap-2">ゲストへメッセージ {!ownerHandlesChat && <ScopeChip party="manager" />}</p>
                 <div className="flex gap-2">
                   <input value={msgInput} onChange={e => setMsgInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && sendOwnerMessage()}
@@ -147,7 +156,7 @@ export default function OwnerDashboardPage() {
         <div className="bg-zinc-900 border border-red-500/20 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-medium text-zinc-200 flex items-center gap-2">
-              <Bell size={14} className="text-red-400" /> 未対応リクエスト
+              <Bell size={14} className="text-red-400" /> 未対応リクエスト {!ownerHandlesRequests && <ScopeChip party="manager" />}
             </h2>
             <span className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full">
               {pendingReqs.length}件

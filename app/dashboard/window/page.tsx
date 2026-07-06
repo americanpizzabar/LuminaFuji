@@ -7,7 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useLanguage } from '@/lib/useLanguage'
 import { useWakeLock } from '@/lib/useWakeLock'
 import { useStore } from '@/lib/useStore'
-import { expOf } from '@/lib/store'
+import { expOf, recordEngagement } from '@/lib/store'
 import FeatureUnavailable from '@/components/FeatureUnavailable'
 import { hapticTap } from '@/lib/haptics'
 
@@ -73,6 +73,7 @@ function LuminaWindowInner() {
 
   const handleEnter = () => {
     hapticTap()
+    recordEngagement('window_lit')
     setReady(true)
     showControls() // 点灯直後は操作方法を一瞬見せてからフェードアウト
   }

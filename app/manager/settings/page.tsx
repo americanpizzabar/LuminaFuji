@@ -12,6 +12,8 @@ import {
   setNotificationSettings, setFacilitySettings,
   DEFAULT_NOTIFICATION_SETTINGS,
 } from '@/lib/store'
+import { scopeOf, isDutyOf } from '@/lib/store'
+import ScopeNotice from '@/components/ScopeNotice'
 import type { NotificationSettings, FacilitySettings } from '@/lib/store'
 import ExperienceSettingsPanel from '@/components/ExperienceSettingsPanel'
 
@@ -72,6 +74,9 @@ type ToastKind = 'notification' | 'facility' | null
 
 export default function ManagerSettingsPage() {
   const [store, update] = useStore()
+  const scope = scopeOf(store)
+  const handlesExperience = isDutyOf(scope, 'experienceConfig', 'manager')
+  const handlesPlaces = isDutyOf(scope, 'placesEditing', 'manager')
   const [toast, setToast] = useState<ToastKind>(null)
 
   // ── Notification settings state ──────────────────────────────────────────
@@ -471,8 +476,10 @@ export default function ManagerSettingsPage() {
           </div>
         </div>
 
-        {/* ── SECTION C: ゲスト体験機能 ───────────────────────────────────── */}
-        <ExperienceSettingsPanel />
+        {/* ── SECTION C: ゲスト体験機能（委託範囲でオーナー専任なら案内表示） ── */}
+        {handlesExperience
+          ? <ExperienceSettingsPanel />
+          : <ScopeNotice duty="ゲスト体験機能の構成" handledBy="owner" accent="teal" />}
 
         {/* ── LIGHTING HARDWARE SETUP ──────────────────────────────────────── */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
@@ -504,7 +511,10 @@ export default function ManagerSettingsPage() {
           </Link>
         </div>
 
-        {/* ── RECOMMENDED PLACES ──────────────────────────────────────────── */}
+        {/* ── RECOMMENDED PLACES（委託範囲でオーナー専任なら案内表示） ── */}
+        {!handlesPlaces ? (
+          <ScopeNotice duty="おすすめスポット編集" handledBy="owner" accent="teal" />
+        ) : (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
           <h2 className="text-sm font-medium text-zinc-200 mb-1 flex items-center gap-2">
             <MapPin size={14} className="text-emerald-400" />
@@ -520,6 +530,7 @@ export default function ManagerSettingsPage() {
             </button>
           </Link>
         </div>
+        )}
 
       </motion.div>
     </>

@@ -6,6 +6,7 @@
  * ECUANEST VIPコンサルティングへのアクセスを解放する。
  */
 
+import { recordEngagement } from '@/lib/store'
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Lock, Unlock } from 'lucide-react'
@@ -48,7 +49,7 @@ export default function SecretKey({
         <motion.button key="dormant"
           className="w-full rounded-3xl p-6 text-center"
           style={{ background:'linear-gradient(165deg, rgba(14,10,7,0.98) 0%, rgba(8,6,4,0.98) 100%)', border:'1px solid rgba(255,157,92,0.13)' }}
-          onClick={() => { hapticCeremony(); setState('revealed') }}
+          onClick={() => { hapticCeremony(); recordEngagement('secretkey_revealed'); setState('revealed') }}
           whileTap={{ scale:0.97 }}
           initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, scale:0.95 }}>
 

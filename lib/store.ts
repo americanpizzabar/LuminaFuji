@@ -109,10 +109,12 @@ export interface LightingEvent {
 
 export interface OwnerMessage {
   id: string
-  from: 'owner' | 'guest'
+  /** 'owner' | 'manager' はゲストには区別なく「スタッフ」として表示される */
+  from: 'owner' | 'guest' | 'manager'
   content: string
   createdAt: string
   readByGuest: boolean
+  /** ゲスト発メッセージをスタッフ（オーナー/管理会社いずれか）が既読にしたか */
   readByOwner: boolean
 }
 
@@ -274,6 +276,123 @@ export function expOf(store: AppStore): ExperienceSettings {
   return { ...DEFAULT_EXPERIENCE_SETTINGS, ...(store.experienceSettings ?? {}) }
 }
 
+// ─── 委託サービス範囲（ServiceScope） ─────────────────────────────────────────
+//
+// オーナーが管理会社への委託内容を定義する「契約」。管理会社が提供できる
+// サービスは会社ごとにマチマチなため、業務単位で担当を切り替えられる。
+// scope が制御するのは「誰が対応責任を持つか」であり、オーナーは常に
+// 全データを閲覧・操作できる（委託中はチップ表示のみ）。
+
+export type DutyKey =
+  | 'guestRequests'    // ゲストリクエストの一次対応
+  | 'guestChat'        // ゲストメッセージ対応
+  | 'cleaning'         // 清掃
+  | 'maintenance'      // メンテナンス
+  | 'bookings'         // 予約管理（登録・編集）
+  | 'experienceConfig' // ゲスト体験機能の構成
+  | 'placesEditing'    // おすすめスポット編集
+
+export type DutyAssignee = 'manager' | 'owner' | 'both'
+
+export type ServiceScope = Record<DutyKey, DutyAssignee>
+
+/** フル委託 — 従来の事実上の役割分担と同じ（既存データの挙動を変えない） */
+export const DEFAULT_SERVICE_SCOPE: ServiceScope = {
+  guestRequests: 'manager',
+  guestChat: 'manager',
+  cleaning: 'manager',
+  maintenance: 'manager',
+  bookings: 'both',
+  experienceConfig: 'both',
+  placesEditing: 'both',
+}
+
+/** 委託範囲を安全に取り出す（欠損フィールドはデフォルト補完） */
+export function scopeOf(store: AppStore): ServiceScope {
+  return { ...DEFAULT_SERVICE_SCOPE, ...(store.serviceScope ?? {}) }
+}
+
+/** その業務を party が担当しているか（'both' は両者とも担当） */
+export function isDutyOf(scope: ServiceScope, duty: DutyKey, party: 'owner' | 'manager'): boolean {
+  return scope[duty] === party || scope[duty] === 'both'
+}
+
+export function setServiceScope(scope: ServiceScope): void {
+  updateStore({ serviceScope: scope })
+}
+
+// ─── 体験エンゲージメント計測 ─────────────────────────────────────────────────
+//
+// ゲストが体験機能を実際に使ったかを匿名カウンタとして蓄積する。
+// PII を含まない集計値のため、ゲスト入替後も維持して
+// 「どの機能が使われているか」の長期データとして体験構成の判断に使う。
+
+export type EngagementKey =
+  | 'arrival_answered' | 'arrival_skipped'
+  | 'arrival_mode_rest' | 'arrival_mode_refresh' | 'arrival_mode_explore'
+  | 'alarm_set'
+  | 'concierge_accepted' | 'concierge_dismissed'
+  | 'memory_opened' | 'blueprint_viewed' | 'window_lit'
+  | 'secretkey_revealed' | 'guestbook_posted'
+
+/** 体験機能の利用を記録する（複数キーを一度の書き込みで加算） */
+export function recordEngagement(...keys: EngagementKey[]): void {
+  const store = getStore()
+  const next = { ...(store.featureEngagement ?? {}) }
+  for (const k of keys) next[k] = (next[k] ?? 0) + 1
+  updateStore({ featureEngagement: next })
+}
+
+/** エンゲージメントを件数降順で返す */
+export function getEngagementStats(store: AppStore): { key: string; count: number }[] {
+  return Object.entries(store.featureEngagement ?? {})
+    .map(([key, count]) => ({ key, count }))
+    .sort((a, b) => b.count - a.count)
+}
+
+// ─── 運営パフォーマンス（オーナー向け・委託業務の実績） ─────────────────────────
+
+export function getOpsPerformance(store: AppStore) {
+  const reqs = store.serviceRequests
+  const responded = reqs.filter(r => r.respondedAt)
+  const completed = reqs.filter(r => r.completedAt)
+  const avg = (arr: number[]) => arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : null
+  const avgFirstResponseMin = avg(responded.map(r =>
+    (new Date(r.respondedAt!).getTime() - new Date(r.createdAt).getTime()) / 60000))
+  const avgCompletionMin = avg(completed.map(r =>
+    (new Date(r.completedAt!).getTime() - new Date(r.createdAt).getTime()) / 60000))
+  const doneCount = reqs.filter(r => r.status === 'done').length
+  const completionRate = reqs.length ? Math.round((doneCount / reqs.length) * 100) : null
+  const cleaningTotal = store.cleaningChecklist.length
+  const cleaningDone = store.cleaningChecklist.filter(t => t.done).length
+  const cleaningPct = cleaningTotal ? Math.round((cleaningDone / cleaningTotal) * 100) : 0
+  const openMaintenance = store.maintenanceItems.filter(m => m.status !== 'done').length
+  return {
+    totalRequests: reqs.length,
+    avgFirstResponseMin, avgCompletionMin, completionRate,
+    cleaningDone, cleaningTotal, cleaningPct, openMaintenance,
+  }
+}
+
+/**
+ * 担当ポータル別のアクション可能件数（scope を考慮したバッジ数）。
+ * consults（ECUANEST リード）はオーナー専任のため owner のみ常時カウント。
+ */
+export function getActionableCounts(store: AppStore, portal: 'owner' | 'manager') {
+  const scope = scopeOf(store)
+  const requests = isDutyOf(scope, 'guestRequests', portal)
+    ? store.serviceRequests.filter(r => r.status === 'pending').length : 0
+  const messages = isDutyOf(scope, 'guestChat', portal)
+    ? store.messages.filter(m => m.from === 'guest' && !m.readByOwner).length : 0
+  const maintenance = isDutyOf(scope, 'maintenance', portal)
+    ? store.maintenanceItems.filter(m => m.status === 'open').length : 0
+  const cleaningPending = isDutyOf(scope, 'cleaning', portal)
+    ? store.cleaningChecklist.filter(t => !t.done).length : 0
+  const consults = portal === 'owner'
+    ? store.consultRequests.filter(c => c.status === 'new').length : 0
+  return { requests, messages, maintenance, cleaningPending, consults, total: requests + messages + maintenance + consults }
+}
+
 export interface AppStore {
   phase: GuestPhase
   guestInfo: GuestInfo | null
@@ -299,6 +418,10 @@ export interface AppStore {
   lightAlarm: LightAlarm | null
   /** ゲスト体験機能の構成（管理会社・オーナーが編集する施設レベル設定） */
   experienceSettings: ExperienceSettings
+  /** 委託サービス範囲（オーナーが編集する委託契約 — 施設レベル） */
+  serviceScope: ServiceScope
+  /** 体験機能の匿名利用カウンタ（ゲスト入替後も維持する長期集計） */
+  featureEngagement: Record<string, number>
 }
 
 // ─── Default data ────────────────────────────────────────────────────────────
@@ -445,6 +568,8 @@ const DEFAULT_STORE: AppStore = {
   lastSceneChangeAt: null,
   lightAlarm: null,
   experienceSettings: DEFAULT_EXPERIENCE_SETTINGS,
+  serviceScope: DEFAULT_SERVICE_SCOPE,
+  featureEngagement: {},
 }
 
 // ─── Storage operations ───────────────────────────────────────────────────────
@@ -466,6 +591,7 @@ export function getStore(): AppStore {
       ...parsed,
       // ネストされた設定はディープマージ（将来フィールドが増えても既存データを壊さない）
       experienceSettings: { ...DEFAULT_EXPERIENCE_SETTINGS, ...(parsed.experienceSettings ?? {}) },
+      serviceScope: { ...DEFAULT_SERVICE_SCOPE, ...(parsed.serviceScope ?? {}) },
     }
   } catch {
     return DEFAULT_STORE
@@ -520,6 +646,8 @@ export function resetStoreForGuest(guestInfo: GuestInfo, _guestBooking?: Booking
     lastSceneChangeAt: null,                  // 無言のコンシェルジュのタイマーをリセット
     lightAlarm: null,                         // 前ゲストの光アラームを除去
     // places はオーナー/管理会社が管理する施設データのため維持する
+    // serviceScope（委託契約）と featureEngagement（匿名の長期利用集計）は
+    // 施設レベルのデータのため、ゲスト入替でも維持する
   })
 }
 
@@ -657,8 +785,13 @@ export function getZoneAnalytics(store: AppStore) {
 }
 
 // Messages
-export function sendMessage(from: 'owner' | 'guest', content: string): OwnerMessage {
-  const msg: OwnerMessage = { id: `msg-${Date.now()}`, from, content, createdAt: new Date().toLocaleString('ja-JP'), readByGuest: from === 'guest', readByOwner: from === 'owner' }
+export function sendMessage(from: 'owner' | 'guest' | 'manager', content: string): OwnerMessage {
+  const msg: OwnerMessage = {
+    id: `msg-${Date.now()}`, from, content,
+    createdAt: new Date().toLocaleString('ja-JP'),
+    readByGuest: from === 'guest',
+    readByOwner: from !== 'guest', // スタッフ（オーナー/管理会社）発は既読扱い
+  }
   const store = getStore()
   updateStore({ messages: [...store.messages, msg] })
   return msg

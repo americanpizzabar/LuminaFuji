@@ -1,5 +1,6 @@
 'use client'
 
+import StaffMessageThread from '@/components/StaffMessageThread'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -14,6 +15,8 @@ import {
   addBookingRecord, updateBookingRecord, deleteBookingRecord,
   markGuestArrived, unmarkGuestArrived,
 } from '@/lib/store'
+import { scopeOf, isDutyOf } from '@/lib/store'
+import { ScopeChip } from '@/components/ScopeNotice'
 import type { BookingRecord, ServiceRequest, MaintenanceItem } from '@/lib/store'
 import PhaseBadge from '@/components/PhaseBadge'
 
@@ -312,8 +315,6 @@ export default function GuestsPage() {
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null)
   const [showModal, setShowModal] = useState<'edit' | 'new' | null>(null)
   const [modalBooking, setModalBooking] = useState<BookingRecord | null>(null)
-  const [msgInput, setMsgInput] = useState('')
-  const [sending, setSending] = useState(false)
   const [activeSection, setActiveSection] = useState<ActiveSection>('bookings')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [emailingId, setEmailingId] = useState<string | null>(null)
@@ -332,6 +333,9 @@ export default function GuestsPage() {
 
   const pendingRequestsCount = store.serviceRequests.filter(r => r.status !== 'done').length
   const unreadMsgCount = store.messages.filter(m => m.from === 'guest' && !m.readByOwner).length
+  const scope = scopeOf(store)
+  const requestsDelegated = !isDutyOf(scope, 'guestRequests', 'owner')
+  const maintenanceDelegated = !isDutyOf(scope, 'maintenance', 'owner')
   const openMaintenanceCount = store.maintenanceItems.filter(m => m.status !== 'done').length
 
   const openEdit = (b: BookingRecord) => { setModalBooking(b); setShowModal('edit') }
@@ -433,15 +437,6 @@ export default function GuestsPage() {
   const scheduleMaintenanceItem = (id: string) => {
     updateMaintenanceItem(id, { status: 'scheduled' })
     update({ maintenanceItems: getStore().maintenanceItems })
-  }
-
-  const sendOwnerMessage = () => {
-    if (!msgInput.trim()) return
-    setSending(true)
-    storeSendMessage('owner', msgInput.trim())
-    update({ messages: getStore().messages })
-    setMsgInput('')
-    setSending(false)
   }
 
   const sectionTabs: { key: ActiveSection; label: string; count?: number }[] = [
@@ -656,6 +651,11 @@ export default function GuestsPage() {
         {/* ── SERVICE REQUESTS ── */}
         {activeSection === 'requests' && (
           <motion.div key="requests" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="space-y-3">
+            {requestsDelegated && (
+              <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                <ScopeChip party="manager" /> 一次対応は管理会社が行います（オーナーも操作可能）
+              </div>
+            )}
             {store.serviceRequests.length === 0 ? (
               <div className="text-center py-12 text-zinc-400 text-sm"><CheckCircle2 size={32} className="mx-auto mb-3 opacity-30" /><p>サービスリクエストはありません</p></div>
             ) : (
@@ -697,47 +697,18 @@ export default function GuestsPage() {
         {/* ── MESSAGES ── */}
         {activeSection === 'messages' && (
           <motion.div key="messages" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="space-y-4">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-zinc-800 flex items-center gap-2">
-                <MessageSquare size={14} className="text-blue-400" />
-                <span className="text-sm font-medium text-zinc-200">ゲストとのメッセージ</span>
-                {unreadMsgCount > 0 && <span className="ml-auto text-[11px] px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400">未読 {unreadMsgCount}件</span>}
-              </div>
-              <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-                {store.messages.length === 0 ? (
-                  <p className="text-center text-zinc-400 text-sm py-8">メッセージはありません</p>
-                ) : (
-                  store.messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.from === 'owner' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${msg.from === 'owner' ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-200'}`}>
-                        <p className="text-xs leading-relaxed">{msg.content}</p>
-                        <div className={`flex items-center gap-1.5 mt-1 ${msg.from === 'owner' ? 'justify-end' : 'justify-start'}`}>
-                          <span className={`text-[11px] ${msg.from === 'owner' ? 'text-blue-200' : 'text-zinc-300'}`}>{msg.from === 'owner' ? 'オーナー' : 'ゲスト'} · {msg.createdAt}</span>
-                          {msg.from === 'owner' && <span className={`text-[11px] ${msg.readByGuest ? 'text-blue-200' : 'text-blue-400/50'}`}>{msg.readByGuest ? '既読' : '未読'}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="p-4 border-t border-zinc-800">
-                <div className="flex gap-2">
-                  <input value={msgInput} onChange={e => setMsgInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendOwnerMessage()}
-                    placeholder="ゲストへメッセージを送信..."
-                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-blue-500/40 transition-all" />
-                  <button onClick={sendOwnerMessage} disabled={!msgInput.trim() || sending}
-                    className="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 flex items-center justify-center transition-all disabled:opacity-40 flex-shrink-0">
-                    <Send size={14} className="text-white" />
-                  </button>
-                </div>
-              </div>
-            </div>
+            <StaffMessageThread portal="owner" />
           </motion.div>
         )}
 
         {/* ── MAINTENANCE ── */}
         {activeSection === 'maintenance' && (
           <motion.div key="maintenance" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="space-y-3">
+            {maintenanceDelegated && (
+              <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                <ScopeChip party="manager" /> メンテナンス対応は管理会社が行います（オーナーも操作可能）
+              </div>
+            )}
             {store.maintenanceItems.length === 0 ? (
               <div className="text-center py-12 text-zinc-400 text-sm"><Wrench size={32} className="mx-auto mb-3 opacity-30" /><p>メンテナンス案件はありません</p></div>
             ) : (

@@ -8,9 +8,13 @@ import {
   markGuestArrived, unmarkGuestArrived,
   BookingRecord,
 } from '@/lib/store'
+import { scopeOf, isDutyOf, getActionableCounts } from '@/lib/store'
+import StaffMessageThread from '@/components/StaffMessageThread'
+import ScopeNotice, { ScopeChip } from '@/components/ScopeNotice'
 import {
   Users, Plus, Calendar, ChevronLeft, ChevronRight, X, Edit2,
   Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp, Link2, Mail, AlertTriangle, MapPin,
+  MessageSquare,
 } from 'lucide-react'
 import PhaseBadge from '@/components/PhaseBadge'
 
@@ -292,7 +296,7 @@ function GuestListTab({
 }: {
   bookings: BookingRecord[]
   facilitySettings: { checkInTime: string; checkOutTime: string }
-  onEdit: (b: BookingRecord) => void
+  onEdit?: (b: BookingRecord) => void
 }) {
   const [, update] = useStore()
   const [filter, setFilter] = useState<string>('all')
@@ -436,7 +440,7 @@ function GuestListTab({
                         </div>
                       )}
                       <div className="flex gap-2 flex-wrap">
-                        <button onClick={() => onEdit(b)}
+                        <button disabled={!onEdit} onClick={() => onEdit?.(b)}
                           className="flex items-center gap-1.5 text-xs text-teal-400 hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 rounded-xl px-3 py-1.5 transition-all">
                           <Edit2 size={11} /> 編集する
                         </button>
@@ -714,7 +718,7 @@ function CalendarTab({
   onEdit,
 }: {
   bookings: BookingRecord[]
-  onEdit: (b: BookingRecord) => void
+  onEdit?: (b: BookingRecord) => void
 }) {
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())
@@ -859,7 +863,7 @@ function CalendarTab({
           {dayMap[selectedDay].map(b => {
             const cfg = STATUS_CONFIG[b.status]
             return (
-              <button key={b.id} onClick={() => onEdit(b)}
+              <button key={b.id} onClick={() => onEdit?.(b)}
                 className={`w-full text-left flex items-center gap-3 p-3 rounded-xl border ${cfg.border} hover:bg-zinc-800/50 transition-all`}>
                 <span className="text-xl">{b.flag}</span>
                 <div className="flex-1 min-w-0">
@@ -888,7 +892,7 @@ function CalendarTab({
             {monthBookings.map(b => {
               const cfg = STATUS_CONFIG[b.status]
               return (
-                <button key={b.id} onClick={() => onEdit(b)}
+                <button key={b.id} onClick={() => onEdit?.(b)}
                   className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border ${cfg.border} bg-zinc-800/30 hover:bg-zinc-800/60 transition-all`}>
                   <span className="text-2xl flex-shrink-0">{b.flag}</span>
                   <div className="flex-1 min-w-0">
@@ -915,12 +919,25 @@ function CalendarTab({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const MAIN_TABS = ['ゲスト一覧', '新規登録', 'カレンダー'] as const
-type MainTab = typeof MAIN_TABS[number]
+const ALL_MAIN_TABS = ['ゲスト一覧', '新規登録', 'カレンダー', 'メッセージ'] as const
+type MainTab = typeof ALL_MAIN_TABS[number]
 
 export default function ManagerGuestsPage() {
   const [store, update] = useStore()
+  // 委託範囲に応じてタブ構成を組み立てる（予約管理・ゲストチャットは委託対象業務）
+  const scope = scopeOf(store)
+  const handlesBookings = isDutyOf(scope, 'bookings', 'manager')
+  const handlesChat = isDutyOf(scope, 'guestChat', 'manager')
+  const MAIN_TABS: MainTab[] = [
+    'ゲスト一覧',
+    ...(handlesBookings ? ['新規登録' as MainTab] : []),
+    'カレンダー',
+    ...(handlesChat ? ['メッセージ' as MainTab] : []),
+  ]
+  const unreadGuestMsgs = getActionableCounts(store, 'manager').messages
   const [activeTab, setActiveTab] = useState<MainTab>('ゲスト一覧')
+  // scope 変更で現在のタブが消えた場合はゲスト一覧へフォールバック（派生値・effect不使用）
+  const effectiveTab: MainTab = MAIN_TABS.includes(activeTab) ? activeTab : 'ゲスト一覧'
   const [editingBooking, setEditingBooking] = useState<BookingRecord | null>(null)
 
   const bookings = store.bookingHistory
@@ -965,13 +982,17 @@ export default function ManagerGuestsPage() {
       <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl p-1 gap-1">
         {MAIN_TABS.map(t => (
           <button key={t} onClick={() => setActiveTab(t)}
-            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${activeTab === t
+            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all ${effectiveTab === t
               ? 'bg-teal-500/20 text-teal-300 border border-teal-500/20'
               : 'text-zinc-300 hover:text-zinc-300'}`}>
             {t === 'ゲスト一覧' && <Globe size={11} className="inline mr-1" />}
             {t === '新規登録' && <Plus size={11} className="inline mr-1" />}
             {t === 'カレンダー' && <Calendar size={11} className="inline mr-1" />}
+            {t === 'メッセージ' && <MessageSquare size={11} className="inline mr-1" />}
             {t}
+            {t === 'メッセージ' && unreadGuestMsgs > 0 && (
+              <span className="ml-1.5 text-amber-400">{unreadGuestMsgs}</span>
+            )}
           </button>
         ))}
       </div>
@@ -979,20 +1000,28 @@ export default function ManagerGuestsPage() {
       {/* Tab content */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={activeTab}
+          key={effectiveTab}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.18 }}
         >
-          {activeTab === 'ゲスト一覧' && (
-            <GuestListTab bookings={bookings} facilitySettings={store.facilitySettings} onEdit={handleEdit} />
+          {effectiveTab === 'ゲスト一覧' && (
+            <>
+              {!handlesBookings && (
+                <div className="mb-3 flex justify-end"><ScopeChip party="owner" /></div>
+              )}
+              <GuestListTab bookings={bookings} facilitySettings={store.facilitySettings} onEdit={handlesBookings ? handleEdit : undefined} />
+            </>
           )}
-          {activeTab === '新規登録' && (
+          {effectiveTab === '新規登録' && handlesBookings && (
             <NewBookingTab onSuccess={() => setActiveTab('ゲスト一覧')} />
           )}
-          {activeTab === 'カレンダー' && (
-            <CalendarTab bookings={bookings} onEdit={handleEdit} />
+          {effectiveTab === 'カレンダー' && (
+            <CalendarTab bookings={bookings} onEdit={handlesBookings ? handleEdit : undefined} />
+          )}
+          {effectiveTab === 'メッセージ' && handlesChat && (
+            <StaffMessageThread portal="manager" />
           )}
         </motion.div>
       </AnimatePresence>
