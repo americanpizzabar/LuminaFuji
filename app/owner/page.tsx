@@ -15,7 +15,9 @@ export default function OwnerLoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (pin === OWNER_PIN) {
+    // 設定ページで変更されたPIN（localStorage）を優先し、無ければ環境変数/デフォルト
+    const effectivePin = localStorage.getItem('NEXT_PUBLIC_OWNER_PIN') ?? OWNER_PIN
+    if (pin === effectivePin) {
       localStorage.setItem('lf_owner_auth', 'true')
       router.push('/owner/dashboard')
     } else {

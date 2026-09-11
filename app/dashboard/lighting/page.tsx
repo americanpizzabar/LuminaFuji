@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Power, Zap, Wifi, WifiOff, Check, Info, Sunset, Moon } from 'lucide-react'
+import { ArrowLeft, Power, Zap, Wifi, Check, Info, Sunset, Moon } from 'lucide-react'
 import Link from 'next/link'
 import {
   SCENES, DEFAULT_ZONES, Zone, LightingScene,
@@ -543,50 +543,11 @@ export default function LightingPage() {
           >
             <ArrowLeft size={18} className="text-zinc-300" />
           </Link>
-          <div className="flex-1">
-            <h1 className="text-lg font-serif text-zinc-100">{t('lighting.title')}</h1>
-            <p className="text-xs text-zinc-300">OLEDWorks Brite 3 · {FIXED_CCT_LABEL}</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-serif text-zinc-100 truncate">{t('lighting.title')}</h1>
+            <p className="text-xs text-zinc-300 truncate">OLEDWorks Brite 3 · {FIXED_CCT_LABEL}</p>
           </div>
-
-          {/* 照明バックエンド接続ステータス (Zigbee / DALI-2) */}
-          {isStaying && (() => {
-            const isLive = backendStatus === 'zigbee' || backendStatus === 'dali' || backendStatus === 'both'
-            const label =
-              backendStatus === 'both' ? 'DALI-2 + Zigbee'
-              : backendStatus === 'dali' ? 'DALI-2'
-              : backendStatus === 'zigbee' ? 'Zigbee'
-              : backendStatus === 'connecting' ? '接続中'
-              : backendStatus === 'offline' ? 'オフライン'
-              : 'シミュレーション'
-            return (
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-medium"
-                style={{
-                  background:
-                    isLive ? 'rgba(34,197,94,0.1)'
-                    : backendStatus === 'connecting' ? 'rgba(251,191,36,0.1)'
-                    : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${
-                    isLive ? 'rgba(34,197,94,0.2)'
-                    : backendStatus === 'connecting' ? 'rgba(251,191,36,0.2)'
-                    : 'rgba(255,255,255,0.06)'
-                  }`,
-                }}
-              >
-                {isLive ? (
-                  <><Wifi size={11} className="text-emerald-400" /><span className="text-emerald-400">{label}</span></>
-                ) : backendStatus === 'connecting' ? (
-                  <><motion.div className="w-2 h-2 bg-gold-400 rounded-full"
-                                animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1, repeat: Infinity }} />
-                    <span className="text-gold-400">{label}</span></>
-                ) : backendStatus === 'offline' ? (
-                  <><WifiOff size={11} className="text-red-400" /><span className="text-red-400">{label}</span></>
-                ) : (
-                  <><Zap size={11} className="text-zinc-300" /><span className="text-zinc-300">{label}</span></>
-                )}
-              </div>
-            )
-          })()}
+          {/* 接続ステータスは直下の DriverStatusPanel に集約（ヘッダーの重複チップは廃止） */}
 
           {/* 光の処方箋ボタン（管理会社の構成で非表示可） */}
           {exp.circadianTuner && (

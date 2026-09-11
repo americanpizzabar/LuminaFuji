@@ -10,7 +10,7 @@ import {
 } from '@/lib/store'
 import { scopeOf, isDutyOf, getActionableCounts } from '@/lib/store'
 import StaffMessageThread from '@/components/StaffMessageThread'
-import ScopeNotice, { ScopeChip } from '@/components/ScopeNotice'
+import { ScopeChip } from '@/components/ScopeNotice'
 import {
   Users, Plus, Calendar, ChevronLeft, ChevronRight, X, Edit2,
   Trash2, Check, Clock, DollarSign, Globe, ChevronDown, ChevronUp, Link2, Mail, AlertTriangle, MapPin,

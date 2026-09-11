@@ -11,7 +11,6 @@ import {
 import { useStore } from '@/lib/useStore'
 import {
   getStore, updateServiceRequest, updateMaintenanceItem,
-  sendMessage as storeSendMessage,
   addBookingRecord, updateBookingRecord, deleteBookingRecord,
   markGuestArrived, unmarkGuestArrived,
 } from '@/lib/store'
